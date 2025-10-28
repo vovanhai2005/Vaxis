@@ -1,14 +1,14 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';    
 import cors from 'cors';
-import dotenv from 'dotenv';
-import { connectDB } from './config/db.js';
+import { sql } from './config/db.js';
+import authRoutes from './routes/auth.route.js';
 
-// Initialize environment variables
-dotenv.config();
-
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8000;
 const app = express();
 
 app.use(express.json());
@@ -18,14 +18,10 @@ app.use(morgan("dev"));
 
 async function initDB() {
     try {
-        // Connect to the Neon database
-        const pool = await connectDB();
-        
         // Create ENUM types first
-        await pool.query(`
+        await sql`
             DO $$ 
             BEGIN
-                -- Create ENUM types if they don't exist
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'role_type') THEN
                     CREATE TYPE role_type AS ENUM ('citizen', 'employee', 'manager');
                 END IF;
@@ -37,14 +33,14 @@ async function initDB() {
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
                     CREATE TYPE notification_type AS ENUM ('reminder', 'news', 'system');
                 END IF;
-            END $$;
-        `);
+            END $$
+        `;
         
-        // Create tables
-        await pool.query(`
-            -- Users table
+        // Create users table
+        await sql`
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                username TEXT NOT NULL,
                 email TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
                 role role_type NOT NULL,
@@ -52,11 +48,13 @@ async function initDB() {
                 phone TEXT,
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 updated_at TIMESTAMPTZ DEFAULT NOW()
-            );
-            
-            CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-            
-            -- Citizens table
+            )
+        `;
+        
+        await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
+        
+        // Create citizens table
+        await sql`
             CREATE TABLE IF NOT EXISTS citizens (
                 id BIGSERIAL PRIMARY KEY,
                 user_id UUID NOT NULL UNIQUE REFERENCES users(id),
@@ -65,18 +63,22 @@ async function initDB() {
                 gender TEXT,
                 address TEXT,
                 emergency_contact TEXT
-            );
-            
-            -- Employees table
+            )
+        `;
+        
+        // Create employees table
+        await sql`
             CREATE TABLE IF NOT EXISTS employees (
                 id BIGSERIAL PRIMARY KEY,
                 user_id UUID NOT NULL UNIQUE REFERENCES users(id),
                 employee_number TEXT UNIQUE,
                 role_title TEXT,
                 active BOOLEAN DEFAULT TRUE
-            );
-            
-            -- Vaccines table
+            )
+        `;
+        
+        // Create vaccines table
+        await sql`
             CREATE TABLE IF NOT EXISTS vaccines (
                 id BIGSERIAL PRIMARY KEY,
                 code TEXT UNIQUE,
@@ -84,9 +86,11 @@ async function initDB() {
                 manufacturer TEXT,
                 description TEXT,
                 created_at TIMESTAMPTZ DEFAULT NOW()
-            );
-            
-            -- Vaccine lots table
+            )
+        `;
+        
+        // Create vaccine_lots table
+        await sql`
             CREATE TABLE IF NOT EXISTS vaccine_lots (
                 id BIGSERIAL PRIMARY KEY,
                 vaccine_id BIGINT NOT NULL REFERENCES vaccines(id),
@@ -95,11 +99,13 @@ async function initDB() {
                 expiry_date DATE,
                 received_at TIMESTAMPTZ DEFAULT NOW(),
                 UNIQUE (vaccine_id, lot_number)
-            );
-            
-            CREATE INDEX IF NOT EXISTS idx_vaccine_lots_vaccine_expiry ON vaccine_lots(vaccine_id, expiry_date);
-            
-            -- Appointments table
+            )
+        `;
+        
+        await sql`CREATE INDEX IF NOT EXISTS idx_vaccine_lots_vaccine_expiry ON vaccine_lots(vaccine_id, expiry_date)`;
+        
+        // Create appointments table
+        await sql`
             CREATE TABLE IF NOT EXISTS appointments (
                 id BIGSERIAL PRIMARY KEY,
                 citizen_id BIGINT NOT NULL REFERENCES citizens(id),
@@ -108,11 +114,13 @@ async function initDB() {
                 notes TEXT,
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 updated_at TIMESTAMPTZ DEFAULT NOW()
-            );
-            
-            CREATE INDEX IF NOT EXISTS idx_appointments_citizen_scheduled ON appointments(citizen_id, scheduled_at);
-            
-            -- Bills table
+            )
+        `;
+        
+        await sql`CREATE INDEX IF NOT EXISTS idx_appointments_citizen_scheduled ON appointments(citizen_id, scheduled_at)`;
+        
+        // Create bills table
+        await sql`
             CREATE TABLE IF NOT EXISTS bills (
                 id BIGSERIAL PRIMARY KEY,
                 citizen_id BIGINT NOT NULL REFERENCES citizens(id),
@@ -120,9 +128,11 @@ async function initDB() {
                 paid BOOLEAN DEFAULT FALSE,
                 issued_at TIMESTAMPTZ DEFAULT NOW(),
                 paid_at TIMESTAMPTZ
-            );
-            
-            -- Administrations table (needs bills to exist first)
+            )
+        `;
+        
+        // Create administrations table
+        await sql`
             CREATE TABLE IF NOT EXISTS administrations (
                 id BIGSERIAL PRIMARY KEY,
                 appointment_id BIGINT REFERENCES appointments(id),
@@ -133,11 +143,13 @@ async function initDB() {
                 dose_number INT,
                 adverse_events TEXT,
                 bill_id BIGINT REFERENCES bills(id)
-            );
-            
-            CREATE INDEX IF NOT EXISTS idx_administrations_citizen_time ON administrations(citizen_id, administered_at);
-            
-            -- Certificates table
+            )
+        `;
+        
+        await sql`CREATE INDEX IF NOT EXISTS idx_administrations_citizen_time ON administrations(citizen_id, administered_at)`;
+        
+        // Create certificates table
+        await sql`
             CREATE TABLE IF NOT EXISTS certificates (
                 id BIGSERIAL PRIMARY KEY,
                 citizen_id BIGINT NOT NULL REFERENCES citizens(id),
@@ -145,9 +157,11 @@ async function initDB() {
                 generated_at TIMESTAMPTZ DEFAULT NOW(),
                 pdf_path TEXT,
                 hash TEXT
-            );
-            
-            -- Notifications table
+            )
+        `;
+        
+        // Create notifications table
+        await sql`
             CREATE TABLE IF NOT EXISTS notifications (
                 id BIGSERIAL PRIMARY KEY,
                 citizen_id BIGINT REFERENCES citizens(id),
@@ -157,9 +171,11 @@ async function initDB() {
                 sent_at TIMESTAMPTZ,
                 created_at TIMESTAMPTZ DEFAULT NOW(),
                 delivered BOOLEAN DEFAULT FALSE
-            );
-            
-            -- Audit logs table
+            )
+        `;
+        
+        // Create audit_logs table
+        await sql`
             CREATE TABLE IF NOT EXISTS audit_logs (
                 id BIGSERIAL PRIMARY KEY,
                 user_id UUID,
@@ -168,8 +184,8 @@ async function initDB() {
                 resource_id TEXT,
                 details JSONB,
                 created_at TIMESTAMPTZ DEFAULT NOW()
-            );
-        `);
+            )
+        `;
         
         console.log('Database initialized successfully');
     } catch (error) {
@@ -183,6 +199,8 @@ initDB();
 app.get('/test', (req, res) => {
     res.send('Hello World!');
 });
+
+app.use("/api/auth", authRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
