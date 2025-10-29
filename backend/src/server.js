@@ -7,15 +7,24 @@ import morgan from 'morgan';
 import cors from 'cors';
 import { sql } from './config/db.js';
 import authRoutes from './routes/auth.route.js';
+import cookieParser from 'cookie-parser';
 
 const PORT = process.env.PORT || 8000;
 const app = express();
 
+// Middlewares
 app.use(express.json());
 app.use(helmet());
 app.use(cors());
 app.use(morgan("dev"));
 
+app.use(cookieParser());
+app.use(cors({
+    origin: "http://localhost:5173",
+    credentials: true
+}));
+
+// Initialize Database
 async function initDB() {
     try {
         // Create ENUM types first
@@ -41,6 +50,7 @@ async function initDB() {
             CREATE TABLE IF NOT EXISTS users (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                 username TEXT NOT NULL,
+                dob DATE,
                 email TEXT NOT NULL UNIQUE,
                 password_hash TEXT NOT NULL,
                 role role_type NOT NULL,
@@ -59,10 +69,10 @@ async function initDB() {
                 id BIGSERIAL PRIMARY KEY,
                 user_id UUID NOT NULL UNIQUE REFERENCES users(id),
                 national_id TEXT UNIQUE,
-                birth_date DATE,
                 gender TEXT,
                 address TEXT,
-                emergency_contact TEXT
+                emergency_contact TEXT,
+                blood_type TEXT
             )
         `;
         
@@ -196,12 +206,11 @@ async function initDB() {
 
 initDB();
 
-app.get('/test', (req, res) => {
-    res.send('Hello World!');
-});
-
+// Routes
 app.use("/api/auth", authRoutes);
 
+
+// Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
