@@ -7,6 +7,9 @@ import morgan from 'morgan';
 import cors from 'cors';
 import { sql } from './config/db.js';
 import authRoutes from './routes/auth.route.js';
+import dashboardRoutes from './routes/dashboard.route.js';
+import inventoryRoutes from './routes/inventory.route.js';
+import statsRoutes from './routes/stats.route.js';
 import cookieParser from 'cookie-parser';
 
 const PORT = process.env.PORT || 8000;
@@ -208,8 +211,9 @@ initDB();
 
 // Routes
 app.use("/api/auth", authRoutes);
-
-
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/inventory", inventoryRoutes);
+app.use("/api/stats", statsRoutes)
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
