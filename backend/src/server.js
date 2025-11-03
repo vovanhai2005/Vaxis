@@ -10,6 +10,9 @@ import authRoutes from './routes/auth.route.js';
 import dashboardRoutes from './routes/dashboard.route.js';
 import inventoryRoutes from './routes/inventory.route.js';
 import statsRoutes from './routes/stats.route.js';
+import userRoutes from './routes/user.route.js';
+import vaccineRoutes from './routes/vaccine.route.js';
+import appointmentRoutes from './routes/appointment.route.js';
 import cookieParser from 'cookie-parser';
 
 const PORT = process.env.PORT || 8000;
@@ -98,6 +101,7 @@ async function initDB() {
                 name TEXT NOT NULL,
                 manufacturer TEXT,
                 description TEXT,
+                price NUMERIC(10,2) DEFAULT 0,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
@@ -200,6 +204,15 @@ async function initDB() {
             )
         `;
         
+        // Create appointment_vaccines table
+        await sql`
+            CREATE TABLE IF NOT EXISTS appointment_vaccines (
+                appointment_id BIGINT NOT NULL REFERENCES appointments(id) ON DELETE CASCADE,
+                vaccine_id BIGINT NOT NULL REFERENCES vaccines(id) ON DELETE CASCADE,
+                PRIMARY KEY (appointment_id, vaccine_id)
+            )
+        `;
+        
         console.log('Database initialized successfully');
     } catch (error) {
         console.log('Error initDB:', error);
@@ -214,6 +227,10 @@ app.use("/api/auth", authRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/stats", statsRoutes)
+app.use("/api/users", userRoutes);
+app.use("/api/vaccines", vaccineRoutes);
+app.use("/api/appointments", appointmentRoutes);
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);

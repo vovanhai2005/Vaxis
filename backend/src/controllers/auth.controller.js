@@ -27,6 +27,13 @@ export const signup = async (req, res) => {
             RETURNING id, username, email, role
         `;
         
+        if (newUser.length > 0) {
+            await sql`
+                INSERT INTO citizens (user_id) 
+                VALUES (${newUser[0].id})
+            `;
+        }
+
         generateToken(newUser[0].id, res); 
 
         res.status(201).json({ 
@@ -80,51 +87,5 @@ export const logout = (req, res) => {
     } catch (error) {
         console.log("Error in logout controller:", error.message);
         res.status(500).json({ message: "Internal server error" });
-    }
-};
-
-export const updateProfile = async (req, res) => {
-    try {
-        const { fullName, phone, dob } = req.body;
-        const userId = req.user.id;
-
-        if (!fullName && !phone && !dob) {
-            return res.status(400).json({ message: "No fields to update provided." });
-        }
-
-        // Start building the query
-        const queryParts = [sql`UPDATE users SET`];
-        const values = [];
-
-        if (fullName) {
-            queryParts.push(sql`full_name = ${fullName}`);
-        }
-        if (phone) {
-            queryParts.push(sql`phone = ${phone}`);
-        }
-        if (dob) {
-            queryParts.push(sql`dob = ${dob}`);
-        }
-
-        // Join the parts with commas
-        const setClause = queryParts.slice(1).reduce((prev, curr) => sql`${prev}, ${curr}`);
-        
-        const finalQuery = sql`
-            ${queryParts[0]} ${setClause}, updated_at = NOW()
-            WHERE id = ${userId}
-            RETURNING id, full_name, email, role, phone, dob
-        `;
-
-        const updatedUser = await finalQuery;
-
-        if (updatedUser.length === 0) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        res.status(200).json(updatedUser[0]);
-
-    } catch (error) {
-        console.error('Error during profile update:', error);
-        res.status(500).json({ message: 'Internal server error.' });
     }
 };
