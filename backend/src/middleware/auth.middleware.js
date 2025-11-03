@@ -3,6 +3,10 @@ import { sql } from '../config/db.js';
 
 export const protectRoute = async (req, res, next) => {
     try {
+        if (!process.env.JWT_SECRET) {
+            throw new Error("JWT_SECRET is not defined in the environment variables.");
+        }
+
         const token = req.cookies.jwt;
         if (!token) {
             return res.status(401).json({ message: "Unauthorized: No token provided" });
@@ -29,7 +33,7 @@ export const protectRoute = async (req, res, next) => {
     } catch (error) {
         console.error("Error in protectRoute middleware:", error.message);
         if (error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: "Unauthorized: Invalid or expired token" });
+            return res.status(401).json({ message: `Unauthorized: ${error.message}` });
         }
         res.status(500).json({ message: "Internal server error" });
     }
