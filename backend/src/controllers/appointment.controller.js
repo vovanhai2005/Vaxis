@@ -54,3 +54,22 @@ export const makeAppointment = async (req, res) => {
     }
 };
 
+// Tổng số mũi đã tiêm (completed) (dashboard admin)
+export const totalCompleted = async (req, res) => {
+  try {
+    const userRole = req.user?.role;
+    if (userRole !== 'manager') {
+      return res.status(403).json({ message: 'Access denied. Manager only.' });
+    }
+    const result = await sql`
+      SELECT COUNT(*)::int AS count
+      FROM appointments
+      WHERE status = 'completed';
+    `;
+    const totalCompleted = result[0]?.count ?? 0;
+    res.status(200).json({ totalCompleted });
+  } catch (error) {
+    console.error('Error fetching total completed vaccinations:', error);
+    res.status(500).json({ message: 'Internal server error.' });
+  }
+};
