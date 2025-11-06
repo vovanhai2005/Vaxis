@@ -8,5 +8,4 @@ router.get("/me", protectRoute, getCitizenProfile);
 router.put("/me", protectRoute, updateCitizenProfile);
 router.get("/me/vaccine-history", protectRoute, getVaccineHistory);
 router.get("/me/notifications", protectRoute, getNotifications);
-
 export default router;
