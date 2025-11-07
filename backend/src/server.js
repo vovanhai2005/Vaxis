@@ -7,9 +7,8 @@ import morgan from 'morgan';
 import cors from 'cors';
 import { sql } from './config/db.js';
 import authRoutes from './routes/auth.route.js';
-import dashboardRoutes from './routes/dashboard.route.js';
-import inventoryRoutes from './routes/inventory.route.js';
-import statsRoutes from './routes/stats.route.js';
+import reportRoutes from './routes/report.route.js';
+import vaccineLotRoutes from './routes/vaccineLot.route.js';
 import userRoutes from './routes/user.route.js';
 import vaccineRoutes from './routes/vaccine.route.js';
 import administrationRoutes from './routes/administration.route.js';
@@ -224,14 +223,11 @@ initDB();
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/inventory", inventoryRoutes);
-app.use("/api/stats", statsRoutes)
 app.use("/api/users", userRoutes);
 app.use("/api/vaccines", vaccineRoutes);
 app.use("/api/appointments", appointmentRoutes);
-app.use("/api/administration", administrationRoutes);
-
+app.use("/api/admin/reports", reportRoutes);
+app.use("/api/vaccine-lot", vaccineLotRoutes);
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
