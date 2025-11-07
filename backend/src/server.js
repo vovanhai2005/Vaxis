@@ -3,7 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import helmet from 'helmet';
-import morgan from 'morgan';    
+import morgan from 'morgan';
 import cors from 'cors';
 import { sql } from './config/db.js';
 import authRoutes from './routes/auth.route.js';
@@ -12,6 +12,7 @@ import inventoryRoutes from './routes/inventory.route.js';
 import statsRoutes from './routes/stats.route.js';
 import userRoutes from './routes/user.route.js';
 import vaccineRoutes from './routes/vaccine.route.js';
+import administrationRoutes from './routes/administration.route.js';
 import appointmentRoutes from './routes/appointment.route.js';
 import cookieParser from 'cookie-parser';
 
@@ -49,7 +50,7 @@ async function initDB() {
                 END IF;
             END $$
         `;
-        
+
         // Create users table
         await sql`
             CREATE TABLE IF NOT EXISTS users (
@@ -65,9 +66,9 @@ async function initDB() {
                 updated_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
-        
+
         await sql`CREATE INDEX IF NOT EXISTS idx_users_email ON users(email)`;
-        
+
         // Create citizens table
         await sql`
             CREATE TABLE IF NOT EXISTS citizens (
@@ -80,7 +81,7 @@ async function initDB() {
                 blood_type TEXT
             )
         `;
-        
+
         // Create employees table
         await sql`
             CREATE TABLE IF NOT EXISTS employees (
@@ -91,7 +92,7 @@ async function initDB() {
                 active BOOLEAN DEFAULT TRUE
             )
         `;
-        
+
         // Create vaccines table
         await sql`
             CREATE TABLE IF NOT EXISTS vaccines (
@@ -104,7 +105,7 @@ async function initDB() {
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
-        
+
         // Create vaccine_lots table
         await sql`
             CREATE TABLE IF NOT EXISTS vaccine_lots (
@@ -117,9 +118,9 @@ async function initDB() {
                 UNIQUE (vaccine_id, lot_number)
             )
         `;
-        
+
         await sql`CREATE INDEX IF NOT EXISTS idx_vaccine_lots_vaccine_expiry ON vaccine_lots(vaccine_id, expiry_date)`;
-        
+
         // Create appointments table
         await sql`
             CREATE TABLE IF NOT EXISTS appointments (
@@ -132,9 +133,9 @@ async function initDB() {
                 updated_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
-        
+
         await sql`CREATE INDEX IF NOT EXISTS idx_appointments_citizen_scheduled ON appointments(citizen_id, scheduled_at)`;
-        
+
         // Create bills table
         await sql`
             CREATE TABLE IF NOT EXISTS bills (
@@ -146,7 +147,7 @@ async function initDB() {
                 paid_at TIMESTAMPTZ
             )
         `;
-        
+
         // Create administrations table
         await sql`
             CREATE TABLE IF NOT EXISTS administrations (
@@ -161,9 +162,9 @@ async function initDB() {
                 bill_id BIGINT REFERENCES bills(id)
             )
         `;
-        
+
         await sql`CREATE INDEX IF NOT EXISTS idx_administrations_citizen_time ON administrations(citizen_id, administered_at)`;
-        
+
         // Create certificates table
         await sql`
             CREATE TABLE IF NOT EXISTS certificates (
@@ -175,7 +176,7 @@ async function initDB() {
                 hash TEXT
             )
         `;
-        
+
         // Create notifications table
         await sql`
             CREATE TABLE IF NOT EXISTS notifications (
@@ -189,7 +190,7 @@ async function initDB() {
                 delivered BOOLEAN DEFAULT FALSE
             )
         `;
-        
+
         // Create audit_logs table
         await sql`
             CREATE TABLE IF NOT EXISTS audit_logs (
@@ -202,7 +203,7 @@ async function initDB() {
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
-        
+
         // Create appointment_vaccines table
         await sql`
             CREATE TABLE IF NOT EXISTS appointment_vaccines (
@@ -211,7 +212,7 @@ async function initDB() {
                 PRIMARY KEY (appointment_id, vaccine_id)
             )
         `;
-        
+
         console.log('Database initialized successfully');
     } catch (error) {
         console.log('Error initDB:', error);
@@ -229,6 +230,7 @@ app.use("/api/stats", statsRoutes)
 app.use("/api/users", userRoutes);
 app.use("/api/vaccines", vaccineRoutes);
 app.use("/api/appointments", appointmentRoutes);
+app.use("/api/administration", administrationRoutes);
 
 // Start server
 app.listen(PORT, () => {
