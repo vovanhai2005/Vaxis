@@ -54,7 +54,7 @@ export const addLot = async (req, res) => {
     res.status(201).json(result[0]);
   } catch (error) {
     console.error("Error adding lot:", error);
-    res.status(500).json({ error: "Không thể thêm lô vaccine" });
+    res.status(500).json({ error: "Unable to add more vaccine batches" });
   }
 };
 
@@ -63,9 +63,9 @@ export const deleteLot = async (req, res) => {
   try {
     const { id } = req.params;
     await sql`DELETE FROM vaccine_lots WHERE id = ${id}`;
-    res.json({ message: "Đã xóa lô vaccine" });
+    res.json({ message: "Vaccine batch deleted" });
   } catch (error) {
     console.error("Error deleting lot:", error);
-    res.status(500).json({ error: "Không thể xóa lô vaccine" });
+    res.status(500).json({ error: "Unable to delete vaccine batch" });
   }
 };
