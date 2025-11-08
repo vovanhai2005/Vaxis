@@ -11,7 +11,6 @@ import reportRoutes from "./routes/report.route.js";
 import vaccineLotRoutes from "./routes/vaccineLot.route.js";
 import userRoutes from "./routes/user.route.js";
 import vaccineRoutes from "./routes/vaccine.route.js";
-import administrationRoutes from "./routes/administration.route.js";
 import appointmentRoutes from "./routes/appointment.route.js";
 import cookieParser from "cookie-parser";
 
