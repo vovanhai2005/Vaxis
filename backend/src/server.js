@@ -12,6 +12,7 @@ import vaccineLotRoutes from "./routes/vaccineLot.route.js";
 import userRoutes from "./routes/user.route.js";
 import vaccineRoutes from "./routes/vaccine.route.js";
 import appointmentRoutes from "./routes/appointment.route.js";
+import administrationRoutes from "./routes/administration.route.js";
 import cookieParser from "cookie-parser";
 
 const PORT = process.env.PORT || 8000;
@@ -227,7 +228,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/vaccines", vaccineRoutes);
 app.use("/api/appointments", appointmentRoutes);
-
+app.use("/api/vaccine-lots", vaccineLotRoutes);
+app.use("/api/reports", reportRoutes);
+app.use("/api/administration", administrationRoutes);
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
