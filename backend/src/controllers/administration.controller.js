@@ -37,29 +37,6 @@ export const createAdministration = async (req, res) => {
   }
 };
 
-export const getAdministrationHistory = async (req, res) => {
-  try {
-    const { citizenId } = req.params;
-
-    const history = await sql`
-            SELECT 
-                a.*,
-                v.name as vaccine_name,
-                vl.lot_number
-            FROM administrations a
-            JOIN vaccines v ON a.vaccine_id = v.id
-            LEFT JOIN vaccine_lots vl ON a.vaccine_lot_id = vl.id
-            WHERE a.citizen_id = ${citizenId}
-            ORDER BY a.administered_at DESC
-        `;
-
-    res.status(200).json(history);
-  } catch (error) {
-    console.error("Error fetching administration history:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
 // Search citizens by national ID
 export const searchCitizensByNationalId = async (req, res) => {
   try {
