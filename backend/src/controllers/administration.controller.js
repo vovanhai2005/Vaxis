@@ -40,7 +40,7 @@ export const createAdministration = async (req, res) => {
 // Search citizens by national ID
 export const searchCitizensByNationalId = async (req, res) => {
   try {
-    const { nationalId } = req.params;
+    const { nationalId } = req.query;
 
     const results = await sql`
             SELECT
@@ -57,7 +57,6 @@ export const searchCitizensByNationalId = async (req, res) => {
             WHERE c.national_id = ${nationalId}
             GROUP BY full_name, scheduled_at, status, notes
             ORDER BY scheduled_at DESC
-
         `;
 
     res.status(200).json(results);
