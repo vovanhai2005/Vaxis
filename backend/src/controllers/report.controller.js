@@ -96,7 +96,7 @@ export const inventory = async (req, res) => {
     res.json(result);
   } catch (error) {
     console.error("Error fetching inventory:", error);
-    res.status(500).json({ error: "Lỗi khi lấy dữ liệu tồn kho" });
+    res.status(500).json({ error: "Error retrieving inventory data" });
   }
 };
 
@@ -160,7 +160,7 @@ export const vaccinationStats = async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching vaccination stats:", error);
-    res.status(500).json({ error: "Lỗi khi lấy thống kê tiêm chủng" });
+    res.status(500).json({ error: "Error when retrieving vaccination statistics" });
   }
 };
 
