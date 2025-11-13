@@ -227,6 +227,7 @@ app.use("/api/vaccines", vaccineRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/admin/reports", reportRoutes);
 app.use("/api/vaccine-lot", vaccineLotRoutes);
+
 // Start server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
