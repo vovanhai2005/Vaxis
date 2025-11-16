@@ -163,6 +163,12 @@ async function initDB() {
                 bill_id BIGINT REFERENCES bills(id)
             )
         `;
+    // Add new columns
+    await sql`
+            ALTER TABLE administrations
+                ADD COLUMN IF NOT EXISTS temperature VARCHAR(10),
+                ADD COLUMN IF NOT EXISTS blood_pressure VARCHAR(20);
+        `;
 
     await sql`CREATE INDEX IF NOT EXISTS idx_administrations_citizen_time ON administrations(citizen_id, administered_at)`;
 

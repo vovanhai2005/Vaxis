@@ -7,6 +7,7 @@ import { protectRoute } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 
-router.post("/", protectRoute, createAdministration);
+router.put("/:appointmentId", protectRoute, createAdministration);
 router.get("/", protectRoute, searchCitizensByNationalId);
+
 export default router;

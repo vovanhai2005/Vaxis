@@ -109,3 +109,55 @@ export const upcomingAppointments = async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
+// Check-in citizen for their appointment
+export const updateAppointmentStatus = async (req, res) => {
+  try {
+    const { id: appointmentId } = req.params;
+    const { temperature, blood_pressure } = req.body;
+
+    if (!temperature || !blood_pressure) {
+      return res
+        .status(400)
+        .json({ message: "Temperature and blood pressure are required." });
+    }
+
+    const updatedStatus = await sql`
+      UPDATE appointments
+      SET status = 'checked_in'
+      WHERE id = ${appointmentId}
+      RETURNING *;
+    `;
+
+    const checkInDetails = updatedStatus[0];
+    const citizenId = checkInDetails.citizen_id;
+    const vaccineId = await sql`
+      SELECT av.vaccine_id, vl.id as vaccine_lot_id
+      FROM appointment_vaccines av
+      JOIN vaccine_lots vl ON av.vaccine_id = vl.vaccine_id
+      WHERE av.appointment_id = ${appointmentId}
+    `;
+    if (vaccineId.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No vaccines found for this appointment." });
+    }
+    // Link the check-in details to administrations table
+    const queries = vaccineId.map(
+      (vaccine) => sql`
+      INSERT INTO administrations (appointment_id, citizen_id, vaccine_id, vaccine_lot_id, temperature, blood_pressure)
+      VALUES (${appointmentId}, ${citizenId}, ${vaccine.vaccine_id}, ${vaccine.vaccine_lot_id} , ${temperature}, ${blood_pressure})
+      RETURNING *;
+    `
+    );
+    await Promise.all(queries);
+
+    res.status(200).json({
+      message: "Check-in successful",
+      appointment: updatedStatus[0],
+    });
+  } catch (error) {
+    console.error("Error during check-in:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};

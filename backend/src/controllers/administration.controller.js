@@ -2,32 +2,14 @@ import { sql } from "../config/db.js";
 
 export const createAdministration = async (req, res) => {
   try {
-    const {
-      appointmentId,
-      citizenId,
-      vaccineId,
-      vaccineLotId,
-      doseNumber,
-      adverseEvents,
-    } = req.body;
+    const { appointmentId } = req.params;
+    const { doseNumber, adverseEvents } = req.body;
 
     const administration = await sql`
-            INSERT INTO administrations (
-                appointment_id,
-                citizen_id,
-                vaccine_id,
-                vaccine_lot_id,
-                dose_number,
-                adverse_events
-            ) VALUES (
-                ${appointmentId},
-                ${citizenId},
-                ${vaccineId},
-                ${vaccineLotId},
-                ${doseNumber},
-                ${adverseEvents}
-            )
-            RETURNING *
+            UPDATE administrations a
+            SET dose_number = ${doseNumber}, adverse_events = ${adverseEvents}, administered_at = NOW()
+            WHERE a.appointment_id = ${appointmentId}
+            RETURNING *;
         `;
 
     res.status(201).json(administration[0]);
