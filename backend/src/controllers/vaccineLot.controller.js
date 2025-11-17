@@ -40,7 +40,7 @@ export const totalStock = async (req, res) => {
   }
 };
 
-// Thêm lô mới tạm thời để test (báo cáo tồn kho)
+// Thêm lô mới (báo cáo tồn kho)
 export const addLot = async (req, res) => {
   try {
     const { vaccine_id, lot_number, quantity, expiry_date } = req.body;
@@ -55,6 +55,34 @@ export const addLot = async (req, res) => {
   } catch (error) {
     console.error("Error adding lot:", error);
     res.status(500).json({ error: "Unable to add more vaccine batches" });
+  }
+};
+
+// Sửa lô vaccine (báo cáo tồn kho)
+export const editLot = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { vaccine_id, lot_number, quantity, expiry_date } = req.body;
+
+    const result = await sql`
+      UPDATE vaccine_lots
+      SET 
+        vaccine_id = COALESCE(${vaccine_id}, vaccine_id),
+        lot_number = COALESCE(${lot_number}, lot_number),
+        quantity = COALESCE(${quantity}, quantity),
+        expiry_date = COALESCE(${expiry_date}, expiry_date)
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Lot not found" });
+    }
+
+    res.status(200).json(result[0]);
+  } catch (error) {
+    console.error("Error editing lot:", error);
+    res.status(500).json({ error: "Unable to edit vaccine batch" });
   }
 };
 
