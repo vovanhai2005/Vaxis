@@ -132,10 +132,15 @@ export const updateAppointmentStatus = async (req, res) => {
     const checkInDetails = updatedStatus[0];
     const citizenId = checkInDetails.citizen_id;
     const vaccineId = await sql`
-      SELECT av.vaccine_id, vl.id as vaccine_lot_id
+      SELECT DISTINCT ON (av.vaccine_id)
+        av.vaccine_id,
+        vl.id AS vaccine_lot_id,
+        vl.quantity
       FROM appointment_vaccines av
       JOIN vaccine_lots vl ON av.vaccine_id = vl.vaccine_id
-      WHERE av.appointment_id = ${appointmentId}
+      WHERE av.appointment_id = ${appointmentId} AND vl.quantity > 0
+      ORDER BY av.vaccine_id, vl.quantity;
+
     `;
     if (vaccineId.length === 0) {
       return res
