@@ -1,4 +1,5 @@
 import { sql } from '../config/db.js';
+import cloudinary from "../lib/cloudinary.js";
 
 export const getVaccines = async (req, res) => {
     try {
@@ -26,10 +27,22 @@ export const getVaccinesByID = async (req, res) => {
 
 export const addVaccine = async (req, res) => {
     try {
-        const { code, name, manufacturer, description, price } = req.body;
+        const { code, name, manufacturer, description, price, imageUrl } = req.body;
+        
+        let vaccineImageUrl = null;
+
+        // Upload vaccine image to Cloudinary if provided (temporary storage)
+        if (imageUrl) {
+            const uploadResponse = await cloudinary.uploader.upload(imageUrl, {
+                resource_type: 'auto',
+                type: 'upload'
+            });
+            vaccineImageUrl = uploadResponse.secure_url;
+        }
+
         const newVaccine = await sql`
-            INSERT INTO vaccines (code, name, manufacturer, description, price) 
-            VALUES (${code}, ${name}, ${manufacturer}, ${description}, ${price}) 
+            INSERT INTO vaccines (code, name, manufacturer, description, price, image_url) 
+            VALUES (${code}, ${name}, ${manufacturer}, ${description}, ${price}, ${vaccineImageUrl}) 
             RETURNING *
         `;
         res.status(201).json(newVaccine[0]);
