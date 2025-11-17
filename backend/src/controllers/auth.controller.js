@@ -52,7 +52,7 @@ export const login = async (req, res) => {
     const { username, password } = req.body;
     try {
         if (!username || !password) {
-            return res.status(400).json({ message: 'username and password are required.' });
+            return res.status(400).json({ message: 'Username and password are required.' });
         }
 
         const user = await sql`SELECT * FROM users WHERE username = ${username}`;

@@ -4,6 +4,8 @@ import { totalStock, expiringBatches, deleteLot, editLot, addLot} from "../contr
 import {  } from "../controllers/vaccineLot.controller.js";
 const router = express.Router();
 
+router.get("/expiring", protectRoute, expiringBatches);
+router.get("/stock", protectRoute, totalStock);
 router.post("/", addLot);
 router.delete("/:id", deleteLot);
 router.put("/:id", editLot);
