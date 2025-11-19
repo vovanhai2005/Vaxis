@@ -18,7 +18,7 @@ export const protectRoute = async (req, res, next) => {
         }
 
         const users = await sql`
-            SELECT id, full_name, email, role 
+            SELECT id, username, full_name, email, role 
             FROM users 
             WHERE id = ${decoded.userId}
         `;
