@@ -13,6 +13,7 @@ import userRoutes from "./routes/user.route.js";
 import vaccineRoutes from "./routes/vaccine.route.js";
 import appointmentRoutes from "./routes/appointment.route.js";
 import administrationRoutes from "./routes/administration.route.js";
+import staffRoutes from "./routes/staff.route.js";
 import cookieParser from "cookie-parser";
 
 const PORT = process.env.PORT || 8000;
@@ -95,6 +96,12 @@ async function initDB() {
             )
         `;
 
+    // add column national_id to employess table
+    await sql`
+            ALTER TABLE employees
+            ADD COLUMN IF NOT EXISTS national_id VARCHAR(50);
+        `;
+
     // Create vaccines table
     await sql`
             CREATE TABLE IF NOT EXISTS vaccines (
@@ -164,6 +171,12 @@ async function initDB() {
                 bill_id BIGINT REFERENCES bills(id)
             )
         `;
+    // Add new columns
+    await sql`
+            ALTER TABLE administrations
+                ADD COLUMN IF NOT EXISTS temperature VARCHAR(10),
+                ADD COLUMN IF NOT EXISTS blood_pressure VARCHAR(20);
+        `;
 
     await sql`CREATE INDEX IF NOT EXISTS idx_administrations_citizen_time ON administrations(citizen_id, administered_at)`;
 
@@ -232,7 +245,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/vaccine-lots", vaccineLotRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/administration", administrationRoutes);
-
+app.use("/api/staff", staffRoutes);
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

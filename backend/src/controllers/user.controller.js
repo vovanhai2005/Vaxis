@@ -2,10 +2,10 @@ import { sql } from "../config/db.js";
 import cloudinary from '../lib/cloudinary.js';
 
 export const getCitizenProfile = async (req, res) => {
-    try {
-        const userId = req.user.id;
+  try {
+    const userId = req.user.id;
 
-        const userProfile = await sql`
+    const userProfile = await sql`
             SELECT 
                 u.full_name, 
                 u.email, 
@@ -21,15 +21,15 @@ export const getCitizenProfile = async (req, res) => {
             WHERE u.id = ${userId}
         `;
 
-        if (userProfile.length === 0) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        res.status(200).json(userProfile[0]);
-    } catch (error) {
-        console.error("Error fetching user profile:", error);
-        res.status(500).json({ message: "Internal server error" });
+    if (userProfile.length === 0) {
+      return res.status(404).json({ message: "User not found" });
     }
+
+    res.status(200).json(userProfile[0]);
+  } catch (error) {
+    console.error("Error fetching user profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const updateCitizenProfile = async (req, res) => {
@@ -78,26 +78,28 @@ export const updateCitizenProfile = async (req, res) => {
             }
         });
 
-        res.status(200).json({ message: "Profile updated successfully" });
-    } catch (error) {
-        console.error("Error updating profile:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+    res.status(200).json({ message: "Profile updated successfully" });
+  } catch (error) {
+    console.error("Error updating profile:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const getVaccineHistory = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const citizenResult = await sql`
+  try {
+    const userId = req.user.id;
+    const citizenResult = await sql`
             SELECT id FROM citizens WHERE user_id = ${userId}
         `;
 
-        if (citizenResult.length === 0) {
-            return res.status(404).json({ message: "Citizen profile not found for this user." });
-        }
-        const citizenId = citizenResult[0].id;
+    if (citizenResult.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Citizen profile not found for this user." });
+    }
+    const citizenId = citizenResult[0].id;
 
-        const history = await sql`
+    const history = await sql`
             SELECT 
                 v.name as vaccine_name,
                 v.manufacturer,
@@ -109,27 +111,29 @@ export const getVaccineHistory = async (req, res) => {
             ORDER BY a.administered_at DESC
         `;
 
-        res.status(200).json(history);
-    } catch (error) {
-        console.error("Error fetching vaccine history:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+    res.status(200).json(history);
+  } catch (error) {
+    console.error("Error fetching vaccine history:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
 
 export const getNotifications = async (req, res) => {
-    try {
-        const userId = req.user.id;
+  try {
+    const userId = req.user.id;
 
-        const citizenResult = await sql`
+    const citizenResult = await sql`
             SELECT id FROM citizens WHERE user_id = ${userId}
         `;
 
-        if (citizenResult.length === 0) {
-            return res.status(404).json({ message: "Citizen profile not found for this user." });
-        }
-        const citizenId = citizenResult[0].id;
+    if (citizenResult.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Citizen profile not found for this user." });
+    }
+    const citizenId = citizenResult[0].id;
 
-        const notifications = await sql`
+    const notifications = await sql`
             SELECT
                 id,
                 type,
@@ -143,9 +147,9 @@ export const getNotifications = async (req, res) => {
             ORDER BY created_at DESC
         `;
 
-        res.status(200).json(notifications);
-    } catch (error) {
-        console.error("Error fetching notifications:", error);
-        res.status(500).json({ message: "Internal server error" });
-    }
+    res.status(200).json(notifications);
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 };
