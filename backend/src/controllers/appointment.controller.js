@@ -61,6 +61,45 @@ export const makeAppointment = async (req, res) => {
   }
 };
 
+export const getCitizenAppointments = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // Find the citizen ID linked to the user ID
+    const citizenResult = await sql`
+            SELECT id FROM citizens WHERE user_id = ${userId}
+        `;
+
+    if (citizenResult.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "Citizen profile not found for this user." });
+    }
+    const citizenId = citizenResult[0].id;
+
+    // Fetch appointments for the citizen
+    const appointments = await sql`
+      SELECT 
+          a.id,
+          a.scheduled_at,
+          a.status,
+          a.notes,
+          json_agg(json_build_object('id', v.id, 'name', v.name)) AS vaccines
+      FROM appointments a
+      LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
+      LEFT JOIN vaccines v ON av.vaccine_id = v.id
+      WHERE a.citizen_id = ${citizenId}
+      GROUP BY a.id
+      ORDER BY a.scheduled_at DESC
+    `;
+
+    res.status(200).json(appointments);
+  } catch (error) {
+    console.error("Error fetching citizen appointments:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
 // Tổng số mũi đã tiêm (completed) (dashboard admin)
 export const totalCompleted = async (req, res) => {
   try {
