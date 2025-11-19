@@ -5,6 +5,9 @@ import SignUpPage from './pages/SignUpPage'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/Citizen/DashboardPage'
 import ProfilePage from './pages/Citizen/ProfilePage'
+import BookingPage from './pages/Citizen/BookingPage'
+import AppointmentPage from './pages/Citizen/AppointmentPage'
+import VaccinationInfoPage from './pages/Citizen/VaccinationInfoPage'
 
 import { useAuthStore } from './store/useAuthStore'
 
@@ -35,10 +38,15 @@ const App = () => {
       {/* Main content area - takes exactly remaining space */}
       <div className={`h-full overflow-y-auto ${authUser ? 'ml-64' : 'w-full'}`}>
         <Routes>
+          {/* Citizen */}
           <Route path="/" element={!authUser ? <Navigate to="/login" /> : <DashboardPage />} />
           <Route path="/signup" element={!authUser ? <SignUpPage /> : <DashboardPage />} />
           <Route path="/login" element={!authUser ? <LoginPage /> : <DashboardPage />} />
           <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : <ProfilePage />} />
+          <Route path="/booking" element={!authUser ? <Navigate to="/login" /> : <BookingPage />} />
+          <Route path="/appointment" element={!authUser ? <Navigate to="/login" /> : <AppointmentPage />} />
+          <Route path="/vaccination-info" element={!authUser ? <Navigate to="/login" /> : <VaccinationInfoPage />} />
+          
         </Routes>
       </div>
       

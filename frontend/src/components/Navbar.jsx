@@ -35,19 +35,27 @@ const Navbar = () => {
             </NavLink>
 
             <NavLink
-              to="/appointments"
-              className={({ isActive }) => `${linkClass} ${isActive ? activeLinkClass : ''}`}
-            >
-              <Calendar className="h-6 w-6" />
-              <span>My Appointments</span>
-            </NavLink>
-
-            <NavLink
               to="/vaccination-info"
               className={({ isActive }) => `${linkClass} ${isActive ? activeLinkClass : ''}`}
             >
               <Info className="h-6 w-6" />
               <span>Vaccination Info</span>
+            </NavLink>
+
+            <NavLink
+              to="/booking"
+              className={({ isActive }) => `${linkClass} ${isActive ? activeLinkClass : ''}`}
+            >
+              <Calendar className="h-6 w-6" />
+              <span>Booking Form</span>
+            </NavLink>
+
+            <NavLink
+              to="/appointment"
+              className={({ isActive }) => `${linkClass} ${isActive ? activeLinkClass : ''}`}
+            >
+              <Calendar className="h-6 w-6" />
+              <span>My Appointments</span>
             </NavLink>
 
             <NavLink

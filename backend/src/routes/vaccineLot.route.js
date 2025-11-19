@@ -11,4 +11,5 @@ router.delete("/:id", deleteLot);
 router.put("/:id", editLot);
 router.get("/stock", protectRoute, totalStock);
 router.get("/expiring", protectRoute, expiringBatches);
+
 export default router;

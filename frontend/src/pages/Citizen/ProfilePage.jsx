@@ -192,7 +192,7 @@ const ProfilePage = () => {
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="bg-white text-teal-600 px-3 py-2 rounded-lg font-medium hover:bg-gray-100 transition"
+                    className="bg-teal-500 text-white px-3 py-2 rounded-lg font-medium hover:bg-teal-600 transition flex items-center gap-2"
                   >
                     Edit Profile
                   </button>
@@ -416,17 +416,9 @@ const ProfilePage = () => {
                           Completed
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Calendar className="h-4 w-4" />
-                          <span>Date: {formatDate(vaccine.administered_at)}</span>
-                        </div>
-                        {vaccine.lot_number && (
-                          <div className="flex items-center gap-2 text-gray-600">
-                            <span className="font-medium">Lot:</span>
-                            <span>{vaccine.lot_number}</span>
-                          </div>
-                        )}
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Calendar className="h-4 w-4" />
+                        <span>Date: {formatDate(vaccine.administered_at)}</span>
                       </div>
                       {vaccine.dose_number && (
                         <div className="mt-2 text-sm text-gray-600">

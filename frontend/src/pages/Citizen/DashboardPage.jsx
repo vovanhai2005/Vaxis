@@ -1,21 +1,24 @@
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
+import { useAppointmentStore } from '../../store/useAppointmentStore'
 import { ShoppingCart, Bell, CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2 } from 'lucide-react'
 
 const DashboardPage = () => {
   const { authUser } = useAuthStore()
   const { vaccineHistory, notifications, getVaccineHistory, getNotifications, isLoadingHistory, isLoadingNotifications } = useUserStore()
+  const { appointments, isLoadingAppointments, getCitizenAppointments } = useAppointmentStore()
   
   const [stats, setStats] = useState({
     completedVaccines: 0,
-    upcomingAppointments: 2
+    upcomingAppointments: 0
   })
 
   useEffect(() => {
     getVaccineHistory()
     getNotifications()
-  }, [getVaccineHistory, getNotifications])
+    getCitizenAppointments()
+  }, [getVaccineHistory, getNotifications, getCitizenAppointments])
 
   useEffect(() => {
     if (vaccineHistory) {
@@ -24,7 +27,13 @@ const DashboardPage = () => {
         completedVaccines: vaccineHistory.length
       }))
     }
-  }, [vaccineHistory])
+    if (appointments) {
+      setStats(prev => ({
+        ...prev,
+        upcomingAppointments: appointments.length
+      }))
+    }
+  }, [vaccineHistory, appointments])
 
   const getTimeAgo = (dateString) => {
     const date = new Date(dateString)
@@ -37,6 +46,32 @@ const DashboardPage = () => {
     if (diffInHours < 24) return `${diffInHours} hours ago`
     if (diffInDays === 1) return '1 day ago'
     return `${diffInDays} days ago`
+  }
+
+  const formatDate = (dateString) => {
+    if (!dateString) return { date: 'N/A', time: 'N/A' }
+    const date = new Date(dateString)
+    return {
+      date: date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+      time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+    }
+  }
+
+  const getStatusInfo = (status) => {
+    switch (status) {
+      case 'booked':
+        return { text: 'Booked', color: 'bg-blue-500' }
+      case 'checked_in':
+        return { text: 'Checked In', color: 'bg-yellow-500' }
+      case 'completed':
+        return { text: 'Completed', color: 'bg-green-500' }
+      case 'cancelled':
+        return { text: 'Cancelled', color: 'bg-red-500' }
+      case 'no_show':
+        return { text: 'No Show', color: 'bg-gray-500' }
+      default:
+        return { text: 'Unknown', color: 'bg-gray-400' }
+    }
   }
 
   const newsItems = [
@@ -71,29 +106,14 @@ const DashboardPage = () => {
       time: '2 days ago',
       title: 'Record Vaccination Numbers This Month',
       description: 'Over 50,000 vaccines administered this month, marking a 20% increase from last month.'
-    }
-  ]
-
-  const appointments = [
-    {
-      id: 1,
-      title: 'Annual Health Check-up',
-      date: 'October 20, 2025',
-      time: '10:30 AM',
-      location: 'Community Health Center, District 1',
-      status: 'Confirmed',
-      statusColor: 'bg-green-500'
     },
     {
-      id: 2,
-      title: 'COVID-19 Booster',
-      subtitle: '(Due)',
-      date: 'November 15, 2025',
-      time: 'Not scheduled',
-      location: 'To be determined',
-      status: 'Action Needed',
-      statusColor: 'bg-orange-500',
-      needsScheduling: true
+      id: 5,
+      category: 'Hepatitis B',
+      categoryColor: 'bg-yellow-100 text-yellow-600',
+      time: '3 days ago',
+      title: 'Free Hepatitis B Screening Available',
+      description: 'Get tested for Hepatitis B at no cost during National Liver Health Month. Vaccination available for those at risk.'
     }
   ]
 
@@ -214,7 +234,11 @@ const DashboardPage = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-gray-500 mb-2">Upcoming</p>
-                  <p className="text-3xl font-bold text-gray-800 mb-1">{stats.upcomingAppointments} Appointments</p>
+                  {isLoadingAppointments ? (
+                    <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-1" />
+                  ) : (
+                    <p className="text-3xl font-bold text-gray-800 mb-1">{stats.upcomingAppointments} Appointments</p>
+                  )}
                 </div>
                 <div className="bg-orange-100 p-3 rounded-full">
                   <Clock className="h-8 w-8 text-orange-600" />
@@ -230,50 +254,61 @@ const DashboardPage = () => {
               <h2 className="text-xl font-semibold text-gray-800">Upcoming Appointments</h2>
             </div>
 
-            <div className="space-y-4">
-              {appointments.map((appointment) => (
-                <div key={appointment.id} className="border border-gray-200 rounded-xl p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                        {appointment.title}
-                        {appointment.subtitle && (
-                          <span className="text-red-500 text-sm">{appointment.subtitle}</span>
-                        )}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        {appointment.date} • {appointment.time}
-                      </p>
-                    </div>
-                    <span className={`text-xs px-3 py-1 rounded-full text-white ${appointment.statusColor}`}>
-                      {appointment.status}
-                    </span>
-                  </div>
+            {isLoadingAppointments ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {appointments.length > 0 ? (
+                  appointments.slice(0, 3).map((appointment) => {
+                    const { date, time } = formatDate(appointment.scheduled_at)
+                    const status = getStatusInfo(appointment.status)
+                    const vaccines = appointment.vaccines.map(v => v.name).join(', ')
 
-                  <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                    <MapPin className="h-4 w-4" />
-                    <span>{appointment.location}</span>
-                  </div>
+                    return (
+                      <div key={appointment.id} className="border border-gray-200 rounded-xl p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                              {vaccines || 'General Check-up'}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {date} • {time}
+                            </p>
+                          </div>
+                          <span className={`text-xs px-3 py-1 rounded-full text-white ${status.color}`}>
+                            {status.text}
+                          </span>
+                        </div>
 
-                  <div className="flex gap-3">
-                    {appointment.needsScheduling ? (
-                      <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition">
-                        Schedule Appointment
-                      </button>
-                    ) : (
-                      <>
-                        <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition">
-                          View Details
-                        </button>
-                        <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition">
-                          Reschedule
-                        </button>
-                      </>
-                    )}
+                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                          <MapPin className="h-4 w-4" />
+                          <span>{appointment.notes || 'Community Health Center'}</span>
+                        </div>
+
+                        <div className="flex gap-3">
+                          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition">
+                            View Details
+                          </button>
+                          <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition">
+                            Reschedule
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })
+                ) : (
+                  <div className="text-center py-8">
+                    <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">No upcoming appointments found.</p>
+                    <button className="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition">
+                      Book an Appointment
+                    </button>
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

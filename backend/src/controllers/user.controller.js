@@ -102,11 +102,9 @@ export const getVaccineHistory = async (req, res) => {
                 v.name as vaccine_name,
                 v.manufacturer,
                 a.administered_at,
-                a.dose_number,
-                vl.lot_number
+                a.dose_number
             FROM administrations a
             JOIN vaccines v ON a.vaccine_id = v.id
-            LEFT JOIN vaccine_lots vl ON a.vaccine_lot_id = vl.id
             WHERE a.citizen_id = ${citizenId}
             ORDER BY a.administered_at DESC
         `;
