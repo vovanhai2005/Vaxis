@@ -1,12 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
-import { ShoppingCart, Bell, User, ChevronDown, ChevronUp, Mail, Phone, MapPin, Droplet, Calendar, Syringe, MapPinIcon, Loader2, Camera } from 'lucide-react'
+import { useVaccineStore } from '../../store/useVaccineStore'
+import { User, ChevronDown, ChevronUp, Mail, Phone, MapPin, Droplet, Calendar, Syringe, MapPinIcon, Loader2, Camera } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
+import Header from '../../components/Header'
 
 const ProfilePage = () => {
+  const navigate = useNavigate()
   const { authUser } = useAuthStore()
   const { userProfile, vaccineHistory, getCitizenProfile, getVaccineHistory, updateCitizenProfile, isLoadingProfile, isLoadingHistory, isUpdatingProfile } = useUserStore()
+  const { selectedVaccines } = useVaccineStore()
   
   const [isBasicInfoExpanded, setIsBasicInfoExpanded] = useState(true)
   const [isVaccineHistoryExpanded, setIsVaccineHistoryExpanded] = useState(true)
@@ -25,9 +30,8 @@ const ProfilePage = () => {
   const [profilePictureFile, setProfilePictureFile] = useState(null)
 
   useEffect(() => {
-    getCitizenProfile()
     getVaccineHistory()
-  }, [getCitizenProfile, getVaccineHistory])
+  }, [getVaccineHistory])
 
   useEffect(() => {
     if (userProfile) {
@@ -108,33 +112,10 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">My Profile</h1>
-          <p className="text-gray-500">Manage your personal information and vaccination records</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-            <ShoppingCart className="h-6 w-6 text-gray-600" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition relative">
-            <Bell className="h-6 w-6 text-gray-600" />
-            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              3
-            </span>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-800">{authUser?.full_name || authUser?.username}</p>
-              <p className="text-xs text-gray-500 capitalize">{authUser?.role || 'Patient'}</p>
-            </div>
-            <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              {(authUser?.full_name || authUser?.username || 'U').charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        title="My Profile" 
+        subtitle="Manage your personal information and vaccination records"
+      />
 
       {/* Profile Content */}
       <div className="max-w-4xl mx-auto">

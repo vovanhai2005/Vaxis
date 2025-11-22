@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, Bell, Info, Calendar, Loader2, ShoppingCartIcon, Trash2, User, Mail, Phone, ShieldCheck, MapPin, Check } from 'lucide-react'
+import { Info, Calendar, Loader2, ShoppingCartIcon, Trash2, User, Mail, Phone, ShieldCheck, Check } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useAppointmentStore } from '../../store/useAppointmentStore'
 import { useVaccineStore } from '../../store/useVaccineStore'
 import DateTimePicker from '../../components/DateTimePicker'
+import Header from '../../components/Header'
 
 const Section = ({ icon, title, subtitle, children }) => (
   <div className="bg-white rounded-2xl shadow-sm mb-6">
@@ -54,33 +55,10 @@ const BookingPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Book Appointment</h1>
-          <p className="text-gray-500">Schedule your vaccination appointment</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-            <ShoppingCart className="h-6 w-6 text-gray-600" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition relative">
-            <Bell className="h-6 w-6 text-gray-600" />
-            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              3
-            </span>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-800">{authUser?.full_name || authUser?.username}</p>
-              <p className="text-xs text-gray-500 capitalize">{authUser?.role || 'Patient'}</p>
-            </div>
-            <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              {(authUser?.full_name || authUser?.username || 'U').charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        title="Book Appointment" 
+        subtitle="Schedule your vaccination appointment"
+      />
 
       {/* Main Content */}
       <div className="max-w-4xl mx-auto">
@@ -186,7 +164,8 @@ const BookingPage = () => {
           <div className="mt-6 pt-6 border-t border-white/20">
             <button
               onClick={() => makeAppointment(appointmentDate, notes)}
-              className="w-full bg-white text-teal-600 font-bold py-4 rounded-lg text-lg hover:bg-gray-100 transition-all transform hover:scale-105 flex items-center justify-center gap-2"
+              disabled={!appointmentDate || selectedVaccines.length === 0}
+              className="w-full bg-white text-teal-600 font-bold py-4 rounded-lg text-lg hover:bg-gray-100 transition-all transform hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               <Check className="h-6 w-6" />
               Confirm & Submit Booking

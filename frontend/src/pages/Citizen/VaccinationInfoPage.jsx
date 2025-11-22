@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Search, ShoppingCart, Bell, Info, Calendar, Loader2, ShoppingCartIcon, X, Shield, Factory, DollarSign, Pill } from 'lucide-react'
+import { Search, Info, Loader2, ShoppingCartIcon, X, Shield, Factory, DollarSign, Pill } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useVaccineStore } from '../../store/useVaccineStore'
-import { Link } from 'react-router-dom'
+import Header from '../../components/Header'
 
 const VaccineDetailModal = ({ vaccine, onClose }) => {
   if (!vaccine) return null
@@ -85,7 +85,7 @@ const VaccineCard = ({ vaccine, onViewDetail }) => {
 
 const VaccinationInfoPage = () => {
   const { authUser } = useAuthStore()
-  const { vaccines, isLoadingVaccines, getVaccines } = useVaccineStore()
+  const { vaccines, isLoadingVaccines, getVaccines, selectedVaccines } = useVaccineStore()
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedVaccine, setSelectedVaccine] = useState(null)
 
@@ -101,33 +101,10 @@ const VaccinationInfoPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Vaccination Information</h1>
-          <p className="text-gray-500">Browse and book available vaccines</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-            <ShoppingCart className="h-6 w-6 text-gray-600" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition relative">
-            <Bell className="h-6 w-6 text-gray-600" />
-            <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-              3
-            </span>
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-800">{authUser?.full_name || authUser?.username}</p>
-              <p className="text-xs text-gray-500 capitalize">{authUser?.role || 'Patient'}</p>
-            </div>
-            <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              {(authUser?.full_name || authUser?.username || 'U').charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        title="Vaccination Information" 
+        subtitle="Browse and book available vaccines"
+      />
 
       {/* Search Bar */}
       <div className="mb-8">
