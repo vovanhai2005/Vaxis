@@ -148,3 +148,55 @@ export const upcomingAppointments = async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
+// Edit appointment
+export const editAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { scheduled_at, status, notes } = req.body;
+
+    // Build update fields dynamically, only including provided values
+    const updates = [];
+    const values = [];
+
+    if (scheduled_at !== undefined && scheduled_at !== null) {
+      updates.push('scheduled_at');
+      // Ensure the date is properly formatted for PostgreSQL
+      values.push(new Date(scheduled_at).toISOString());
+    }
+    if (status !== undefined && status !== null) {
+      updates.push('status');
+      values.push(status);
+    }
+    if (notes !== undefined && notes !== null) {
+      updates.push('notes');
+      values.push(notes);
+    }
+
+    // Always update the updated_at timestamp
+    updates.push('updated_at');
+    values.push(sql`NOW()`);
+
+    if (updates.length === 1) { // Only updated_at, no actual changes
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    const result = await sql`
+      UPDATE appointments
+      SET ${sql(updates.reduce((acc, field, i) => {
+        acc[field] = values[i];
+        return acc;
+      }, {}))}
+      WHERE id = ${id}
+      RETURNING *
+    `;
+    
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Appointment not found" });
+    }
+    res.status(200).json(result[0]);
+  } catch (error) {
+    console.error("Error editing appointment:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};

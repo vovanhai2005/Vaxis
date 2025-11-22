@@ -12,7 +12,13 @@ export const useAppointmentStore = create((set, get) => ({
         const { selectedVaccines } = useVaccineStore.getState()
         if (selectedVaccines.length === 0) {
             toast.error('No vaccines selected for appointment')
+            return
         }   
+
+        if (!scheduledAt) {
+            toast.error('Please select an appointment date and time')
+            return
+        }
 
         try {
             const vaccineIds = selectedVaccines.map(v => v.id)
@@ -53,6 +59,22 @@ export const useAppointmentStore = create((set, get) => ({
         } catch (error) {
             console.error('Error cancelling appointment:', error);
             toast.error(error.response?.data?.message || 'Failed to cancel appointment');
+        }
+    },
+
+    editAppointment: async (appointmentId, scheduledAt, notes) => {
+        try {
+            await axiosInstance.put(`/appointments/${appointmentId}`, {
+                scheduled_at: scheduledAt,
+                notes: notes
+            });
+            toast.success('Appointment updated successfully');
+            // Refresh appointments after editing
+            get().getCitizenAppointments();
+        }
+        catch (error) {
+            console.error('Error updating appointment:', error);
+            toast.error(error.response?.data?.message || 'Failed to update appointment');
         }
     }
 

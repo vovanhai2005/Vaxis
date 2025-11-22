@@ -78,9 +78,9 @@ const DateTimePicker = ({ value, onChange }) => {
           key={day}
           onClick={() => !isPast && handleDateClick(day)}
           disabled={isPast}
-          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm transition-colors
-            ${isPast ? 'text-gray-300 cursor-not-allowed' : 'hover:bg-teal-50 cursor-pointer'}
-            ${isSelected ? 'bg-teal-500 text-white hover:bg-teal-600' : ''}
+          className={`h-10 w-10 rounded-lg flex items-center justify-center text-sm font-semibold transition-colors
+            ${isPast ? 'text-gray-400 cursor-not-allowed bg-gray-200' : 'text-gray-700 hover:bg-teal-100 cursor-pointer'}
+            ${isSelected ? 'bg-teal-600 text-white hover:bg-teal-700' : ''}
           `}
         >
           {day}
@@ -99,32 +99,32 @@ const DateTimePicker = ({ value, onChange }) => {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full p-3 rounded-lg focus:outline-none border-gray-300 ring-2 ring-transparent focus:border-teal-500 focus:ring-teal-100 bg-white text-left flex items-center justify-between"
+        className="w-full p-3 rounded-xl focus:outline-none border-2 border-gray-400 ring-2 ring-transparent focus:border-teal-600 focus:ring-teal-200 bg-white text-left flex items-center justify-between hover:border-gray-500 transition shadow-sm"
       >
-        <span className={value ? 'text-gray-800' : 'text-gray-400'}>
+        <span className={value ? 'text-gray-900 font-medium' : 'text-gray-500'}>
           {formatDisplayDate()}
         </span>
-        <Calendar className="h-5 w-5 text-gray-400" />
+        <Calendar className="h-5 w-5 text-teal-600" />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 mt-2 bg-white rounded-xl shadow-xl border border-gray-200 p-4 w-80">
+        <div className="absolute z-50 mt-2 bg-gray-50 rounded-xl shadow-xl border-2 border-gray-400 p-4 w-80">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-4">
             <button
               type="button"
               onClick={previousMonth}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-200 rounded-lg font-semibold text-gray-700"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
-            <div className="text-lg font-semibold">
+            <div className="text-lg font-bold text-gray-900">
               {monthNames[currentMonth.getMonth()]} {currentMonth.getFullYear()}
             </div>
             <button
               type="button"
               onClick={nextMonth}
-              className="p-2 hover:bg-gray-100 rounded-lg"
+              className="p-2 hover:bg-gray-200 rounded-lg font-semibold text-gray-700"
             >
               <ChevronRight className="h-5 w-5" />
             </button>
@@ -133,7 +133,7 @@ const DateTimePicker = ({ value, onChange }) => {
           {/* Day Names */}
           <div className="grid grid-cols-7 gap-1 mb-2">
             {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-              <div key={day} className="h-10 flex items-center justify-center text-xs font-semibold text-gray-500">
+              <div key={day} className="h-10 flex items-center justify-center text-xs font-bold text-gray-700">
                 {day}
               </div>
             ))}
@@ -145,16 +145,16 @@ const DateTimePicker = ({ value, onChange }) => {
           </div>
 
           {/* Time Picker */}
-          <div className="border-t pt-4">
-            <label className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-              <Clock className="h-4 w-4" />
+          <div className="border-t-2 border-gray-300 pt-4">
+            <label className="flex items-center gap-2 text-sm font-semibold text-gray-900 mb-2">
+              <Clock className="h-4 w-4 text-teal-600" />
               Time
             </label>
             <input
               type="time"
               value={selectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
-              className="w-full p-2 rounded-lg border border-gray-300 focus:outline-none focus:border-teal-500"
+              className="w-full p-3 rounded-lg border-2 border-gray-400 focus:outline-none focus:border-teal-600 focus:ring-2 focus:ring-teal-200 bg-white text-gray-900 font-medium"
             />
           </div>
 
@@ -163,7 +163,7 @@ const DateTimePicker = ({ value, onChange }) => {
             type="button"
             onClick={handleConfirm}
             disabled={!selectedDate}
-            className="w-full mt-4 bg-teal-500 text-white py-2 rounded-lg font-semibold hover:bg-teal-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="w-full mt-4 bg-teal-600 text-white py-3 rounded-lg font-bold hover:bg-teal-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors shadow-sm"
           >
             Confirm
           </button>

@@ -10,16 +10,24 @@ import AppointmentPage from './pages/Citizen/AppointmentPage'
 import VaccinationInfoPage from './pages/Citizen/VaccinationInfoPage'
 
 import { useAuthStore } from './store/useAuthStore'
+import { useUserStore } from './store/useUserStore'
 
 import { Loader } from 'lucide-react'
 import { Toaster } from 'react-hot-toast'
 
 const App = () => {
-  const { authUser, checkAuth, isCheckingAuth, onlineUsers } = useAuthStore()
+  const { authUser, checkAuth, isCheckingAuth } = useAuthStore()
+  const { getCitizenProfile } = useUserStore()
 
   useEffect(() => {
     checkAuth()
   }, [checkAuth]);
+
+  useEffect(() => {
+    if (authUser) {
+      getCitizenProfile()
+    }
+  }, [authUser, getCitizenProfile]);
 
   console.log( authUser ? "True" : "False");
 
@@ -38,14 +46,16 @@ const App = () => {
       {/* Main content area - takes exactly remaining space */}
       <div className={`h-full overflow-y-auto ${authUser ? 'ml-64' : 'w-full'}`}>
         <Routes>
-          {/* Citizen */}
-          <Route path="/" element={!authUser ? <Navigate to="/login" /> : <DashboardPage />} />
-          <Route path="/signup" element={!authUser ? <SignUpPage /> : <DashboardPage />} />
-          <Route path="/login" element={!authUser ? <LoginPage /> : <DashboardPage />} />
-          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : <ProfilePage />} />
-          <Route path="/booking" element={!authUser ? <Navigate to="/login" /> : <BookingPage />} />
-          <Route path="/appointment" element={!authUser ? <Navigate to="/login" /> : <AppointmentPage />} />
-          <Route path="/vaccination-info" element={!authUser ? <Navigate to="/login" /> : <VaccinationInfoPage />} />
+          {/* Public Routes */}
+          <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
+          <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
+          
+          {/* Citizen Routes */}
+          <Route path="/" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <DashboardPage /> : <Navigate to="/login" />} />
+          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <ProfilePage /> : <Navigate to="/login" />} />
+          <Route path="/booking" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <BookingPage /> : <Navigate to="/login" />} />
+          <Route path="/appointment" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <AppointmentPage /> : <Navigate to="/login" />} />
+          <Route path="/vaccination-info" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <VaccinationInfoPage /> : <Navigate to="/login" />} />
           
         </Routes>
       </div>

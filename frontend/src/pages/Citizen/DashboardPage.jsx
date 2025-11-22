@@ -2,12 +2,17 @@ import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useAppointmentStore } from '../../store/useAppointmentStore'
-import { ShoppingCart, Bell, CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2 } from 'lucide-react'
+import { useVaccineStore } from '../../store/useVaccineStore'
+import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2 } from 'lucide-react'
+import Header from '../../components/Header'
+import { useNavigate } from 'react-router-dom'
 
 const DashboardPage = () => {
+  const navigate = useNavigate()
   const { authUser } = useAuthStore()
   const { vaccineHistory, notifications, getVaccineHistory, getNotifications, isLoadingHistory, isLoadingNotifications } = useUserStore()
   const { appointments, isLoadingAppointments, getCitizenAppointments } = useAppointmentStore()
+  const { selectedVaccines } = useVaccineStore()
   
   const [stats, setStats] = useState({
     completedVaccines: 0,
@@ -119,35 +124,11 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-500">Welcome back, {authUser?.full_name || authUser?.username || 'User'}</p>
-        </div>
-        <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition">
-            <ShoppingCart className="h-6 w-6 text-gray-600" />
-          </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition relative">
-            <Bell className="h-6 w-6 text-gray-600" />
-            {notifications.length > 0 && (
-              <span className="absolute top-1 right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {notifications.length}
-              </span>
-            )}
-          </button>
-          <div className="flex items-center gap-2">
-            <div className="text-right">
-              <p className="text-sm font-medium text-gray-800">{authUser?.full_name || authUser?.username}</p>
-              <p className="text-xs text-gray-500 capitalize">{authUser?.role || 'Patient'}</p>
-            </div>
-            <div className="w-12 h-12 bg-teal-500 rounded-full flex items-center justify-center text-white font-bold text-lg">
-              {(authUser?.fullName || authUser?.username || 'U').charAt(0).toUpperCase()}
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header 
+        title="Dashboard" 
+        subtitle={`Welcome back, ${authUser?.full_name || authUser?.username || 'User'}`}
+        notificationCount={notifications.length}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - News */}
