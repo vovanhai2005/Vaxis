@@ -66,7 +66,8 @@ async function initDB() {
                 full_name TEXT,
                 phone TEXT,
                 created_at TIMESTAMPTZ DEFAULT NOW(),
-                updated_at TIMESTAMPTZ DEFAULT NOW()
+                updated_at TIMESTAMPTZ DEFAULT NOW(),
+                profile_picture TEXT
             )
         `;
 
@@ -108,6 +109,7 @@ async function initDB() {
                 id BIGSERIAL PRIMARY KEY,
                 code TEXT UNIQUE,
                 name TEXT NOT NULL,
+                image_url TEXT,
                 manufacturer TEXT,
                 description TEXT,
                 price NUMERIC(10,2) DEFAULT 0,
@@ -121,6 +123,7 @@ async function initDB() {
                 id BIGSERIAL PRIMARY KEY,
                 vaccine_id BIGINT NOT NULL REFERENCES vaccines(id),
                 lot_number TEXT NOT NULL,
+                notes TEXT,
                 quantity BIGINT DEFAULT 0,
                 expiry_date DATE,
                 received_at TIMESTAMPTZ DEFAULT NOW(),

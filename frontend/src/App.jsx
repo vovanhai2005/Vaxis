@@ -57,6 +57,7 @@ const App = () => {
           <Route path="/appointment" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <AppointmentPage /> : <Navigate to="/login" />} />
           <Route path="/vaccination-info" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <VaccinationInfoPage /> : <Navigate to="/login" />} />
           
+          
         </Routes>
       </div>
       
