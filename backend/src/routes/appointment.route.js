@@ -1,6 +1,5 @@
-import { makeAppointment, getCitizenAppointments, totalCompleted, upcomingAppointments, editAppointment } from "../controllers/appointment.controller.js";
+import { makeAppointment, getCitizenAppointments, totalCompleted, upcomingAppointments, editAppointment, updateAppointmentStatus } from "../controllers/appointment.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
-import { updateAppointmentStatus } from "../controllers/appointment.controller.js";
 import express from "express";
 
 const router = express.Router();
