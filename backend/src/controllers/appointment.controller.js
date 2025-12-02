@@ -200,6 +200,24 @@ export const editAppointment = async (req, res) => {
     res.status(500).json({ message: "Internal server error." });
   }
 };
+
+export const deleteAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // Delete the appointment
+    await sql`
+      DELETE FROM appointments
+      WHERE id = ${id};
+    `;
+
+    res.status(200).json({ message: "Appointment deleted successfully." });
+  } catch (error) {
+    console.error("Error deleting appointment:", error);
+    res.status(500).json({ message: "Internal server error." });
+  }
+};
+
 // Check-in citizen for their appointment
 export const updateAppointmentStatus = async (req, res) => {
   try {

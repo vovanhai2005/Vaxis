@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useVaccineStore } from '../../store/useVaccineStore'
-import { User, ChevronDown, ChevronUp, Mail, Phone, MapPin, Droplet, Calendar, Syringe, MapPinIcon, Loader2, Camera } from 'lucide-react'
+import { User, ChevronDown, ChevronUp, Mail, Phone, MapPin, Droplet, Calendar, Syringe, MapPinIcon, Loader2, Camera, UserCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import Header from '../../components/Header'
@@ -63,6 +63,7 @@ const ProfilePage = () => {
       dob: formData.dob,
       address: formData.address,
       bloodType: formData.bloodType,
+      gender: formData.gender,
       national_id: formData.national_id,
       // send base64 preview string if available (backend will upload to Cloudinary)
       profilePicture: formData.profile_picture_preview || null
@@ -111,14 +112,15 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30">
       <Header 
         title="My Profile" 
         subtitle="Manage your personal information and vaccination records"
+        icon={UserCircle}
       />
 
       {/* Profile Content */}
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Profile Header Card */}
         <div className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-t-3xl p-8 pb-16 relative" />
 
@@ -269,6 +271,73 @@ const ProfilePage = () => {
 
               <div>
                 <label className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                  <User className="h-4 w-4" />
+                  Gender
+                </label>
+                {isEditing ? (
+                  <select
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleInputChange}
+                    className={`w-full p-3 rounded-lg focus:outline-none ${isEditing ? 'border-teal-500 ring-2 ring-teal-100 bg-white' : 'border-gray-300'}`}
+                  >
+                    <option value="">Select Gender</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
+                  </select>
+                ) : (
+                  <p className="text-gray-800 font-medium capitalize">{formData.gender || 'Not provided'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                  <User className="h-4 w-4" />
+                  National ID
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="national_id"
+                    value={formData.national_id}
+                    onChange={handleInputChange}
+                    className={`w-full p-3 rounded-lg focus:outline-none ${isEditing ? 'border-teal-500 ring-2 ring-teal-100 bg-white' : 'border-gray-300'}`}
+                  />
+                ) : (
+                  <p className="text-gray-800 font-medium">{formData.national_id || 'Not provided'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm text-gray-600 mb-2">
+                  <Droplet className="h-4 w-4" />
+                  Blood Type
+                </label>
+                {isEditing ? (
+                  <select
+                    name="bloodType"
+                    value={formData.bloodType}
+                    onChange={handleInputChange}
+                    className={`w-full p-3 rounded-lg focus:outline-none ${isEditing ? 'border-teal-500 ring-2 ring-teal-100 bg-white' : 'border-gray-300'}`}
+                  >
+                    <option value="">Select Blood Type</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                  </select>
+                ) : (
+                  <p className="text-gray-800 font-medium">{formData.bloodType || 'Not provided'}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                   <Mail className="h-4 w-4" />
                   Email Address
                 </label>
@@ -303,7 +372,7 @@ const ProfilePage = () => {
                 )}
               </div>
 
-              <div className="col-span-2">
+              <div>
                 <label className="flex items-center gap-2 text-sm text-gray-600 mb-2">
                   <MapPin className="h-4 w-4" />
                   Address
@@ -318,33 +387,6 @@ const ProfilePage = () => {
                   />
                 ) : (
                   <p className="text-gray-800 font-medium">{formData.address || 'Not provided'}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="flex items-center gap-2 text-sm text-gray-600 mb-2">
-                  <Droplet className="h-4 w-4" />
-                  Blood Type
-                </label>
-                {isEditing ? (
-                  <select
-                    name="bloodType"
-                    value={formData.bloodType}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 rounded-lg focus:outline-none ${isEditing ? 'border-teal-500 ring-2 ring-teal-100 bg-white' : 'border-gray-300'}`}
-                  >
-                    <option value="">Select Blood Type</option>
-                    <option value="O+">O+</option>
-                    <option value="O-">O-</option>
-                    <option value="A+">A+</option>
-                    <option value="A-">A-</option>
-                    <option value="B+">B+</option>
-                    <option value="B-">B-</option>
-                    <option value="AB+">AB+</option>
-                    <option value="AB-">AB-</option>
-                  </select>
-                ) : (
-                  <p className="text-gray-800 font-medium">{formData.bloodType || 'Not provided'}</p>
                 )}
               </div>
             </div>

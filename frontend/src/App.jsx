@@ -1,4 +1,5 @@
 import Navbar from './components/Navbar'
+import AIChatbot from './components/AIChatbot'
 import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import SignUpPage from './pages/SignUpPage'
@@ -65,6 +66,9 @@ const App = () => {
         
         </Routes>
       </div>
+      
+      {/* AI Chatbot - available for authenticated users */}
+      {authUser && <AIChatbot />}
       
       <Toaster 
         toastOptions={{

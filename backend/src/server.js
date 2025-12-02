@@ -14,6 +14,7 @@ import vaccineRoutes from "./routes/vaccine.route.js";
 import appointmentRoutes from "./routes/appointment.route.js";
 import administrationRoutes from "./routes/administration.route.js";
 import staffRoutes from "./routes/staff.route.js";
+import aiRoutes from "./routes/ai.route.js";
 import cookieParser from "cookie-parser";
 
 const PORT = process.env.PORT || 8000;
@@ -249,6 +250,7 @@ app.use("/api/vaccine-lots", vaccineLotRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/administration", administrationRoutes);
 app.use("/api/staff", staffRoutes);
+app.use("/api/ai", aiRoutes);
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

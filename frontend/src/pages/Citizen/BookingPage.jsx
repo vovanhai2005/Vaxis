@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Info, Calendar, Loader2, ShoppingCartIcon, Trash2, User, Mail, Phone, ShieldCheck, Check } from 'lucide-react'
+import { Info, Calendar, Loader2, ShoppingCartIcon, Trash2, User, Mail, Phone, ShieldCheck, Check, CalendarPlus } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useAppointmentStore } from '../../store/useAppointmentStore'
@@ -54,14 +54,15 @@ const BookingPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30">
       <Header 
         title="Book Appointment" 
         subtitle="Schedule your vaccination appointment"
+        icon={CalendarPlus}
       />
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-4xl mx-auto px-6 py-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-800">Book Your Vaccination Appointment</h2>
           <p className="text-gray-500 mt-1">Fill in your details below to schedule your vaccination appointment</p>
@@ -144,7 +145,7 @@ const BookingPage = () => {
               onChange={(e) => setNotes(e.target.value)}
               rows="3"
               placeholder="Any special requests or information..."
-              className="w-full p-3 rounded-lg focus:outline-none border-gray-300 ring-2 ring-transparent focus:border-teal-500 focus:ring-teal-100 bg-white"
+              className="w-full p-3 rounded-lg focus:outline-none border-2 border-gray-400 ring-2 ring-transparent focus:border-teal-600 focus:ring-teal-200 bg-white text-gray-900 placeholder-gray-500"
             />
           </div>
         </Section>

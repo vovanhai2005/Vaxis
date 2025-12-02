@@ -1,4 +1,4 @@
-import { makeAppointment, getCitizenAppointments, totalCompleted, upcomingAppointments, editAppointment, updateAppointmentStatus } from "../controllers/appointment.controller.js";
+import { makeAppointment, getCitizenAppointments, totalCompleted, upcomingAppointments, editAppointment, deleteAppointment, updateAppointmentStatus } from "../controllers/appointment.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import express from "express";
 
@@ -9,6 +9,7 @@ router.get("/me", protectRoute, getCitizenAppointments);
 router.get("/completed", protectRoute, totalCompleted);
 router.get("/upcoming", protectRoute, upcomingAppointments);
 router.put("/:id", protectRoute, editAppointment);
+router.delete("/:id", protectRoute, deleteAppointment);
 router.put("/:id/status", protectRoute, updateAppointmentStatus);
 
 export default router;
