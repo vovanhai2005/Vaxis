@@ -24,32 +24,34 @@ const LookUpCitizenProfile = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30">
       <Header
         title="Lookup Citizen Profile"
         subtitle="View citizen information and vaccination history"
+        icon={Search}
       />
 
-      <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow">
-        {/* Search */}
-        <div className="flex gap-3">
-          <input
-            type="text"
-            placeholder="Enter National ID"
-            value={nationalId}
-            onChange={(e) => setNationalId(e.target.value)}
-            className="flex-1 p-3 border rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:ring-2 ring-teal-300"
-            disabled={isLoading}
-          />
-          <button
-            onClick={handleSearch}
-            disabled={isLoading}
-            className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg flex items-center gap-2"
-          >
-            {isLoading ? <Loader2 className="animate-spin" /> : <Search />}
-            Search
-          </button>
-        </div>
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-3xl mx-auto bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+          {/* Search */}
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder="Enter National ID"
+              value={nationalId}
+              onChange={(e) => setNationalId(e.target.value)}
+              className="flex-1 p-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              disabled={isLoading}
+            />
+            <button
+              onClick={handleSearch}
+              disabled={isLoading}
+              className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-3 rounded-xl font-medium flex items-center gap-2 transition-colors shadow-sm"
+            >
+              {isLoading ? <Loader2 className="animate-spin" /> : <Search className="h-5 w-5" />}
+              Search
+            </button>
+          </div>
 
         {/* States */}
         <div className="mt-8">
@@ -211,6 +213,7 @@ const LookUpCitizenProfile = () => {
           onClose={() => setIsDetailsOpen(false)}
           data={selectedRecord}
         />
+        </div>
       </div>
     </div>
   );

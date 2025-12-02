@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useAppointmentStore } from '../../store/useAppointmentStore'
 import { useVaccineStore } from '../../store/useVaccineStore'
-import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2 } from 'lucide-react'
+import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2, LayoutDashboard } from 'lucide-react'
 import Header from '../../components/Header'
 import { useNavigate } from 'react-router-dom'
 
@@ -123,12 +123,15 @@ const DashboardPage = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30">
       <Header 
         title="Dashboard" 
         subtitle={`Welcome back, ${authUser?.full_name || authUser?.username || 'User'}`}
+        icon={LayoutDashboard}
         notificationCount={notifications.length}
       />
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - News */}
@@ -293,10 +296,14 @@ const DashboardPage = () => {
           </div>
         </div>
       </div>
+      </div>
 
       {/* Help Button */}
-      <button className="fixed bottom-8 right-8 bg-gray-800 hover:bg-gray-900 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition">
-        <span className="text-xl">?</span>
+      <button className="fixed bottom-6 right-6 bg-gray-900 hover:bg-gray-800 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 group">
+        <span className="text-xl font-medium">?</span>
+        <span className="absolute right-full mr-3 bg-gray-900 text-white text-sm font-medium px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          Need help?
+        </span>
       </button>
     </div>
   )
