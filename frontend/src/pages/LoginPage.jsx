@@ -21,9 +21,9 @@ const LoginPage = () => {
         {/* Left field */}
         <div className="flex items-center justify-center h-full w-full">
           <div className="text-center p-8">
-            <h1 className="text-6xl font-bold text-white mb-4">Welcome to Vibe!</h1>
+            <h1 className="text-6xl font-bold text-white mb-4">Welcome to Vaxis!</h1>
             <p className="text-lg text-white">
-              Join us and start connecting with your friends. Create an account to get started!
+              Your trusted platform for seamless vaccination management.
             </p>
             <img 
               src="/Pin.png" 
