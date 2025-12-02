@@ -5,11 +5,9 @@ import {  } from "../controllers/vaccineLot.controller.js";
 const router = express.Router();
 
 router.get("/expiring", protectRoute, expiringBatches);
-router.get("/stock", protectRoute, totalStock);
+router.get("/total-stock", protectRoute, totalStock);
 router.post("/", addLot);
 router.delete("/:id", deleteLot);
 router.put("/:id", editLot);
-router.get("/stock", protectRoute, totalStock);
-router.get("/expiring", protectRoute, expiringBatches);
 
 export default router;
