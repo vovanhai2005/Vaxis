@@ -10,7 +10,7 @@ import BookingPage from './pages/Citizen/BookingPage'
 import AppointmentPage from './pages/Citizen/AppointmentPage'
 import VaccinationInfoPage from './pages/Citizen/VaccinationInfoPage'
 import LookupCitizenProfilePage from './pages/Employee/LookupCitizenProfilePage'
-
+import ManagerDashboardPage from './pages/Manager/DashboardPage'
 
 import { useAuthStore } from './store/useAuthStore'
 import { useUserStore } from './store/useUserStore'
@@ -27,7 +27,7 @@ const App = () => {
   }, [checkAuth]);
 
   useEffect(() => {
-    if (authUser) {
+    if (authUser && authUser.role !== 'manager') {
       getCitizenProfile()
     }
   }, [authUser, getCitizenProfile]);
@@ -54,7 +54,7 @@ const App = () => {
           <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
           
           {/* Citizen Routes */}
-          <Route path="/" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' || authUser.role === 'employee' ? <DashboardPage /> : <Navigate to="/login" />} />
+          <Route path="/" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' || authUser.role === 'employee' ? <DashboardPage /> : authUser.role === 'manager' ? <Navigate to="/manager" /> :<Navigate to="/login" />} />
           <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <ProfilePage /> : <Navigate to="/login" />} />
           <Route path="/booking" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <BookingPage /> : <Navigate to="/login" />} />
           <Route path="/appointment" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <AppointmentPage /> : <Navigate to="/login" />} />
@@ -64,6 +64,16 @@ const App = () => {
           <Route path="/lookup-citizen" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <LookupCitizenProfilePage /> : <Navigate to="/login" />} />
           <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <ProfilePage /> : <Navigate to="/login" />} />
         
+         {/* Manager Routes */}
+        <Route 
+            path="/manager" 
+            element={
+              !authUser ? <Navigate to="/login" /> : 
+              authUser.role === 'manager' ? <ManagerDashboardPage /> : 
+              <Navigate to="/login" />
+            } 
+          />
+    
         </Routes>
       </div>
       

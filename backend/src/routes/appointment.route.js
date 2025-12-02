@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post("/", protectRoute, makeAppointment);
 router.get("/me", protectRoute, getCitizenAppointments);
-router.get("/completed", protectRoute, totalCompleted);
+router.get("/total-completed", protectRoute, totalCompleted);
 router.get("/upcoming", protectRoute, upcomingAppointments);
 router.put("/:id", protectRoute, editAppointment);
 router.delete("/:id", protectRoute, deleteAppointment);

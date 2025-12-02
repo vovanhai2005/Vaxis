@@ -43,11 +43,11 @@ export const totalStock = async (req, res) => {
 // Thêm lô mới (báo cáo tồn kho)
 export const addLot = async (req, res) => {
   try {
-    const { vaccine_id, lot_number, quantity, expiry_date } = req.body;
+    const { vaccine_id, lot_number, notes, quantity, expiry_date } = req.body;
 
     const result = await sql`
-      INSERT INTO vaccine_lots (vaccine_id, lot_number, quantity, expiry_date)
-      VALUES (${vaccine_id}, ${lot_number}, ${quantity}, ${expiry_date})
+      INSERT INTO vaccine_lots (vaccine_id, lot_number, notes, quantity, expiry_date)
+      VALUES (${vaccine_id}, ${lot_number}, ${notes}, ${quantity}, ${expiry_date})
       RETURNING *
     `;
 
