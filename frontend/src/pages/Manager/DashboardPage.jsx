@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import Header from '../../components/Header';
 import { BarChart as BarIcon, PieChart as PieIcon } from 'lucide-react';
+import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2, LayoutDashboard } from 'lucide-react'
 
 const DashboardPage = () => {
   const { authUser } = useAuthStore();
@@ -130,16 +131,17 @@ const DashboardPage = () => {
   `;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30 pb-10">
 	<style>{removeFocusOutline}</style>
       <Header 
         title="Dashboard" 
         subtitle={`Welcome back, ${authUser?.full_name || authUser?.username || 'Manager'}`}
+		 icon={LayoutDashboard}
         notificationCount={0} 
       />
 
       {/* Stats Cards Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-6 px-6">
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
           <p className="text-gray-500 text-sm font-medium mb-2">Total Injections</p>
           <h3 className="text-3xl font-bold text-gray-800">
@@ -169,7 +171,7 @@ const DashboardPage = () => {
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 px-6">
         
         {/* CHART 1: Vaccination Rate */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
@@ -221,7 +223,7 @@ const DashboardPage = () => {
       </div>
 
       {/*UPCOMING APPOINTMENTS*/}
-      <div className="bg-white rounded-2xl p-6 shadow-sm">
+      <div className="bg-white rounded-2xl p-6 shadow-sm mx-6 ">
         <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800">Upcoming Appointments</h2>
             <span className="text-sm text-gray-500">Next 10 bookings</span>
@@ -295,6 +297,14 @@ const DashboardPage = () => {
             </table>
         </div>
       </div>
+	  
+	   {/* Help Button */}
+      <button className="fixed bottom-6 right-6 bg-gray-900 hover:bg-gray-800 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 group">
+        <span className="text-xl font-medium">?</span>
+        <span className="absolute right-full mr-3 bg-gray-900 text-white text-sm font-medium px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          Need help?
+        </span>
+      </button>
     </div>
   );
 }

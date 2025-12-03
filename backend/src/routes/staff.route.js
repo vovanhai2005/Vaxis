@@ -2,6 +2,7 @@ import {
   createEmployee,
   getStaffList,
   deleteEmployee,
+  restoreEmployee,
   updateEmployeeProfile,
 } from "../controllers/staff.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
@@ -13,5 +14,5 @@ router.post("/create", protectRoute, createEmployee);
 router.get("/list", protectRoute, getStaffList);
 router.put("/update/:id", protectRoute, updateEmployeeProfile);
 router.put("/delete/:id", protectRoute, deleteEmployee);
-
+router.put("/restore/:id", protectRoute, restoreEmployee);
 export default router;
