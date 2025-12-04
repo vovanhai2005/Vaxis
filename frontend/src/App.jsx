@@ -11,7 +11,7 @@ import AppointmentPage from './pages/Citizen/AppointmentPage'
 import VaccinationInfoPage from './pages/Citizen/VaccinationInfoPage'
 import LookupCitizenProfilePage from './pages/Employee/LookupCitizenProfilePage'
 import ManagerDashboardPage from './pages/Manager/DashboardPage'
-
+import StaffManagementPage from './pages/Manager/StaffManagementPage'
 import { useAuthStore } from './store/useAuthStore'
 import { useUserStore } from './store/useUserStore'
 
@@ -65,14 +65,8 @@ const App = () => {
           <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <ProfilePage /> : <Navigate to="/login" />} />
         
          {/* Manager Routes */}
-        <Route 
-            path="/manager" 
-            element={
-              !authUser ? <Navigate to="/login" /> : 
-              authUser.role === 'manager' ? <ManagerDashboardPage /> : 
-              <Navigate to="/login" />
-            } 
-          />
+        <Route path="/manager" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <ManagerDashboardPage /> : <Navigate to="/login" />} />
+		<Route path="/staff-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <StaffManagementPage /> : <Navigate to="/login" />} />
     
         </Routes>
       </div>
