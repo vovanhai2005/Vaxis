@@ -166,8 +166,8 @@ const EmployeeManagementPage = () => {
         isOpen={isDeleteOpen}
         onClose={() => setIsDeleteOpen(false)}
         onConfirm={handleConfirmDelete}
-        itemName={employeeToDelete?.full_name} // Hiển thị tên người bị xóa
-        isLoading={isLoadingStaff} // Hiển thị spinner nếu store đang chạy
+        itemName={employeeToDelete?.full_name || employeeToDelete?.username}
+        isLoading={isLoadingStaff} //
       />
 
       <div className="px-6 mt-6">
@@ -183,7 +183,7 @@ const EmployeeManagementPage = () => {
                     <input
                         type="text"
                         className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"
-                        placeholder="Search by staff number, name, email, ID..."
+                        placeholder="Search by staff ID, name, email, National ID..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -222,7 +222,7 @@ const EmployeeManagementPage = () => {
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Role</label>
                                         <select 
-                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border"
+                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
                                             value={filters.role}
                                             onChange={(e) => setFilters({...filters, role: e.target.value})}
                                         >
@@ -236,7 +236,7 @@ const EmployeeManagementPage = () => {
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
                                         <select 
-                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border"
+                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
                                             value={filters.status}
                                             onChange={(e) => setFilters({...filters, status: e.target.value})}
                                         >
@@ -250,7 +250,7 @@ const EmployeeManagementPage = () => {
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">National ID</label>
                                         <select 
-                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border"
+                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
                                             value={filters.hasNationalId}
                                             onChange={(e) => setFilters({...filters, hasNationalId: e.target.value})}
                                         >
@@ -264,7 +264,7 @@ const EmployeeManagementPage = () => {
                                     <div>
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Staff ID</label>
                                         <select 
-                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border"
+                                            className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
                                             value={filters.hasStaffId}
                                             onChange={(e) => setFilters({...filters, hasStaffId: e.target.value})}
                                         >
@@ -290,7 +290,7 @@ const EmployeeManagementPage = () => {
                         onClick={() =>  setIsAddOpen(true)}
                     >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add
+                        Add Staff
                     </button>
                 </div>
             </div>

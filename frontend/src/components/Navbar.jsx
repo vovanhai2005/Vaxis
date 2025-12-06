@@ -1,7 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import {Home, Calendar, Info, User, Users, LogOut, LogIn, UserPlus, Search,
-   Boxes, List, Table2 } from "lucide-react";
+   Boxes, List, Table2, Layers, Package, Syringe } from "lucide-react";
 
 const Navbar = () => {
   const { authUser, logout } = useAuthStore();
@@ -34,10 +34,10 @@ const Navbar = () => {
 
      manager:[
       { to: "/", label: "Home", icon: Home },
-      { to: "/staff-management", label: "Staff Management", icon: Users },
-      /*{ to: "/booking", label: "Catalog  Management", icon: List },
-      { to: "/appointment-Lots", label: "Vaccine Lots Management", icon: Boxes },
-      { to: "/profile-Stats", label: "Vaccination Stats", icon: Table2 },*/
+      { to: "/staff-management", label: "Staff", icon: Users },
+      { to: "/Categories-management", label: "Categories", icon: Layers },
+      { to: "/", label: "Inventory", icon: Package },
+      { to: "/", label: "Statistics", icon: Syringe },
     ],
 
   };
