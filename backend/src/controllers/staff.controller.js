@@ -34,7 +34,7 @@ export const createEmployee = async (req, res) => {
     // Check email tồn tại
     const existingUser = await sql`SELECT * FROM users WHERE email = ${email}`;
     if (existingUser.length > 0) {
-      return res.status(400).json({ message: "Email is already in use." });
+      return res.status(400).json({ message: "Email is already taken." });
     }
 
     // Check username tồn tại
@@ -43,6 +43,11 @@ export const createEmployee = async (req, res) => {
       return res.status(400).json({ message: "Username is already taken." });
     }
 
+	const existingEmployeeNumber = await sql`SELECT * FROM employees WHERE employee_number = ${employee_number}`;
+    if (existingEmployeeNumber.length > 0) {
+      return res.status(400).json({ message: "Staff ID is already taken." });
+    }
+	
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 

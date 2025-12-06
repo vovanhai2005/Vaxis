@@ -94,7 +94,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="full_name"
                       value={formData.full_name}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"          
+                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                       placeholder="Nguyen Van A"
                     />
                   </div>
@@ -111,7 +111,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       required
                       value={formData.username}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"
+                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
                     />
                   </div>
                 </div>
@@ -128,7 +128,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"
+                      	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
                       placeholder="••••••••"
                     />
                   </div>
@@ -146,7 +146,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"
+                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
                     />
                   </div>
                 </div>
@@ -162,7 +162,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-						className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"      
+						className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"      
 						/>
                   </div>
                 </div>
@@ -178,7 +178,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="national_id"
                       value={formData.national_id}
                       onChange={handleChange}
-                      	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm appearance-none"      
+                      	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm appearance-none bg-white text-gray-900"      
 						/>
                   </div>
                 </div>
@@ -186,7 +186,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                 {/* Employee Number */}
                 <div>
                   <label className="block text-sm font-medium leading-6 text-gray-900">
-                    Employee Number
+                    Staff ID
                   </label>
                   <div className="mt-1">
                     <input
@@ -194,7 +194,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="employee_number"
                       value={formData.employee_number}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"
+                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
                       placeholder="NV001"
                     />
                   </div>
@@ -211,7 +211,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="role_title"
                       value={formData.role_title}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm"   
+                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"   
                       placeholder="e.g. Head Nurse"
                     />
                   </div>
@@ -228,7 +228,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="dob"
                       value={formData.dob}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm" 
+                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900" 
                     />
                   </div>
                 </div>

@@ -173,7 +173,7 @@ const ViewEditStaff = ({ isOpen, onClose, staffData }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium leading-6 text-gray-900">Email</label>
+                  <label className="block text-sm font-medium leading-6 text-gray-900">Email Address</label>
                   <div className="mt-1">
                     <input
                       type="email"
@@ -284,7 +284,7 @@ const ViewEditStaff = ({ isOpen, onClose, staffData }) => {
                     <button
                         type="button"
                         onClick={handleToggleEdit}
-                        className="flex items-center justify-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-all"
+                        className="flex items-center justify-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-all"
                     >
                         <Pencil className="w-4 h-4 mr-2" />
                         Edit Profile

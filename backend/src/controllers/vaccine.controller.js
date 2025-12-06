@@ -29,6 +29,11 @@ export const addVaccine = async (req, res) => {
     try {
         const { code, name, manufacturer, description, price, imageUrl } = req.body;
         
+		const existingCode = await sql`SELECT * FROM vaccines WHERE code = ${code}`;
+		if (existingCode.length > 0) {
+		return res.status(400).json({ message: "Code is already taken." });
+		}
+		
         let vaccineImageUrl = null;
 
         // Upload vaccine image to Cloudinary if provided (temporary storage)
@@ -55,8 +60,24 @@ export const addVaccine = async (req, res) => {
 export const editVaccine = async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, name, manufacturer, description, price } = req.body;
+    const { code, name, manufacturer, description, price, imageUrl } = req.body; 
 
+    let vaccineImageUrl = null; 
+
+    if (imageUrl && imageUrl.startsWith('data:image')) {
+        try {
+            const uploadResponse = await cloudinary.uploader.upload(imageUrl, {
+                resource_type: 'auto',
+                type: 'upload'
+            });
+            vaccineImageUrl = uploadResponse.secure_url;
+        } catch (uploadError) {
+            console.error("Cloudinary upload failed:", uploadError);
+            return res.status(500).json({ error: "Image upload failed" });
+        }
+    }
+
+    // Câu lệnh SQL update (đã thêm image_url)
     const result = await sql`
       UPDATE vaccines
       SET
@@ -64,7 +85,8 @@ export const editVaccine = async (req, res) => {
         name = COALESCE(${name}, name),
         manufacturer = COALESCE(${manufacturer}, manufacturer),
         description = COALESCE(${description}, description),
-        price = COALESCE(${price}, price)
+        price = COALESCE(${price}, price),
+        image_url = COALESCE(${vaccineImageUrl}, image_url) 
       WHERE id = ${id}
       RETURNING *
     `;

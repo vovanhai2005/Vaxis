@@ -12,6 +12,7 @@ import VaccinationInfoPage from './pages/Citizen/VaccinationInfoPage'
 import LookupCitizenProfilePage from './pages/Employee/LookupCitizenProfilePage'
 import ManagerDashboardPage from './pages/Manager/DashboardPage'
 import StaffManagementPage from './pages/Manager/StaffManagementPage'
+import CategoriesVaccinePage from './pages/Manager/CategoriesVaccinePage'
 import { useAuthStore } from './store/useAuthStore'
 import { useUserStore } from './store/useUserStore'
 
@@ -67,7 +68,7 @@ const App = () => {
          {/* Manager Routes */}
         <Route path="/manager" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <ManagerDashboardPage /> : <Navigate to="/login" />} />
 		<Route path="/staff-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <StaffManagementPage /> : <Navigate to="/login" />} />
-    
+		<Route path="/Categories-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <CategoriesVaccinePage /> : <Navigate to="/login" />} />
         </Routes>
       </div>
       

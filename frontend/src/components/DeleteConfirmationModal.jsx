@@ -1,7 +1,15 @@
 import React from 'react';
 import { X, Loader2, Trash2, AlertTriangle } from 'lucide-react';
 
-const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName, isLoading }) => {
+// Thêm prop isPermanent (mặc định là false)
+const DeleteConfirmationModal = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  itemName, 
+  isLoading, 
+  isPermanent = false // Mặc định là xóa mềm (có thể undo)
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -18,7 +26,8 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName, isLoadi
           <div className="bg-gray-50 px-4 py-4 sm:px-6 flex justify-between items-center border-b border-gray-100">
             <h3 className="text-lg font-semibold leading-6 text-gray-900 flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-red-600" />
-              Confirm Deletion
+              {/* Tiêu đề thay đổi tùy theo mức độ nghiêm trọng */}
+              {isPermanent ? "Delete Permanently" : "Confirm Deletion"}
             </h3>
             <button
               onClick={onClose}
@@ -35,9 +44,23 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName, isLoadi
               <p className="text-sm text-gray-500">
                 Are you sure you want to delete <span className="font-bold text-gray-900">{itemName || "this item"}</span>? 
               </p>
-              <p className="mt-2 text-sm text-red-500 font-medium bg-red-50 p-3 rounded-lg border border-red-100">
-                This action cannot be undone. All data associated with this employee will be permanently removed.
-              </p>
+              
+              {/* Logic hiển thị cảnh báo dựa trên isPermanent */}
+              <div className={`mt-2 text-sm font-medium p-3 rounded-lg border ${
+                isPermanent 
+                  ? "text-red-700 bg-red-100 border-red-200" // Style đậm hơn cho xóa vĩnh viễn
+                  : "text-red-500 bg-red-50 border-red-100"
+              }`}>
+                {isPermanent ? (
+                  // Cảnh báo xóa vĩnh viễn
+                  <>
+                    Warning: This action <span className="font-bold uppercase">cannot</span> be undone. This data will be lost forever.
+                  </>
+                ) : (
+                  // Cảnh báo xóa mềm (cũ)
+                  "This action can be undone. Any data related to this item will not be deleted."
+                )}
+              </div>
             </div>
           </div>
 
@@ -57,7 +80,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, itemName, isLoadi
               ) : (
                 <>
                   <Trash2 className="w-5 h-5 mr-2" />
-                  Yes, Delete
+                  {isPermanent ? "Delete Forever" : "Yes, Delete"}
                 </>
               )}
             </button>
