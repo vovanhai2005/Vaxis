@@ -13,6 +13,7 @@ import LookupCitizenProfilePage from './pages/Employee/LookupCitizenProfilePage'
 import ManagerDashboardPage from './pages/Manager/DashboardPage'
 import StaffManagementPage from './pages/Manager/StaffManagementPage'
 import CategoriesVaccinePage from './pages/Manager/CategoriesVaccinePage'
+import VaccineLotsManagementPage from './pages/Manager/VaccineLotsManagementPage'
 import { useAuthStore } from './store/useAuthStore'
 import { useUserStore } from './store/useUserStore'
 
@@ -68,7 +69,8 @@ const App = () => {
          {/* Manager Routes */}
         <Route path="/manager" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <ManagerDashboardPage /> : <Navigate to="/login" />} />
 		<Route path="/staff-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <StaffManagementPage /> : <Navigate to="/login" />} />
-		<Route path="/Categories-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <CategoriesVaccinePage /> : <Navigate to="/login" />} />
+		<Route path="/categories-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <CategoriesVaccinePage /> : <Navigate to="/login" />} />
+		<Route path="/vaccineLots-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <VaccineLotsManagementPage /> : <Navigate to="/login" />} />
         </Routes>
       </div>
       
