@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useVaccineStore } from '../../store/useVaccineStore'
-import { User, ChevronDown, ChevronUp, Mail, Phone, MapPin, Droplet, Calendar, Syringe, MapPinIcon, Loader2, Camera, UserCircle } from 'lucide-react'
+import { User, ChevronDown, ChevronUp, Mail, Phone, MapPin, Droplet, Calendar, Syringe, MapPinIcon, Loader2, Camera, UserCircle, ChevronRight, Download, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import Header from '../../components/Header'
+import VaccinationDetailModal from '../../components/VaccinationDetailModal'
+import VaccinationCertificateTemplate from '../../components/VaccinationCertificateTemplate'
+import html2canvas from 'html2canvas-pro'
+import jsPDF from 'jspdf'
 
 const ProfilePage = () => {
   const navigate = useNavigate()
+  const certificateRef = useRef()
   const { authUser } = useAuthStore()
   const { userProfile, vaccineHistory, getCitizenProfile, getVaccineHistory, updateCitizenProfile, isLoadingProfile, isLoadingHistory, isUpdatingProfile } = useUserStore()
   const { selectedVaccines } = useVaccineStore()
@@ -16,6 +21,7 @@ const ProfilePage = () => {
   const [isBasicInfoExpanded, setIsBasicInfoExpanded] = useState(true)
   const [isVaccineHistoryExpanded, setIsVaccineHistoryExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
+  const [selectedVaccine, setSelectedVaccine] = useState(null)
   
   const [formData, setFormData] = useState({
     fullname: '',
@@ -47,6 +53,46 @@ const ProfilePage = () => {
       })
     }
   }, [userProfile])
+
+  const [certificateVaccine, setCertificateVaccine] = useState(null)
+
+  const handleDownloadCertificate = (vaccine) => {
+    setCertificateVaccine(vaccine)
+    // Allow time for the hidden component to re-render with new data
+    setTimeout(() => {
+      generatePDF(vaccine)
+    }, 500)
+  }
+
+  const generatePDF = async (vaccine) => {
+    const element = certificateRef.current
+    if (!element) return
+
+    const toastId = toast.loading('Generating Certificate...')
+
+    try {
+      const canvas = await html2canvas(element, {
+        scale: 2, // Higher quality
+        useCORS: true,
+        logging: false,
+        windowWidth: 794, // A4 width in px at 96dpi approx
+        windowHeight: 1123,
+        backgroundColor: '#ffffff' // Force white background to avoid oklch errors
+      })
+      
+      const imgData = canvas.toDataURL('image/png')
+      const pdf = new jsPDF('p', 'mm', 'a4')
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = pdf.internal.pageSize.getHeight()
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(`Vaxis_Certificate_${vaccine.vaccine_name.replace(/\s+/g, '_')}_${userProfile?.full_name || 'User'}.pdf`)
+      toast.success('Certificate downloaded', { id: toastId })
+    } catch (error) {
+      console.error('PDF Generation Error:', error)
+      toast.error('Failed to generate PDF', { id: toastId })
+    }
+  }
 
   const handleInputChange = (e) => {
     setFormData({
@@ -282,9 +328,9 @@ const ProfilePage = () => {
                     className={`w-full p-3 rounded-lg focus:outline-none ${isEditing ? 'border-teal-500 ring-2 ring-teal-100 bg-white' : 'border-gray-300'}`}
                   >
                     <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 ) : (
                   <p className="text-gray-800 font-medium capitalize">{formData.gender || 'Not provided'}</p>
@@ -429,25 +475,58 @@ const ProfilePage = () => {
               ) : (
                 <div className="space-y-4">
                   {vaccineHistory.map((vaccine, index) => (
-                    <div key={index} className="border border-gray-200 rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h4 className="font-semibold text-gray-800">{vaccine.vaccine_name}</h4>
-                          <p className="text-sm text-gray-600">{vaccine.manufacturer}</p>
+                    <div key={index} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 group">
+                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-teal-100 transition-colors">
+                            <Syringe className="h-6 w-6 text-teal-600" />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <h4 className="font-bold text-gray-900 text-lg">{vaccine.vaccine_name}</h4>
+                              <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${
+                                vaccine.status === 'Completed' 
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                                  : 'bg-blue-50 text-blue-700 border-blue-200'
+                              }`}>
+                                {vaccine.status || 'Completed'}
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-500 font-medium">{vaccine.manufacturer}</p>
+                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                              <div className="flex items-center gap-1.5">
+                                <Calendar className="h-4 w-4 text-gray-400" />
+                                <span>{formatDate(vaccine.administered_at)}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <MapPinIcon className="h-4 w-4 text-gray-400" />
+                                <span>{vaccine.location || 'Main Clinic'}</span>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${getVaccineStatusColor('Completed')}`}>
-                          Completed
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
-                        <Calendar className="h-4 w-4" />
-                        <span>Date: {formatDate(vaccine.administered_at)}</span>
-                      </div>
-                      {vaccine.dose_number && (
-                        <div className="mt-2 text-sm text-gray-600">
-                          Dose #{vaccine.dose_number}
+
+                        <div className="flex items-center gap-4 pl-16 md:pl-0 border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
+                          <div className="text-right hidden md:block mr-4">
+                            <p className="text-xs text-gray-400 uppercase font-semibold tracking-wider">Dose Number</p>
+                            <p className="text-xl font-bold text-gray-800">#{vaccine.dose_number || 1}</p>
+                          </div>
+                          <button 
+                            onClick={() => handleDownloadCertificate(vaccine)}
+                            className="p-2.5 bg-gray-50 hover:bg-teal-50 text-gray-700 hover:text-teal-700 rounded-lg border border-gray-200 hover:border-teal-200 transition-all group/btn"
+                            title="Download Certificate"
+                          >
+                            <Download className="h-4 w-4 text-gray-400 group-hover/btn:text-teal-500 transition-colors" />
+                          </button>
+                          <button 
+                            onClick={() => setSelectedVaccine(vaccine)}
+                            className="flex-1 md:flex-none px-4 py-2.5 bg-gray-50 hover:bg-teal-50 text-gray-700 hover:text-teal-700 font-medium rounded-lg border border-gray-200 hover:border-teal-200 transition-all flex items-center justify-center gap-2 group/btn"
+                          >
+                            View Details
+                            <ChevronRight className="h-4 w-4 text-gray-400 group-hover/btn:text-teal-500 transition-colors" />
+                          </button>
                         </div>
-                      )}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -457,10 +536,23 @@ const ProfilePage = () => {
         </div>
       </div>
 
+      {/* Vaccination Detail Modal */}
+      <VaccinationDetailModal 
+        vaccine={selectedVaccine} 
+        onClose={() => setSelectedVaccine(null)} 
+      />
+
       {/* Help Button */}
       <button className="fixed bottom-8 right-8 bg-gray-800 hover:bg-gray-900 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition">
         <span className="text-xl">?</span>
       </button>
+
+      {/* Hidden Certificate Template for PDF Generation */}
+      <VaccinationCertificateTemplate 
+        ref={certificateRef}
+        userProfile={userProfile}
+        vaccine={certificateVaccine}
+      />
     </div>
   )
 }

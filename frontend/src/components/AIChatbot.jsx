@@ -88,8 +88,8 @@ const AIChatbot = () => {
               <div className="text-center text-gray-500 mt-4">
                 <div className="bg-gradient-to-r from-teal-100 to-cyan-100 p-4 rounded-lg mb-4">
                   <Sparkles className="h-12 w-12 mx-auto mb-3 text-teal-600" />
-                  <p className="font-semibold text-gray-800 mb-2">Ask me about vaccinations!</p>
-                  <p className="text-xs text-gray-600">I have access to all our vaccine data</p>
+                  <p className="font-semibold text-gray-800 mb-2">Ask me for your health problem!</p>
+                  <p className="text-xs text-gray-600">I can answer all the basic health information you need.</p>
                 </div>
                 
                 <div className="space-y-2">
