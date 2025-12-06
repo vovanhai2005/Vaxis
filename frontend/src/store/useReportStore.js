@@ -46,11 +46,14 @@ export const useReportStore = create((set) => ({
     },
 
     //  Tồn kho vaccine (có tìm kiếm + lọc)
-    getInventory: async (params) => {
-        set({ isLoadingInventory: true });
-        try {
+    getInventory: async (params) => { 
+        try {            
             const res = await axiosInstance.get("/reports/inventory", { params });
-            set({ inventory: res.data });
+            
+            set({ 
+                inventory: res.data.data, 
+                totalPages: res.data.pagination.totalPages 
+            });
         } catch (error) {
             toast.error("Unable to get inventory data");
             console.error(error);
