@@ -40,11 +40,41 @@ export const totalStock = async (req, res) => {
   }
 };
 
+// xem detail
+export const getLotById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const result = await sql`
+            SELECT 
+                vl.*,
+                v.name,
+                v.code,
+                v.image_url,
+                v.manufacturer
+            FROM vaccine_lots vl
+            JOIN vaccines v ON vl.vaccine_id = v.id
+            WHERE vl.id = ${id}
+        `;
+
+        if (result.length === 0) {
+            return res.status(404).json({ message: 'Lot not found.' });
+        }
+        res.status(200).json(result[0]);
+    } catch (error) {
+        console.error('Error fetching lot detail:', error);
+        res.status(500).json({ message: 'Internal server error.' });
+    }
+};
+
 // Thêm lô mới (báo cáo tồn kho)
 export const addLot = async (req, res) => {
   try {
     const { vaccine_id, lot_number, notes, quantity, expiry_date } = req.body;
 
+	const existing = await sql`SELECT id FROM vaccine_lots WHERE vaccine_id = ${vaccine_id} AND lot_number = ${lot_number}`;
+    if (existing.length > 0) {
+        return res.status(400).json({ error: "Lot number already exists for this vaccine." });
+    }
     const result = await sql`
       INSERT INTO vaccine_lots (vaccine_id, lot_number, notes, quantity, expiry_date)
       VALUES (${vaccine_id}, ${lot_number}, ${notes}, ${quantity}, ${expiry_date})
@@ -62,15 +92,15 @@ export const addLot = async (req, res) => {
 export const editLot = async (req, res) => {
   try {
     const { id } = req.params;
-    const { vaccine_id, lot_number, quantity, expiry_date } = req.body;
+    const { lot_number, quantity, expiry_date, notes } = req.body;
 
     const result = await sql`
       UPDATE vaccine_lots
       SET 
-        vaccine_id = COALESCE(${vaccine_id}, vaccine_id),
         lot_number = COALESCE(${lot_number}, lot_number),
         quantity = COALESCE(${quantity}, quantity),
-        expiry_date = COALESCE(${expiry_date}, expiry_date)
+        expiry_date = COALESCE(${expiry_date}, expiry_date),
+        notes = COALESCE(${notes}, notes)
       WHERE id = ${id}
       RETURNING *
     `;

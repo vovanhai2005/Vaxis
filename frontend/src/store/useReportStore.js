@@ -89,4 +89,12 @@ export const useReportStore = create((set) => ({
             set({ isLoadingTotalCitizens: false });
         }
     },
+	
+	updateInventoryItem: (updatedItem) => {
+        set((state) => ({
+            inventory: state.inventory.map((item) => 
+                item.id === updatedItem.id ? { ...item, ...updatedItem } : item
+            )
+        }));
+    },
 }));

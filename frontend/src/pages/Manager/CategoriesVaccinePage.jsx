@@ -252,6 +252,9 @@ const CategoriesVaccinePage = () => {
                             <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
                                 No
                             </th>
+							<th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                                ID
+                            </th>
                             <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
                                 Code
                             </th>
@@ -287,19 +290,19 @@ const CategoriesVaccinePage = () => {
                                         {String(index + 1 + indexOfFirstItem).padStart(3, '0')}
                                     </td>
                                     
+									 {/* ID */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">                                       
+                                            {vaccine.id}                
+                                    </td>
+									
                                     {/* Code */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
-                                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-mono">
-                                            {vaccine.code || 'N/A'}
-                                        </span>
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium font-bold text-teal-700">
+										{vaccine.code}
                                     </td>
                                     
                                     {/* Name */}
                                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
-                                        <div className="flex items-center">
-                                            {vaccine.image_url && (
-                                                <img src={vaccine.image_url} alt="" className="h-8 w-8 rounded-full mr-2 object-cover border" />
-                                            )}
+                                        <div className="flex items-center">                                          
                                             {vaccine.name}
                                         </div>
                                     </td>
@@ -312,7 +315,7 @@ const CategoriesVaccinePage = () => {
                                     </td>
                                     
                                     {/* Price */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-teal-700 font-bold border-l border-gray-100">
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm font-bold border-l border-gray-100">
                                         {formatCurrency(vaccine.price)}
                                     </td>
 

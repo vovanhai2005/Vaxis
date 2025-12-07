@@ -126,7 +126,7 @@ const ViewEditStaff = ({ isOpen, onClose, staffData }) => {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="px-4 py-6 sm:px-6">
+            <div className="px-4 pt-3 pb-3 sm:px-6">
               <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
                 
                 {/* Username */}
