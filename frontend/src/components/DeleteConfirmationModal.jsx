@@ -8,7 +8,7 @@ const DeleteConfirmationModal = ({
   onConfirm, 
   itemName, 
   isLoading, 
-  isPermanent = false // Mặc định là xóa mềm (có thể undo)
+  isPermanent = false 
 }) => {
   if (!isOpen) return null;
 
@@ -80,7 +80,7 @@ const DeleteConfirmationModal = ({
               ) : (
                 <>
                   <Trash2 className="w-5 h-5 mr-2" />
-                  {isPermanent ? "Delete Forever" : "Yes, Delete"}
+                  {"Delete"}
                 </>
               )}
             </button>

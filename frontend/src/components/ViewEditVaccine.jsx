@@ -146,7 +146,7 @@ const ViewEditVaccine = ({ isOpen, onClose, vaccineData }) => {
           </div>
 
           <form onSubmit={handleSubmit}>
-            <div className="px-6 py-6">
+            <div className="px-6 pt-3 pb-3">
               
               <div className="flex flex-col md:flex-row gap-6 mb-6 md:items-center">
                 

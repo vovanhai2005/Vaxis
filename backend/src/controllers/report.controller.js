@@ -62,19 +62,31 @@ export const monthlyStats = async (req, res) => {
   }
 };
 
-// Lấy danh sách vaccine + lô (báo cáo tồn kho)
+// report.controller.js
 export const inventory = async (req, res) => {
   try {
-    const { search, expiry_status, page = 1, limit = 10 } = req.query; // Nhận thêm page, limit
-    const offset = (page - 1) * limit;
+   
+    const { 
+        search, 
+        expiry_status, 
+        min_quantity, 
+        max_quantity, 
+        from_date, 
+        to_date, 
+        page = 1, 
+        limit = 10 
+    } = req.query;
+   
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const offset = (pageNumber - 1) * limitNumber;
 
-    // 1. Xây dựng điều kiện WHERE (dùng chung cho cả đếm và lấy data)
     let whereClause = `WHERE 1=1`;
     
     if (search) {
       whereClause += ` AND (vl.lot_number ILIKE '%${search}%' OR v.code ILIKE '%${search}%' OR v.name ILIKE '%${search}%')`;
     }
-
+   
     if (expiry_status === "sap_het") {
       whereClause += ` AND vl.expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days'`;
     } else if (expiry_status === "qua_han") {
@@ -82,34 +94,47 @@ export const inventory = async (req, res) => {
     } else if (expiry_status === "con_han") {
       whereClause += ` AND vl.expiry_date > NOW() + INTERVAL '30 days'`;
     }
+   
+    if (min_quantity) {
+        whereClause += ` AND vl.quantity >= ${parseInt(min_quantity)}`;
+    }
+    if (max_quantity) {
+        whereClause += ` AND vl.quantity <= ${parseInt(max_quantity)}`;
+    }
+   
+    if (from_date) {
+        whereClause += ` AND vl.expiry_date >= '${from_date}'`;
+    }
+    if (to_date) {
+        whereClause += ` AND vl.expiry_date <= '${to_date}'`;
+    }
 
-    // 2. Query ĐẾM tổng số bản ghi thỏa mãn điều kiện (để tính số trang)
     const countQuery = `
       SELECT COUNT(*) as total 
       FROM vaccine_lots vl
       JOIN vaccines v ON vl.vaccine_id = v.id
       ${whereClause}
     `;
-    const countResult = await sql(countQuery);
+    
+    const countResult = await sql.unsafe(countQuery);
     const totalItems = parseInt(countResult[0]?.total || 0);
 
-    // 3. Query LẤY dữ liệu phân trang
     const dataQuery = `
       SELECT vl.id, v.code, v.name, vl.lot_number, vl.quantity, vl.expiry_date
       FROM vaccine_lots vl
       JOIN vaccines v ON vl.vaccine_id = v.id
       ${whereClause}
       ORDER BY vl.expiry_date ASC
-      LIMIT ${limit} OFFSET ${offset}
+      LIMIT ${limitNumber} OFFSET ${offset}
     `;
-    const dataResult = await sql(dataQuery);
+    
+    const dataResult = await sql.unsafe(dataQuery);
 
-    // 4. Trả về cấu trúc chuẩn cho phân trang
     res.json({
       data: dataResult,
       pagination: {
-        currentPage: parseInt(page),
-        totalPages: Math.ceil(totalItems / limit),
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalItems / limitNumber),
         totalItems: totalItems
       }
     });
@@ -119,8 +144,8 @@ export const inventory = async (req, res) => {
     res.status(500).json({ error: "Error retrieving inventory data" });
   }
 };
-
 // (thống kê sỗ mũi đã tiêm)
+
 export const vaccinationStats = async (req, res) => {
   try {
     const { search, period } = req.query;
