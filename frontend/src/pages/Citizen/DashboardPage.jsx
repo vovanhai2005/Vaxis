@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useAppointmentStore } from '../../store/useAppointmentStore'
 import { useVaccineStore } from '../../store/useVaccineStore'
-import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2, LayoutDashboard } from 'lucide-react'
+import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2, LayoutDashboard, Syringe, CalendarPlus, FileText, User, ChevronRight, Lightbulb } from 'lucide-react'
 import Header from '../../components/Header'
 import { useNavigate } from 'react-router-dom'
 
@@ -33,9 +33,14 @@ const DashboardPage = () => {
       }))
     }
     if (appointments) {
+      // Only count appointments that are upcoming (booked or checked_in) and in the future
+      const upcomingCount = appointments.filter(apt => 
+        (apt.status === 'booked' || apt.status === 'checked_in') && 
+        new Date(apt.scheduled_at) >= new Date()
+      ).length
       setStats(prev => ({
         ...prev,
-        upcomingAppointments: appointments.length
+        upcomingAppointments: upcomingCount
       }))
     }
   }, [vaccineHistory, appointments])
@@ -132,11 +137,47 @@ const DashboardPage = () => {
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - News */}
-        <div className="lg:col-span-1">
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Completed Vaccines */}
           <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-gray-500 mb-2">Completed</p>
+                {isLoadingHistory ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-1" />
+                ) : (
+                  <p className="text-3xl font-bold text-gray-800 mb-1">{stats.completedVaccines} Vaccines</p>
+                )}
+              </div>
+              <div className="bg-green-100 p-3 rounded-full">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+            </div>
+          </div>
+
+          {/* Upcoming Appointments */}
+          <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-gray-500 mb-2">Upcoming</p>
+                {isLoadingAppointments ? (
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-1" />
+                ) : (
+                  <p className="text-3xl font-bold text-gray-800 mb-1">{stats.upcomingAppointments} Appointments</p>
+                )}
+              </div>
+              <div className="bg-orange-100 p-3 rounded-full">
+                <Clock className="h-8 w-8 text-orange-600" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Grid - News, Quick Actions, Vaccination History */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - News */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-6">
               <Newspaper className="h-6 w-6 text-gray-700" />
               <h2 className="text-xl font-semibold text-gray-800">
@@ -149,12 +190,12 @@ const DashboardPage = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-2 flex-1 overflow-hidden">
                 {notifications.length > 0 ? (
-                  notifications.slice(0, 4).map((notification) => (
-                    <div key={notification.id} className="border-b border-gray-100 last:border-0 pb-6 last:pb-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${
+                  notifications.slice(0, 5).map((notification) => (
+                    <div key={notification.id} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
                           notification.type === 'reminder' ? 'bg-blue-100 text-blue-600' :
                           notification.type === 'news' ? 'bg-purple-100 text-purple-600' :
                           'bg-gray-100 text-gray-600'
@@ -166,15 +207,15 @@ const DashboardPage = () => {
                           {getTimeAgo(notification.created_at)}
                         </span>
                       </div>
-                      <h3 className="font-semibold text-gray-800 mb-2">{notification.subject}</h3>
-                      <p className="text-sm text-gray-500">{notification.body}</p>
+                      <h3 className="font-semibold text-gray-800 mb-1">{notification.subject}</h3>
+                      <p className="text-sm text-gray-500 line-clamp-2">{notification.body}</p>
                     </div>
                   ))
                 ) : (
-                  newsItems.map((news) => (
-                    <div key={news.id} className="border-b border-gray-100 last:border-0 pb-6 last:pb-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-xs px-3 py-1 rounded-full font-medium ${news.categoryColor}`}>
+                  newsItems.slice(0, 5).map((news) => (
+                    <div key={news.id} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${news.categoryColor}`}>
                           {news.category}
                         </span>
                         <span className="text-xs text-gray-400 flex items-center gap-1">
@@ -182,117 +223,181 @@ const DashboardPage = () => {
                           {news.time}
                         </span>
                       </div>
-                      <h3 className="font-semibold text-gray-800 mb-2">{news.title}</h3>
-                      <p className="text-sm text-gray-500">{news.description}</p>
+                      <h3 className="font-semibold text-gray-800 mb-1">{news.title}</h3>
+                      <p className="text-sm text-gray-500 line-clamp-2">{news.description}</p>
                     </div>
                   ))
                 )}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Right Column - Stats & Appointments */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Completed Vaccines */}
+          {/* Middle Column - Quick Actions & Vaccination History */}
+          <div className="lg:col-span-2 space-y-6 flex flex-col">
+          {/* Quick Actions & Vaccination History */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
+            {/* Quick Actions */}
             <div className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-500 mb-2">Completed</p>
-                  {isLoadingHistory ? (
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-1" />
-                  ) : (
-                    <p className="text-3xl font-bold text-gray-800 mb-1">{stats.completedVaccines} Vaccines</p>
-                  )}
+              <div className="flex items-center gap-2 mb-6">
+                <CalendarPlus className="h-6 w-6 text-teal-600" />
+                <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
+              </div>
+
+              <div className="space-y-3">
+                <button 
+                  onClick={() => navigate('/vaccination-info')}
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+                      <Syringe className="h-5 w-5 text-emerald-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-800">Vaccination Info</p>
+                      <p className="text-sm text-gray-500">Learn about vaccines</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-emerald-600 transition" />
+                </button>
+
+                <button 
+                  onClick={() => navigate('/booking')}
+                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 rounded-xl border border-teal-200/50 transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
+                      <CalendarPlus className="h-5 w-5 text-teal-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-800">Book Appointment</p>
+                      <p className="text-sm text-gray-500">Schedule your vaccination</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-teal-600 transition" />
+                </button>
+
+                <button 
+                  onClick={() => navigate('/appointment')}
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-800">My Appointments</p>
+                      <p className="text-sm text-gray-500">View & manage bookings</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition" />
+                </button>
+
+                <button 
+                  onClick={() => navigate('/profile')}
+                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <User className="h-5 w-5 text-purple-600" />
+                    </div>
+                    <div className="text-left">
+                      <p className="font-semibold text-gray-800">My Profile</p>
+                      <p className="text-sm text-gray-500">Update personal info</p>
+                    </div>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition" />
+                </button>
+              </div>
+
+              <div className="mt-6 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-3 border border-teal-100">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="p-1 bg-white rounded-lg shadow-sm text-teal-600">
+                    <Lightbulb className="h-3 w-3" />
+                  </div>
+                  <h3 className="font-semibold text-gray-800 text-xs">Health Tips</h3>
                 </div>
-                <div className="bg-green-100 p-3 rounded-full">
-                  <CheckCircle className="h-8 w-8 text-green-600" />
+                
+                <div className="space-y-2">
+                  <div className="flex gap-2">
+                    <div className="w-0.5 bg-teal-200 rounded-full flex-shrink-0 mt-1"></div>
+                    <p className="text-xs text-gray-600 leading-tight">
+                      <span className="font-medium text-teal-700">Stay Hydrated:</span> Drink water before & after vaccination.
+                    </p>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <div className="w-0.5 bg-teal-200 rounded-full flex-shrink-0 mt-1"></div>
+                    <p className="text-xs text-gray-600 leading-tight">
+                      <span className="font-medium text-teal-700">Keep Moving:</span> Move your arm to reduce soreness.
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <div className="w-0.5 bg-teal-200 rounded-full flex-shrink-0 mt-1"></div>
+                    <p className="text-xs text-gray-600 leading-tight">
+                      <span className="font-medium text-teal-700">Rest Well:</span> Sleep helps your immune response.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Upcoming Appointments */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-gray-500 mb-2">Upcoming</p>
-                  {isLoadingAppointments ? (
-                    <Loader2 className="h-8 w-8 animate-spin text-gray-400 mb-1" />
-                  ) : (
-                    <p className="text-3xl font-bold text-gray-800 mb-1">{stats.upcomingAppointments} Appointments</p>
-                  )}
-                </div>
-                <div className="bg-orange-100 p-3 rounded-full">
-                  <Clock className="h-8 w-8 text-orange-600" />
+            {/* Recent Vaccination History */}
+            <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <Syringe className="h-6 w-6 text-emerald-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Vaccination History</h2>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Upcoming Appointments */}
-          <div className="bg-white rounded-2xl shadow-sm p-6">
-            <div className="flex items-center gap-2 mb-6">
-              <Calendar className="h-6 w-6 text-gray-700" />
-              <h2 className="text-xl font-semibold text-gray-800">Upcoming Appointments</h2>
-            </div>
-
-            {isLoadingAppointments ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {appointments.length > 0 ? (
-                  appointments.slice(0, 3).map((appointment) => {
-                    const { date, time } = formatDate(appointment.scheduled_at)
-                    const status = getStatusInfo(appointment.status)
-                    const vaccines = appointment.vaccines.map(v => v.name).join(', ')
-
+              {isLoadingHistory ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+                </div>
+              ) : vaccineHistory && vaccineHistory.length > 0 ? (
+                <div className="space-y-3 flex-1 overflow-y-auto">
+                  {vaccineHistory.slice(0, 6).map((record, index) => {
+                    const administeredDate = new Date(record.administered_at)
                     return (
-                      <div key={appointment.id} className="border border-gray-200 rounded-xl p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <div>
-                            <h3 className="font-semibold text-gray-800 flex items-center gap-2">
-                              {vaccines || 'General Check-up'}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {date} • {time}
-                            </p>
-                          </div>
-                          <span className={`text-xs px-3 py-1 rounded-full text-white ${status.color}`}>
-                            {status.text}
-                          </span>
+                      <div key={record.id || index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                        <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <CheckCircle className="h-5 w-5 text-emerald-600" />
                         </div>
-
-                        <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                          <MapPin className="h-4 w-4" />
-                          <span>{appointment.notes || 'Community Health Center'}</span>
-                        </div>
-
-                        <div className="flex gap-3">
-                          <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition">
-                            View Details
-                          </button>
-                          <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-4 rounded-lg font-medium transition">
-                            Reschedule
-                          </button>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-800 truncate">{record.vaccine_name || 'Vaccine'}</p>
+                          <p className="text-sm text-gray-500">
+                            {administeredDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {record.dose_number && ` • Dose ${record.dose_number}`}
+                          </p>
                         </div>
                       </div>
                     )
-                  })
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">No upcoming appointments found.</p>
-                    <button className="mt-4 bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition">
-                      Book an Appointment
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+                  })}
+                  {vaccineHistory.length > 6 && (
+                    <p className="text-center text-sm text-gray-500 pt-2">
+                      +{vaccineHistory.length - 6} more records
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
+                  <Syringe className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">No vaccination records yet</p>
+                  <p className="text-sm text-gray-400 mt-1">Your history will appear here after vaccination</p>
+                </div>
+              )}
+
+              {vaccineHistory && vaccineHistory.length > 0 && (
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="mt-4 w-full px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium rounded-lg border border-emerald-200 transition flex items-center justify-center gap-2"
+                >
+                  View Full History
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

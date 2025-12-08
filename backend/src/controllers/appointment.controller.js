@@ -84,7 +84,7 @@ export const getCitizenAppointments = async (req, res) => {
           a.scheduled_at,
           a.status,
           a.notes,
-          json_agg(json_build_object('id', v.id, 'name', v.name)) AS vaccines
+          json_agg(json_build_object('id', v.id, 'name', v.name, 'price', v.price)) AS vaccines
       FROM appointments a
       LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
       LEFT JOIN vaccines v ON av.vaccine_id = v.id
