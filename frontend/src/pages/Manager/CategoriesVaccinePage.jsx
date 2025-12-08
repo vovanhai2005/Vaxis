@@ -8,7 +8,7 @@ import ViewEditVaccine from '../../components/ViewEditVaccine';
 import { 
   Syringe, Search, Plus, Filter, Trash2, ChevronLeft, 
   ChevronRight, ChevronsLeft, ChevronsRight, Eye, 
-  Loader2 
+  Loader2, Layers 
 } from 'lucide-react';
 
 const CategoriesVaccinePage = () => {
@@ -122,7 +122,7 @@ const CategoriesVaccinePage = () => {
       <Header 
         title="Vaccine Categories" 
         subtitle="List of available vaccines"
-        icon={Syringe}
+        icon={Layers}
         notificationCount={0} 
       />
 
@@ -256,7 +256,7 @@ const CategoriesVaccinePage = () => {
                                 ID
                             </th>
                             <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
-                                Code
+                                Vaccine Code
                             </th>
                             <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
                                 Vaccine Name

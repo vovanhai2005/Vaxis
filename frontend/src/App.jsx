@@ -14,6 +14,7 @@ import ManagerDashboardPage from './pages/Manager/DashboardPage'
 import StaffManagementPage from './pages/Manager/StaffManagementPage'
 import CategoriesVaccinePage from './pages/Manager/CategoriesVaccinePage'
 import VaccineLotsManagementPage from './pages/Manager/VaccineLotsManagementPage'
+import VaccinationStatsPage from './pages/Manager/VaccinationStatsPage'
 import { useAuthStore } from './store/useAuthStore'
 import { useUserStore } from './store/useUserStore'
 
@@ -71,6 +72,7 @@ const App = () => {
 		<Route path="/staff-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <StaffManagementPage /> : <Navigate to="/login" />} />
 		<Route path="/categories-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <CategoriesVaccinePage /> : <Navigate to="/login" />} />
 		<Route path="/vaccineLots-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <VaccineLotsManagementPage /> : <Navigate to="/login" />} />
+		<Route path="/vaccination-stats" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <VaccinationStatsPage /> : <Navigate to="/login" />} />
         </Routes>
       </div>
       

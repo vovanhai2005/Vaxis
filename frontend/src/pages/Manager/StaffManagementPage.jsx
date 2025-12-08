@@ -338,7 +338,7 @@ const EmployeeManagementPage = () => {
                                <td colSpan="9" className="px-6 py-20 text-center text-gray-500">
                                 <div className="flex flex-col items-center justify-center h-full">
                                     <Loader2 className="w-8 h-8 text-teal-500 animate-spin mb-2" /> 
-                                    <span className="text-sm font-medium">Loading data...</span>
+                                    <span className="text-sm font-medium">Loading staff...</span>
                                 </div>
                                 </td>
                             </tr>

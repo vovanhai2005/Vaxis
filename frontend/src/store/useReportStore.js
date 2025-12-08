@@ -9,6 +9,7 @@ export const useReportStore = create((set) => ({
     inventory: [],
     vaccinationStats: [],
     totalCitizens: 0,
+	totalVaccinationPages: 1,
 
     // Loading flags
     isLoadingRate: false,
@@ -67,7 +68,11 @@ export const useReportStore = create((set) => ({
         set({ isLoadingVaccinationStats: true });
         try {
             const res = await axiosInstance.get("/reports/vaccinations", { params });
-            set({ vaccinationStats: res.data });
+            // Cấu trúc trả về mới: { data: [...], pagination: {...} }
+            set({ 
+                vaccinationStats: res.data.data,
+                totalVaccinationPages: res.data.pagination.totalPages
+            });
         } catch (error) {
             toast.error("Unable to get injection statistics");
             console.error(error);
