@@ -432,7 +432,7 @@ const VaccineLotsManagementPage = () => {
                         </table>
                     </div>
 
-                    {/* PAGINATION (Giữ nguyên) */}
+                    {/* PAGINATION */}
                     <div className="border-t border-gray-100 pt-4 flex items-center justify-end pr-20 mt-auto">
                         <div className="flex gap-1">
                             <button 

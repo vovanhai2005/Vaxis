@@ -37,7 +37,7 @@ const Navbar = () => {
       { to: "/staff-management", label: "Staff", icon: Users },
       { to: "/categories-management", label: "Categories", icon: Layers },
       { to: "/vaccineLots-management", label: "Inventory", icon: Package },
-      { to: "/", label: "Statistics", icon: Syringe },
+      { to: "/vaccination-stats", label: "Statistics", icon: Syringe },
     ],
 
   };
