@@ -68,11 +68,11 @@ const App = () => {
           <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <ProfilePage /> : <Navigate to="/login" />} />
         
          {/* Manager Routes */}
-        <Route path="/manager" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <ManagerDashboardPage /> : <Navigate to="/login" />} />
-		<Route path="/staff-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <StaffManagementPage /> : <Navigate to="/login" />} />
-		<Route path="/categories-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <CategoriesVaccinePage /> : <Navigate to="/login" />} />
-		<Route path="/vaccineLots-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <VaccineLotsManagementPage /> : <Navigate to="/login" />} />
-		<Route path="/vaccination-stats" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <VaccinationStatsPage /> : <Navigate to="/login" />} />
+          <Route path="/manager" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <ManagerDashboardPage /> : <Navigate to="/login" />} />
+          <Route path="/staff-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <StaffManagementPage /> : <Navigate to="/login" />} />
+          <Route path="/categories-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <CategoriesVaccinePage /> : <Navigate to="/login" />} />
+          <Route path="/vaccineLots-management" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <VaccineLotsManagementPage /> : <Navigate to="/login" />} />
+          <Route path="/vaccination-stats" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <VaccinationStatsPage /> : <Navigate to="/login" />} />
         </Routes>
       </div>
       
