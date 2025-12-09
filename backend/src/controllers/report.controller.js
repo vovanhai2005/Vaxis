@@ -144,14 +144,18 @@ export const inventory = async (req, res) => {
     res.status(500).json({ error: "Error retrieving inventory data" });
   }
 };
-// (thống kê sỗ mũi đã tiêm)
 
+// (thống kê sỗ mũi đã tiêm)
 export const vaccinationStats = async (req, res) => {
   try {
-    const { search, period } = req.query;
-    const params = [];
+    const { search, period, page = 1, limit = 10 } = req.query;
+    
+    // Xử lý phân trang
+    const pageNumber = parseInt(page) || 1;
+    const limitNumber = parseInt(limit) || 10;
+    const offset = (pageNumber - 1) * limitNumber;
 
-    // Build date filter
+    // 1. Xử lý Filter thời gian (cho số mũi ĐÃ TIÊM)
     let dateFilter = "";
     switch (period) {
       case "today":
@@ -167,24 +171,32 @@ export const vaccinationStats = async (req, res) => {
         dateFilter = "AND a.administered_at >= CURRENT_DATE - INTERVAL '6 months'";
         break;
       default:
-        dateFilter = ""; // tất cả
+        dateFilter = ""; // Tất cả
     }
 
-    // Build search filter
+    // 2. Xử lý Search
     let searchFilter = "";
     if (search) {
-      
       searchFilter = `AND (v.name ILIKE '%${search}%' OR v.code ILIKE '%${search}%')`;
     }
 
-    // Main query: thống kê doses_given và remaining
+    // 3. Tính tổng số lượng bản ghi (để phân trang)
+    const countQuery = `
+      SELECT COUNT(*) as total 
+      FROM vaccines v
+      WHERE 1=1 ${searchFilter}
+    `;
+    const countResult = await sql.unsafe(countQuery);
+    const totalItems = parseInt(countResult[0]?.total || 0);
+
+    // 4. Query lấy dữ liệu chính (có phân trang)
     const query = `
       SELECT
         v.id,
         v.code,
         v.name,
-        COALESCE(SUM(a_count), 0) AS doses_given,
-        COALESCE(SUM(l.quantity), 0) - COALESCE(SUM(a_count), 0) AS remaining
+        COALESCE(SUM(a_count), 0)::int AS doses_given,
+        COALESCE(SUM(l.quantity), 0)::int AS remaining
       FROM vaccines v
       LEFT JOIN vaccine_lots l ON l.vaccine_id = v.id
       LEFT JOIN (
@@ -198,10 +210,20 @@ export const vaccinationStats = async (req, res) => {
       ${searchFilter}
       GROUP BY v.id, v.code, v.name
       ORDER BY v.name ASC
+      LIMIT ${limitNumber} OFFSET ${offset}
     `;
 
-    const result = await sql(query);
-    res.json(result);
+    const result = await sql.unsafe(query);
+
+    // 5. Trả về cấu trúc có pagination
+    res.json({
+        data: result,
+        pagination: {
+            currentPage: pageNumber,
+            totalPages: Math.ceil(totalItems / limitNumber),
+            totalItems: totalItems
+        }
+    });
 
   } catch (error) {
     console.error("Error fetching vaccination stats:", error);
