@@ -195,12 +195,12 @@ export const vaccinationStats = async (req, res) => {
         v.id,
         v.code,
         v.name,
-        COALESCE(SUM(a_count), 0)::int AS doses_given,
+        COALESCE(MAX(a.a_count), 0)::int AS doses_given,
         COALESCE(SUM(l.quantity), 0)::int AS remaining
       FROM vaccines v
       LEFT JOIN vaccine_lots l ON l.vaccine_id = v.id
       LEFT JOIN (
-        SELECT vaccine_id, COUNT(*) AS a_count
+        SELECT vaccine_id, SUM(dose_number) AS a_count
         FROM administrations a
         WHERE 1=1
         ${dateFilter}
@@ -250,5 +250,46 @@ export const totalCitizens = async (req, res) => {
   } catch (error) {
     console.error('Error fetching total completed vaccinations:', error);
     res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+export const vaccinationStatsLimit10 = async (req, res) => {
+  try {   
+ const query = `
+      SELECT
+		  v.id,
+		  v.code,
+		  v.name,
+		  COALESCE(a.doses_given, 0)::int AS doses_given,
+		  COALESCE(l.remaining, 0)::int AS remaining
+		FROM vaccines v
+		LEFT JOIN (
+		  SELECT
+			vaccine_id,
+			SUM(dose_number) AS doses_given
+		  FROM administrations
+		  GROUP BY vaccine_id
+		) a ON a.vaccine_id = v.id
+		LEFT JOIN (
+		  SELECT
+			vaccine_id,
+			SUM(quantity) AS remaining
+		  FROM vaccine_lots
+		  GROUP BY vaccine_id
+		) l ON l.vaccine_id = v.id
+		ORDER BY doses_given DESC
+		LIMIT 10;
+    `;
+
+    const result = await sql.unsafe(query);
+
+    // Trả về dữ liệu gọn nhẹ
+    res.json({
+        data: result
+    });
+
+  } catch (error) {
+    console.error("Error fetching top vaccines:", error);
+    res.status(500).json({ error: "Error when retrieving top vaccination statistics" });
   }
 };
