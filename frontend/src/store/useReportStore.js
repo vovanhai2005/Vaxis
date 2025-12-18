@@ -10,7 +10,7 @@ export const useReportStore = create((set) => ({
     vaccinationStats: [],
     totalCitizens: 0,
 	totalVaccinationPages: 1,
-
+	vaccinationStatsLimit10: [], 
     // Loading flags
     isLoadingRate: false,
     isLoadingMonthly: false,
@@ -78,6 +78,22 @@ export const useReportStore = create((set) => ({
             console.error(error);
         } finally {
             set({ isLoadingVaccinationStats: false });
+        }
+    },
+
+   //  Thống kê mũi tiêm theo thời gian limit 10
+ 	getVaccinationStatsLimit10: async () => {
+        try {
+            const res = await axiosInstance.get("/reports/vaccinations-limit-10"); // URL API của bạn
+            
+            // 2. LẤY ĐÚNG DỮ LIỆU
+            // Backend trả về { data: [...] } nên phải lấy res.data.data
+            set({ vaccinationStatsLimit10: res.data.data }); 
+            
+        } catch (error) {
+            console.error("Error fetching top 10 stats:", error);
+            // Nếu lỗi, set lại về mảng rỗng để không crash trang
+            set({ vaccinationStatsLimit10: [] }); 
         }
     },
 

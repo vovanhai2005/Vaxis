@@ -8,13 +8,23 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import Header from '../../components/Header';
-import { BarChart as BarIcon, PieChart as PieIcon } from 'lucide-react';
-import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2, LayoutDashboard } from 'lucide-react'
+// Đã thêm các icon mới vào import bên dưới
+import { 
+  BarChart as BarIcon, 
+  PieChart as PieIcon, 
+  LayoutDashboard, 
+  TrendingUp,
+  Syringe,          // Icon cho mũi tiêm
+  Package,          // Icon cho kho
+  Users,            // Icon cho công dân
+  AlertTriangle     // Icon cảnh báo hết hạn
+} from 'lucide-react';
 
 const DashboardPage = () => {
   const { authUser } = useAuthStore();
   const [rateChartType, setRateChartType] = useState('pie');
   const [monthlyChartType, setMonthlyChartType] = useState('bar');
+  
   const { 
     totalStock, 
     expiringBatches, 
@@ -27,29 +37,29 @@ const DashboardPage = () => {
     vaccinationRate, 
     monthlyStats,
     totalCitizens,
+    vaccinationStatsLimit10,
     getVaccinationRate, 
     getMonthlyStats,
+    getVaccinationStatsLimit10,
     getTotalCitizens,
   } = useReportStore();
 
   const { 
    totalCompleted,
-   upcomingList,
-   getTotalCompleted,
-   getUpcomingAppointments
+   getTotalCompleted
   } = useAppointmentStore();
 
 
   useEffect(() => {
     // Call all necessary APIs
-	getTotalCompleted();
-	getUpcomingAppointments();
+    getTotalCompleted();    
     getTotalStock();
     getExpiringBatches();
     getVaccinationRate();
     getMonthlyStats();
     getTotalCitizens();
-  }, [getTotalCompleted, getUpcomingAppointments, getTotalStock, getExpiringBatches, getVaccinationRate, getMonthlyStats, getTotalCitizens]);
+    getVaccinationStatsLimit10(); // Gọi API lấy top 10
+  }, [getTotalCompleted, getTotalStock, getExpiringBatches, getVaccinationRate, getMonthlyStats, getTotalCitizens, getVaccinationStatsLimit10]);
 
   // Chart Data Configuration 
   const pieChartData = [
@@ -106,24 +116,11 @@ const DashboardPage = () => {
     </ResponsiveContainer>
   );
 
-  // Helper function for Lot Status 
-  const getLotStatus = (expiryDate) => {
-    const today = new Date();
-    const expiry = new Date(expiryDate);
-    const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-
-    if (diffDays < 0) return <span className="text-red-600 bg-red-100 px-2 py-1 rounded-full text-xs font-semibold">Expired</span>;
-    if (diffDays <= 30) return <span className="text-yellow-600 bg-yellow-100 px-2 py-1 rounded-full text-xs font-semibold">Expiring soon ({diffDays} days)</span>;
-    return <span className="text-green-600 bg-green-100 px-2 py-1 rounded-full text-xs font-semibold">Valid</span>;
-  };
-
   const removeFocusOutline = `
     .recharts-wrapper,
     .recharts-wrapper *,
     .recharts-surface,
     .recharts-layer,
-    .recharts-sector,
-    .recharts-rectangle,
     path, 
     rect {
         outline: none !important;
@@ -132,41 +129,67 @@ const DashboardPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30 pb-10">
-	<style>{removeFocusOutline}</style>
+    <style>{removeFocusOutline}</style>
       <Header 
         title="Dashboard" 
         subtitle={`Welcome back, ${authUser?.full_name || authUser?.username || 'Manager'}`}
-		 icon={LayoutDashboard}
+         icon={LayoutDashboard}
         notificationCount={0} 
       />
 
-      {/* Stats Cards Section */}
+      {/* Stats Cards Section - ĐÃ CẬP NHẬT ICONS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 mt-6 px-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm font-medium mb-2">Total Injections</p>
-          <h3 className="text-3xl font-bold text-gray-800">
-            {totalCompleted ? totalCompleted.toLocaleString() : '0'}
-          </h3>
-        </div>
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm font-medium mb-2">Total Vaccine Stock</p>
-          <h3 className="text-3xl font-bold text-gray-800">
-            {totalStock ? totalStock.toLocaleString() : '0'}
-          </h3>
-        </div>
-
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-          <p className="text-gray-500 text-sm font-medium mb-2">Total Citizens</p>
-          <h3 className="text-3xl font-bold text-gray-800">
-            {totalCitizens || 0}
-          </h3>
+        
+        {/* CARD 1: Total Injections */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex justify-between items-start">
+            <div>
+                <p className="text-gray-500 text-sm font-medium mb-2">Total Injections</p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                    {totalCompleted ? totalCompleted.toLocaleString() : '0'}
+                </h3>
+            </div>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                <Syringe size={24} />
+            </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-6 shadow-sm border-l-4 border-l-yellow-400 border-y border-r border-gray-100">
-          <p className="text-gray-500 text-sm font-medium mb-2">Expiring Batches</p>
-          <h3 className="text-3xl font-bold text-gray-800">
-            {expiringBatches || 0}
-          </h3>
+        {/* CARD 2: Total Vaccine Stock */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex justify-between items-start">
+            <div>
+                <p className="text-gray-500 text-sm font-medium mb-2">Total Vaccine Stock</p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                    {totalStock ? totalStock.toLocaleString() : '0'}
+                </h3>
+            </div>
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+                <Package size={24} />
+            </div>
+        </div>
+
+        {/* CARD 3: Total Citizens */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex justify-between items-start">
+            <div>
+                <p className="text-gray-500 text-sm font-medium mb-2">Total Citizens</p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                    {totalCitizens || 0}
+                </h3>
+            </div>
+            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-xl">
+                <Users size={24} />
+            </div>
+        </div>
+
+        {/* CARD 4: Expiring Batches */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border-l-4 border-l-yellow-400 border-y border-r border-gray-100 flex justify-between items-start">
+            <div>
+                <p className="text-gray-500 text-sm font-medium mb-2">Expiring Batches</p>
+                <h3 className="text-3xl font-bold text-gray-800">
+                    {expiringBatches || 0}
+                </h3>
+            </div>
+            <div className="p-3 bg-yellow-50 text-yellow-600 rounded-xl">
+                <AlertTriangle size={24} />
+            </div>
         </div>
       </div>
 
@@ -177,7 +200,6 @@ const DashboardPage = () => {
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800">Vaccination Rate (All Time)</h2>
-            {/* Nút Switch Chart */}
             <button 
                 onClick={() => setRateChartType(prev => prev === 'pie' ? 'bar' : 'pie')}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-blue-600"
@@ -189,11 +211,6 @@ const DashboardPage = () => {
           
           <div className="h-64 relative">
              {rateChartType === 'pie' ? renderPieChart(pieChartData) : renderBarChart(pieChartData)}
-             {rateChartType === 'pie' && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[150%] text-center">
-                    <p className="text-sm text-gray-400">Overview</p>
-                </div>
-             )}
           </div>
         </div>
 
@@ -201,7 +218,6 @@ const DashboardPage = () => {
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-lg font-bold text-gray-800">Monthly Vaccination Status</h2>
-            {/* Nút Switch Chart */}
             <button 
                 onClick={() => setMonthlyChartType(prev => prev === 'bar' ? 'pie' : 'bar')}
                 className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500 hover:text-blue-600"
@@ -213,98 +229,86 @@ const DashboardPage = () => {
 
           <div className="h-64 relative">
              {monthlyChartType === 'bar' ? renderBarChart(barChartData) : renderPieChart(barChartData)}
-             {monthlyChartType === 'pie' && (
-                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-[150%] text-center">
-                    <p className="text-sm text-gray-400">Overview</p>
-                </div>
-             )}
           </div>
         </div>
       </div>
 
-      {/*UPCOMING APPOINTMENTS*/}
-      <div className="bg-white rounded-2xl p-6 shadow-sm mx-6 ">
-        <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-gray-800">Upcoming Appointments</h2>
-            <span className="text-sm text-gray-500">Next 10 bookings</span>
+      {/* TOP 10 VACCINES TABLE */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm mx-6 border border-gray-100">
+        <div className="flex items-center gap-2 mb-6">
+             {/* Thêm icon TrendingUp để nhấn mạnh thống kê */}
+             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
+                <TrendingUp size={20} />
+            </div>
+            <div>
+                {/* SỬA LẠI TITLE CHO ĐÚNG */}
+                <h2 className="text-lg font-bold text-gray-800">Top 10 Most Administered Vaccines</h2>
+                <span className="text-sm text-gray-500">Based on total doses given</span>
+            </div>
         </div>
         
         <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
                 <thead>
                     <tr className="border-b border-gray-100 text-sm uppercase tracking-wider">
-                        <th className="pb-4 font-semibold text-gray-500 pl-4">Citizen Name</th>
-                        <th className="pb-4 font-semibold text-gray-500">Vaccines</th>
-                        <th className="pb-4 font-semibold text-gray-500">Scheduled Time</th>
-                        <th className="pb-4 font-semibold text-gray-500">Status</th>
-                        <th className="pb-4 font-semibold text-gray-500">Notes</th>
+                        <th className="pb-4 font-semibold text-gray-500 pl-4">ID</th>
+                        <th className="pb-4 font-semibold text-gray-500">Code</th>
+                        <th className="pb-4 font-semibold text-gray-500">Vaccine Name</th>
+                        <th className="pb-4 font-semibold text-gray-500">Doses Given</th>
+                        <th className="pb-4 font-semibold text-gray-500">Remaining Stock</th>
                     </tr>
                 </thead>
                 <tbody className="text-sm text-gray-700">
-                    {upcomingList && upcomingList.length > 0 ? (
-                        upcomingList.map((apt, index) => (
-                            <tr key={apt.id || index} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
-                                {/* Cột 1: Tên công dân */}
-                                <td className="py-4 pl-4 font-medium text-gray-900">
-                                    {apt.citizen_name}
-                                </td>
-
-                                {/* Cột 2: Danh sách vắc xin */}
+                    {vaccinationStatsLimit10 && vaccinationStatsLimit10.length > 0 ? (
+                        vaccinationStatsLimit10.map((vac, index) => (
+                            <tr key={vac.id || index} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
+                                {/* Cột 1: ID */}                               
                                 <td className="py-4">
-                                    <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium">
-                                        {apt.vaccine_names || 'N/A'}
+                                    <span className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
+                                        {vac.id || 'N/A'}
                                     </span>
                                 </td>
 
-                                {/* Cột 3: Thời gian (Format lại cho đẹp) */}
+                                {/* Cột 2: Code */}
                                 <td className="py-4">
-                                    <div className="flex flex-col">
-                                        <span className="font-bold text-gray-800">
-                                            {new Date(apt.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                            {new Date(apt.time).toLocaleDateString('en-GB')}
-                                        </span>
-                                    </div>
-                                </td>
-
-                                {/* Cột 4: Trạng thái */}
-                                <td className="py-4">
-                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold 
-                                        ${apt.status === 'booked' ? 'bg-yellow-100 text-yellow-700' : ''}
-                                        ${apt.status === 'completed' ? 'bg-green-100 text-green-700' : ''}
-                                        ${apt.status === 'cancelled' ? 'bg-red-100 text-red-700' : ''}
-                                        ${!['booked', 'completed', 'cancelled'].includes(apt.status) ? 'bg-gray-100 text-gray-700' : ''}
-                                    `}>
-                                        {apt.status ? apt.status.charAt(0).toUpperCase() + apt.status.slice(1) : 'Unknown'}
+                                    <span className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
+                                        {vac.code || 'N/A'}
                                     </span>
                                 </td>
 
-                                {/* Cột 5: Ghi chú */}
-                                <td className="py-4 text-gray-500 italic max-w-xs truncate">
-                                    {apt.notes || '-'}
+                                {/* Cột 3: Tên Vaccine */}
+                                <td className="py-4 font-medium text-gray-800">
+                                    {vac.name || 'N/A'}
+                                </td>
+
+                                {/* Cột 4: Số mũi đã tiêm */}
+                                <td className="py-4">
+                                    <span className=" text-gray-700 px-2 py-1 rounded-md text-xs font-bold">
+                                        {vac.doses_given ? vac.doses_given.toLocaleString() : '0'}
+                                    </span>
+                                </td>
+                                
+                                {/* Cột 5: Tồn kho */}
+                                <td className="py-4">
+                                    <span className={`px-2 py-1 rounded-md text-xs font-bold ${
+                                        vac.remaining > 10 ? 'bg-blue-50 text-blue-700' : 'bg-red-50 text-red-700'
+                                    }`}>
+                                        {vac.remaining ? vac.remaining.toLocaleString() : '0'}
+                                    </span>
                                 </td>
                             </tr>
                         ))
                     ) : (
                         <tr>
                             <td className="py-8 text-center text-gray-400" colSpan="5">
-                                No upcoming appointments found.
+                                No vaccination data found.
                             </td>
                         </tr>
                     )}
                 </tbody>
             </table>
         </div>
-      </div>
-	  
-	   {/* Help Button */}
-      <button className="fixed bottom-6 right-6 bg-gray-900 hover:bg-gray-800 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 group">
-        <span className="text-xl font-medium">?</span>
-        <span className="absolute right-full mr-3 bg-gray-900 text-white text-sm font-medium px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-          Need help?
-        </span>
-      </button>
+      </div>    
     </div>
   );
 }
