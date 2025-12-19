@@ -553,6 +553,14 @@ const ProfilePage = () => {
         userProfile={userProfile}
         vaccine={certificateVaccine}
       />
+
+      {/* Help Button */}
+      <button className="fixed bottom-6 right-6 bg-gray-900 hover:bg-gray-800 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 group">
+        <span className="text-xl font-medium">?</span>
+        <span className="absolute right-full mr-3 bg-gray-900 text-white text-sm font-medium px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          Need help?
+        </span>
+      </button>
     </div>
   )
 }

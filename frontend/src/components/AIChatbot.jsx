@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, Send, X, Loader2, Sparkles } from 'lucide-react';
 import { useAIChatStore } from '../store/useAIChatStore';
+import { useAuthStore } from '../store/useAuthStore';
 import ReactMarkdown from 'react-markdown';
 
 const AIChatbot = () => {
@@ -9,6 +10,12 @@ const AIChatbot = () => {
   const messagesEndRef = useRef(null);
   
   const { messages, isLoading, sendMessage, clearChat } = useAIChatStore();
+  const { authUser } = useAuthStore();
+
+  // Only show chatbot for citizens
+  if (authUser?.role?.toLowerCase() !== 'citizen') {
+    return null;
+  }
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

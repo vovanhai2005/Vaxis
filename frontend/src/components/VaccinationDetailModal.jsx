@@ -14,6 +14,15 @@ const VaccinationDetailModal = ({ vaccine, onClose }) => {
     })
   }
 
+  const formatTime = (dateString) => {
+    if (!dateString) return 'N/A'
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    })
+  }
+
   const getStatusColor = (status) => {
     if (status === 'Completed') return 'bg-emerald-100 text-emerald-700 border-emerald-200'
     if (status === 'Upcoming') return 'bg-blue-100 text-blue-700 border-blue-200'
@@ -67,13 +76,11 @@ const VaccinationDetailModal = ({ vaccine, onClose }) => {
               
               <div className="bg-gray-50 rounded-xl p-4 space-y-4 border border-gray-100">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Dose Number</p>
-                  <p className="font-semibold text-gray-900 text-lg flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm font-bold">
-                      #{vaccine.dose_number || 1}
-                    </span>
-                    of {vaccine.total_doses || 2}
-                  </p>
+                  <p className="text-sm text-gray-500 mb-1">Time Administered</p>
+                  <div className="flex items-center gap-2 text-gray-900 font-medium">
+                    <Clock className="h-5 w-5 text-teal-500" />
+                    {formatTime(vaccine.administered_at)}
+                  </div>
                 </div>
 
                 <div>
@@ -103,13 +110,6 @@ const VaccinationDetailModal = ({ vaccine, onClose }) => {
               
               <div className="bg-gray-50 rounded-xl p-4 space-y-4 border border-gray-100">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Lot Number</p>
-                  <p className="font-mono text-gray-900 bg-white px-3 py-1 rounded border border-gray-200 inline-block">
-                    {vaccine.lot_number || 'N/A'}
-                  </p>
-                </div>
-
-                <div>
                   <p className="text-sm text-gray-500 mb-1">Administered By</p>
                   <div className="flex items-center gap-2 text-gray-900 font-medium">
                     <User className="h-5 w-5 text-teal-500" />
@@ -118,10 +118,18 @@ const VaccinationDetailModal = ({ vaccine, onClose }) => {
                 </div>
 
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Next Due Date</p>
+                  <p className="text-sm text-gray-500 mb-1">Temperature</p>
                   <div className="flex items-center gap-2 text-gray-900 font-medium">
-                    <Clock className="h-5 w-5 text-orange-500" />
-                    {vaccine.next_due_date ? formatDate(vaccine.next_due_date) : 'Not scheduled'}
+                    <span className="text-2xl">🌡️</span>
+                    {vaccine.temperature ? `${vaccine.temperature}°C` : 'Not recorded'}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-sm text-gray-500 mb-1">Blood Pressure</p>
+                  <div className="flex items-center gap-2 text-gray-900 font-medium">
+                    <span className="text-2xl">❤️</span>
+                    {vaccine.blood_pressure || 'Not recorded'}
                   </div>
                 </div>
               </div>
@@ -146,10 +154,6 @@ const VaccinationDetailModal = ({ vaccine, onClose }) => {
             className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 font-medium rounded-xl hover:bg-gray-50 transition-colors shadow-sm"
           >
             Close
-          </button>
-          <button className="px-5 py-2.5 bg-teal-600 text-white font-medium rounded-xl hover:bg-teal-700 transition-colors shadow-md shadow-teal-200 flex items-center gap-2">
-            <DownloadIcon className="h-4 w-4" />
-            Download Certificate
           </button>
         </div>
       </div>
