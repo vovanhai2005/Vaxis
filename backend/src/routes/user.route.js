@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import { getCitizenProfile, updateCitizenProfile, getVaccineHistory, getEmployeeProfile, updateEmployeeProfile } from "../controllers/user.controller.js";
-=======
 import { getCitizenProfile, updateCitizenProfile, getVaccineHistory, getNotifications, getEmployeeProfile, updateEmployeeProfile } from "../controllers/user.controller.js";
->>>>>>> 6b79410 (feat(api): getEmployeeProfile, updateEmployeeProfile)
 import { protectRoute } from "../middleware/auth.middleware.js";
 import express from "express";
 

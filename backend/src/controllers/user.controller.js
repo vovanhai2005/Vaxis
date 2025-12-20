@@ -149,40 +149,6 @@ export const getEmployeeProfile = async (req, res) => {
   }
 };
 
-<<<<<<< HEAD
-=======
-// Get employee profile
-export const getEmployeeProfile = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const userProfile = await sql`
-            SELECT 
-                u.full_name, 
-                u.email, 
-                u.phone, 
-                u.dob,
-                u.profile_picture,
-                e.employee_number,
-                e.role_title,
-                e.national_id
-            FROM users u
-            LEFT JOIN employees e ON u.id = e.user_id
-            WHERE u.id = ${userId}
-        `;
-
-    if (userProfile.length === 0) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.status(200).json(userProfile[0]);
-  } catch (error) {
-    console.error("Error fetching employee profile:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
->>>>>>> 6b79410 (feat(api): getEmployeeProfile, updateEmployeeProfile)
 // Update employee profile
 export const updateEmployeeProfile = async (req, res) => {
     try {

@@ -1,36 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
-<<<<<<< HEAD
 import BillModal from '../../components/BillModal';
 import { Calendar, Search, Filter, Loader2, 
   Syringe,User,Clock,Phone,MapPin,ChevronLeft,
   ChevronRight,ChevronsLeft,ChevronsRight,StickyNote,CheckCircle,
   XCircle,Eye,Thermometer,Activity,AlertCircle,ClipboardCheck,X
-=======
-import { 
-  Calendar, 
-  Search, 
-  Filter, 
-  Loader2, 
-  Syringe,
-  User,
-  Clock,
-  Phone,
-  MapPin,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  StickyNote,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Thermometer,
-  Activity,
-  AlertCircle,
-  ClipboardCheck,
-  X
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
 } from 'lucide-react';
 import { axiosInstance } from '../../lib/axios';
 import toast from 'react-hot-toast';
@@ -53,7 +27,6 @@ const UpcomingAppointmentsPage = () => {
     current_medications: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-<<<<<<< HEAD
   const [isBillModalOpen, setIsBillModalOpen] = useState(false);
   const [billData, setBillData] = useState(null);
   const [isAdministrationModalOpen, setIsAdministrationModalOpen] = useState(false);
@@ -62,8 +35,6 @@ const UpcomingAppointmentsPage = () => {
     adverseEvents: ''
   });
   const [isBillPaid, setIsBillPaid] = useState(false);
-=======
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -160,11 +131,8 @@ const UpcomingAppointmentsPage = () => {
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-700 border-green-200';
-<<<<<<< HEAD
       case 'administered':
         return 'bg-purple-100 text-purple-700 border-purple-200';
-=======
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
       case 'checked_in':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'booked':
@@ -207,7 +175,6 @@ const UpcomingAppointmentsPage = () => {
     setCurrentPage(page);
   };
 
-<<<<<<< HEAD
   const handleViewDetails = async (appointment) => {
     setSelectedAppointment(appointment);
     setIsDetailsModalOpen(true);
@@ -317,11 +284,6 @@ const UpcomingAppointmentsPage = () => {
       console.error('Error completing appointment:', error);
       toast.error(error.response?.data?.message || 'Failed to complete appointment');
     }
-=======
-  const handleViewDetails = (appointment) => {
-    setSelectedAppointment(appointment);
-    setIsDetailsModalOpen(true);
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
   };
 
   return (
@@ -393,10 +355,7 @@ const UpcomingAppointmentsPage = () => {
                           <option value="">All Statuses</option>
                           <option value="booked">Booked</option>
                           <option value="checked_in">Checked In</option>
-<<<<<<< HEAD
                           <option value="administered">Administered</option>
-=======
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                           <option value="completed">Completed</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
@@ -423,15 +382,9 @@ const UpcomingAppointmentsPage = () => {
                 <tr>
                   <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-10">No</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Citizen Name</th>
-<<<<<<< HEAD
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccines</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Scheduled At</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Notes</th>
-=======
-                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">National ID</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccines</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Scheduled At</th>
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Status</th>
                   <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Actions</th>
                 </tr>
@@ -455,18 +408,9 @@ const UpcomingAppointmentsPage = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-gray-400" />
-<<<<<<< HEAD
                           <span className="font-medium text-gray-900">{appointment.citizen_name || 'N/A'}</span>
                         </div>
                       </td>
-=======
-                          <span className="font-medium text-gray-900">{appointment.full_name || 'N/A'}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
-                        {appointment.national_id || 'N/A'}
-                      </td>
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                       <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100">
                         <div className="flex items-center gap-2">
                           <Syringe className="h-4 w-4 text-teal-500" />
@@ -476,18 +420,12 @@ const UpcomingAppointmentsPage = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-gray-400" />
-<<<<<<< HEAD
                           {formatDate(appointment.time)}
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
                         {appointment.notes || 'N/A'}
                       </td>
-=======
-                          {formatDate(appointment.scheduled_at)}
-                        </div>
-                      </td>
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                       <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
                         {getStatusBadge(appointment.status)}
                       </td>
@@ -609,11 +547,7 @@ const UpcomingAppointmentsPage = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600 font-medium">Full Name:</span>
-<<<<<<< HEAD
                     <p className="text-gray-900">{selectedAppointment.citizen_name || 'N/A'}</p>
-=======
-                    <p className="text-gray-900">{selectedAppointment.full_name || 'N/A'}</p>
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                   </div>
                   <div>
                     <span className="text-gray-600 font-medium">National ID:</span>
@@ -640,11 +574,7 @@ const UpcomingAppointmentsPage = () => {
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gray-400" />
                     <span className="text-gray-600 font-medium">Scheduled:</span>
-<<<<<<< HEAD
                     <span className="text-gray-900">{formatDate(selectedAppointment.time)}</span>
-=======
-                    <span className="text-gray-900">{formatDate(selectedAppointment.scheduled_at)}</span>
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                   </div>
                   <div className="flex items-center gap-2">
                     <Syringe className="h-4 w-4 text-gray-400" />
@@ -680,7 +610,6 @@ const UpcomingAppointmentsPage = () => {
                     Check In
                   </button>
                 )}
-<<<<<<< HEAD
                 {selectedAppointment.status === 'checked_in' && (
                   <button
                     onClick={() => {
@@ -710,8 +639,6 @@ const UpcomingAppointmentsPage = () => {
                     Complete
                   </button>
                 )}
-=======
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                 <button
                   onClick={() => setIsDetailsModalOpen(false)}
                   className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 font-medium"
@@ -737,11 +664,7 @@ const UpcomingAppointmentsPage = () => {
                     Check-In Form
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
-<<<<<<< HEAD
                     Patient: <span className="font-semibold">{selectedAppointment.citizen_name}</span>
-=======
-                    Patient: <span className="font-semibold">{selectedAppointment.full_name}</span>
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
                   </p>
                 </div>
                 <button
@@ -922,7 +845,6 @@ const UpcomingAppointmentsPage = () => {
           </div>
         </div>
       )}
-<<<<<<< HEAD
 
       {/* Administration Modal */}
       {isAdministrationModalOpen && selectedAppointment && (
@@ -1053,8 +975,6 @@ const UpcomingAppointmentsPage = () => {
         billData={billData}
         onPayment={handlePayment}
       />
-=======
->>>>>>> f98d83f (feat(pages): Employee pages: dashboard, upcomming appointment, vaccine stock)
     </div>
   );
 };
