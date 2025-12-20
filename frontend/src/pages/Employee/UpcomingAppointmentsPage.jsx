@@ -1,28 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
-import { 
-  Calendar, 
-  Search, 
-  Filter, 
-  Loader2, 
-  Syringe,
-  User,
-  Clock,
-  Phone,
-  MapPin,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  StickyNote,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Thermometer,
-  Activity,
-  AlertCircle,
-  ClipboardCheck,
-  X
+import { Calendar, Search, Filter, Loader2, 
+  Syringe,User,Clock,Phone,MapPin,ChevronLeft,
+  ChevronRight,ChevronsLeft,ChevronsRight,StickyNote,CheckCircle,
+  XCircle,Eye,Thermometer,Activity,AlertCircle,ClipboardCheck,X
 } from 'lucide-react';
 import { axiosInstance } from '../../lib/axios';
 import toast from 'react-hot-toast';
