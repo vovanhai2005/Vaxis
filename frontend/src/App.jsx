@@ -71,7 +71,7 @@ const App = () => {
           <Route path="/lookup-citizen" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <LookupCitizenProfilePage /> : <Navigate to="/login" />} />
           <Route path="/upcoming-appointments" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <UpcomingAppointmentsPage /> : <Navigate to="/login" />} />
           <Route path="/vaccine-stock" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <VaccineStockPage /> : <Navigate to="/login" />} />
-          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <ProfilePage /> : <Navigate to="/login" />} />
+          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <EmployeeProfilePage /> : <Navigate to="/login" />} />
         
          {/* Manager Routes */}
           <Route path="/manager" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <ManagerDashboardPage /> : <Navigate to="/login" />} />
