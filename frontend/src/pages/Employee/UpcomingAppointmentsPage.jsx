@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import Header from '../../components/Header';
+import BillModal from '../../components/BillModal';
 import { Calendar, Search, Filter, Loader2, 
   Syringe,User,Clock,Phone,MapPin,ChevronLeft,
   ChevronRight,ChevronsLeft,ChevronsRight,StickyNote,CheckCircle,
@@ -26,6 +27,14 @@ const UpcomingAppointmentsPage = () => {
     current_medications: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBillModalOpen, setIsBillModalOpen] = useState(false);
+  const [billData, setBillData] = useState(null);
+  const [isAdministrationModalOpen, setIsAdministrationModalOpen] = useState(false);
+  const [administrationData, setAdministrationData] = useState({
+    doseNumber: '',
+    adverseEvents: ''
+  });
+  const [isBillPaid, setIsBillPaid] = useState(false);
   const itemsPerPage = 10;
 
   useEffect(() => {
@@ -122,6 +131,8 @@ const UpcomingAppointmentsPage = () => {
     switch (status) {
       case 'completed':
         return 'bg-green-100 text-green-700 border-green-200';
+      case 'administered':
+        return 'bg-purple-100 text-purple-700 border-purple-200';
       case 'checked_in':
         return 'bg-blue-100 text-blue-700 border-blue-200';
       case 'booked':
@@ -164,9 +175,115 @@ const UpcomingAppointmentsPage = () => {
     setCurrentPage(page);
   };
 
-  const handleViewDetails = (appointment) => {
+  const handleViewDetails = async (appointment) => {
     setSelectedAppointment(appointment);
     setIsDetailsModalOpen(true);
+    
+    // If appointment is administered, check if bill is paid
+    if (appointment.status === 'administered') {
+      try {
+        const billResponse = await axiosInstance.get(`/administration/${appointment.id}/bill`);
+        setIsBillPaid(billResponse.data.paid || false);
+      } catch (error) {
+        console.error('Error fetching bill status:', error);
+        setIsBillPaid(false);
+      }
+    } else {
+      setIsBillPaid(false);
+    }
+  };
+
+  const handleCreateAdministration = (appointment) => {
+    setSelectedAppointment(appointment);
+    setAdministrationData({
+      doseNumber: '',
+      adverseEvents: ''
+    });
+    setIsAdministrationModalOpen(true);
+  };
+
+  const handleAdministrationSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!administrationData.doseNumber) {
+      toast.error('Dose number is required');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await axiosInstance.put(`/administration/${selectedAppointment.id}`, {
+        doseNumber: parseInt(administrationData.doseNumber),
+        adverseEvents: administrationData.adverseEvents || null
+      });
+      
+      toast.success('Administration created successfully!');
+      setIsAdministrationModalOpen(false);
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error creating administration:', error);
+      toast.error(error.response?.data?.message || 'Failed to create administration');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleAdministrationInputChange = (e) => {
+    const { name, value } = e.target;
+    setAdministrationData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleGetBill = async (appointmentId) => {
+    try {
+      const response = await axiosInstance.get(`/administration/${appointmentId}/bill`);
+      const billDataResponse = response.data;
+      
+      setBillData(billDataResponse);
+      setIsBillModalOpen(true);
+      
+      return billDataResponse;
+    } catch (error) {
+      console.error('Error getting bill:', error);
+      toast.error(error.response?.data?.message || 'Failed to get bill');
+      return null;
+    }
+  };
+
+  const handlePayment = async () => {
+    if (!selectedAppointment || !billData) return;
+
+    try {
+      await axiosInstance.put(`/administration/${selectedAppointment.id}/bill`);
+      toast.success('Payment processed successfully!');
+      
+      // Update bill data and paid status
+      setBillData({ ...billData, paid: true });
+      setIsBillPaid(true);
+      
+      // Refresh appointments to show updated status
+      fetchAppointments();
+      
+      // Close bill modal
+      setIsBillModalOpen(false);
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      toast.error(error.response?.data?.message || 'Failed to process payment');
+    }
+  };
+
+  const handleCompleteAppointment = async (appointmentId) => {
+    try {
+      await axiosInstance.put(`/appointments/${appointmentId}/complete`);
+      toast.success('Appointment completed successfully!');
+      setIsDetailsModalOpen(false);
+      fetchAppointments();
+    } catch (error) {
+      console.error('Error completing appointment:', error);
+      toast.error(error.response?.data?.message || 'Failed to complete appointment');
+    }
   };
 
   return (
@@ -238,6 +355,7 @@ const UpcomingAppointmentsPage = () => {
                           <option value="">All Statuses</option>
                           <option value="booked">Booked</option>
                           <option value="checked_in">Checked In</option>
+                          <option value="administered">Administered</option>
                           <option value="completed">Completed</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
@@ -264,9 +382,9 @@ const UpcomingAppointmentsPage = () => {
                 <tr>
                   <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-10">No</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Citizen Name</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">National ID</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccines</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Scheduled At</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Notes</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Status</th>
                   <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Actions</th>
                 </tr>
@@ -290,11 +408,8 @@ const UpcomingAppointmentsPage = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
                         <div className="flex items-center gap-2">
                           <User className="h-4 w-4 text-gray-400" />
-                          <span className="font-medium text-gray-900">{appointment.full_name || 'N/A'}</span>
+                          <span className="font-medium text-gray-900">{appointment.citizen_name || 'N/A'}</span>
                         </div>
-                      </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
-                        {appointment.national_id || 'N/A'}
                       </td>
                       <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100">
                         <div className="flex items-center gap-2">
@@ -305,8 +420,11 @@ const UpcomingAppointmentsPage = () => {
                       <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100">
                         <div className="flex items-center gap-2">
                           <Calendar className="h-4 w-4 text-gray-400" />
-                          {formatDate(appointment.scheduled_at)}
+                          {formatDate(appointment.time)}
                         </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
+                        {appointment.notes || 'N/A'}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
                         {getStatusBadge(appointment.status)}
@@ -429,7 +547,7 @@ const UpcomingAppointmentsPage = () => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-gray-600 font-medium">Full Name:</span>
-                    <p className="text-gray-900">{selectedAppointment.full_name || 'N/A'}</p>
+                    <p className="text-gray-900">{selectedAppointment.citizen_name || 'N/A'}</p>
                   </div>
                   <div>
                     <span className="text-gray-600 font-medium">National ID:</span>
@@ -456,7 +574,7 @@ const UpcomingAppointmentsPage = () => {
                   <div className="flex items-center gap-2">
                     <Clock className="h-4 w-4 text-gray-400" />
                     <span className="text-gray-600 font-medium">Scheduled:</span>
-                    <span className="text-gray-900">{formatDate(selectedAppointment.scheduled_at)}</span>
+                    <span className="text-gray-900">{formatDate(selectedAppointment.time)}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Syringe className="h-4 w-4 text-gray-400" />
@@ -492,6 +610,35 @@ const UpcomingAppointmentsPage = () => {
                     Check In
                   </button>
                 )}
+                {selectedAppointment.status === 'checked_in' && (
+                  <button
+                    onClick={() => {
+                      setIsDetailsModalOpen(false);
+                      handleCreateAdministration(selectedAppointment);
+                    }}
+                    className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 font-medium"
+                  >
+                    Create Administration
+                  </button>
+                )}
+                {selectedAppointment.status === 'administered' && (
+                  <button
+                    onClick={async () => {
+                      await handleGetBill(selectedAppointment.id);
+                    }}
+                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium"
+                  >
+                    Get Bill
+                  </button>
+                )}
+                {selectedAppointment.status === 'administered' && isBillPaid && (
+                  <button
+                    onClick={() => handleCompleteAppointment(selectedAppointment.id)}
+                    className="flex-1 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 font-medium"
+                  >
+                    Complete
+                  </button>
+                )}
                 <button
                   onClick={() => setIsDetailsModalOpen(false)}
                   className="flex-1 bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 font-medium"
@@ -517,7 +664,7 @@ const UpcomingAppointmentsPage = () => {
                     Check-In Form
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
-                    Patient: <span className="font-semibold">{selectedAppointment.full_name}</span>
+                    Patient: <span className="font-semibold">{selectedAppointment.citizen_name}</span>
                   </p>
                 </div>
                 <button
@@ -698,6 +845,136 @@ const UpcomingAppointmentsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Administration Modal */}
+      {isAdministrationModalOpen && selectedAppointment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+                    <ClipboardCheck className="text-purple-600" size={28} />
+                    Create Administration Record
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Patient: <span className="font-semibold">{selectedAppointment.citizen_name}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsAdministrationModalOpen(false)}
+                  disabled={isSubmitting}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleAdministrationSubmit} className="p-6">
+              <div className="space-y-6">
+                {/* Administration Details */}
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <Syringe className="text-purple-600" size={20} />
+                    Administration Details
+                  </h4>
+                  
+                  <div className="space-y-4">
+                    {/* Dose Number */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Dose Number
+                        <span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <input
+                        type="number"
+                        name="doseNumber"
+                        value={administrationData.doseNumber}
+                        onChange={handleAdministrationInputChange}
+                        min="1"
+                        max="10"
+                        placeholder="e.g., 1, 2, 3"
+                        required
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      />
+                      <p className="text-xs text-gray-500 mt-1">Which dose of this vaccine is being administered?</p>
+                    </div>
+
+                    {/* Adverse Events */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Adverse Events / Reactions
+                        <span className="text-xs text-gray-500 font-normal ml-2">(Optional)</span>
+                      </label>
+                      <textarea
+                        name="adverseEvents"
+                        value={administrationData.adverseEvents}
+                        onChange={handleAdministrationInputChange}
+                        rows="4"
+                        placeholder="Describe any adverse events or reactions observed..."
+                        className="w-full px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info Box */}
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <div className="flex gap-3">
+                    <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
+                    <div className="text-sm">
+                      <p className="font-semibold text-blue-800 mb-1">Important</p>
+                      <p className="text-blue-700">
+                        Creating this administration record will generate a bill for the patient. Make sure all information is accurate before proceeding.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-3 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setIsAdministrationModalOpen(false)}
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="animate-spin" size={20} />
+                        Creating...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={20} />
+                        Create Administration
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Bill Modal */}
+      <BillModal
+        isOpen={isBillModalOpen}
+        onClose={() => setIsBillModalOpen(false)}
+        billData={billData}
+        onPayment={handlePayment}
+      />
     </div>
   );
 };
