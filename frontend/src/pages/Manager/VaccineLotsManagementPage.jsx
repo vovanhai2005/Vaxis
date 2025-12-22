@@ -284,7 +284,7 @@ const VaccineLotsManagementPage = () => {
                                                     onChange={(e) => handleFilterChange(e, 'status')}
                                                 >
                                                     <option value="">All Batches</option>
-                                                    <option value="con_han">Valid (> 30 days)</option>
+                                                    <option value="con_han">Valid (&gt; 30 days)</option>
                                                     <option value="sap_het">Expiring Soon (≤ 30 days)</option>
                                                     <option value="qua_han">Expired</option>
                                                 </select>
