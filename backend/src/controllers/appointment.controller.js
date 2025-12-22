@@ -127,7 +127,11 @@ export const upcomingAppointments = async (req, res) => {
 
     const results = await sql`
       SELECT 
+        a.id,
         u.full_name AS citizen_name,
+        u.phone,
+        c.address,
+        c.national_id,
         string_agg(v.name, ', ') AS vaccine_names,
         a.scheduled_at as time,
         a.status as status,
@@ -135,10 +139,10 @@ export const upcomingAppointments = async (req, res) => {
       FROM appointments a
       JOIN citizens c ON a.citizen_id = c.id
       JOIN users u ON c.user_id = u.id
-      JOIN appointment_vaccines av ON a.id = av.appointment_id
-      JOIN vaccines v ON av.vaccine_id = v.id
-      WHERE a.scheduled_at > ${now} AND a.status = 'booked'
-      GROUP BY a.id, u.full_name, a.scheduled_at, a.status, a.notes
+      LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
+      LEFT JOIN vaccines v ON av.vaccine_id = v.id
+      WHERE a.scheduled_at > ${now} AND a.status IN ('booked', 'checked_in', 'administered')
+      GROUP BY a.id, u.full_name, a.scheduled_at, a.status, a.notes, u.phone, c.address, c.national_id
       ORDER BY a.scheduled_at ASC
       LIMIT 10;
     `;
@@ -271,6 +275,56 @@ export const updateAppointmentStatus = async (req, res) => {
     });
   } catch (error) {
     console.error("Error during check-in:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+// Complete appointment when administered and paid
+export const completeAppointment = async (req, res) => {
+  try {
+    const { id: appointmentId } = req.params;
+
+    // Check if appointment is administered and bill is paid
+    const appointmentCheck = await sql`
+      SELECT 
+        a.id,
+        a.status,
+        b.paid
+      FROM appointments a
+      JOIN administrations ad ON a.id = ad.appointment_id
+      JOIN bills b ON ad.bill_id = b.id
+      WHERE a.id = ${appointmentId}
+      LIMIT 1
+    `;
+
+    if (appointmentCheck.length === 0) {
+      return res.status(404).json({ message: "Appointment not found or not administered yet" });
+    }
+
+    const appointment = appointmentCheck[0];
+
+    if (appointment.status === 'administered' && appointment.paid === true) {
+      // Update appointment status to completed
+      const updated = await sql`
+        UPDATE appointments
+        SET status = 'completed', updated_at = NOW()
+        WHERE id = ${appointmentId}
+        RETURNING *;
+      `;
+
+      return res.status(200).json({
+        message: "Appointment completed successfully",
+        appointment: updated[0],
+      });
+    } else {
+      return res.status(400).json({
+        message: "Appointment cannot be completed. Status must be 'administered' and bill must be paid.",
+        current_status: appointment.status,
+        bill_paid: appointment.paid
+      });
+    }
+  } catch (error) {
+    console.error("Error completing appointment:", error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
