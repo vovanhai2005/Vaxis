@@ -26,10 +26,10 @@ export const createAdministration = async (req, res) => {
         .json({ message: "Administration record not found" });
     }
 
-    // Step 2: Update appointment status to completed
+    // Step 2: Update appointment status to administered
     const status = await sql`
       UPDATE appointments
-      SET status = 'completed', updated_at = NOW()
+      SET status = 'administered', updated_at = NOW()
       WHERE id = ${appointmentId}
       RETURNING *;
     `;
@@ -155,18 +155,19 @@ export const getBillDetails = async (req, res) => {
     const billDetails = await sql`
       SELECT
         b.id AS bill_id,
-        u.full_name as full_name,
-        string_agg(v.name, ', ') AS vaccine_names,
+        u.full_name,
+        string_agg(DISTINCT v.name, ', ' ORDER BY v.name) AS vaccine_names,
         b.amount_cents,
         b.paid,
         b.issued_at AS bill_created_at
-      FROM bills b
-      JOIN citizens c ON c.id = b.citizen_id
+      FROM administrations ad
+      JOIN bills b ON ad.bill_id = b.id
+      JOIN citizens c ON b.citizen_id = c.id
       JOIN users u ON c.user_id = u.id
-      JOIN administrations ad ON ad.bill_id = b.id
       JOIN vaccines v ON ad.vaccine_id = v.id
       WHERE ad.appointment_id = ${appointmentId}
-      GROUP BY b.id, b.amount_cents, b.paid, b.issued_at, full_name
+      GROUP BY b.id, u.full_name, b.amount_cents, b.paid, b.issued_at
+      LIMIT 1
     `;
 
     if (billDetails.length === 0) {
