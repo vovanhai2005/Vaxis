@@ -62,7 +62,7 @@ const App = () => {
           
           {/* Citizen Routes */}
           <Route path="/" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <DashboardPage /> : authUser.role === 'employee' ? <EmployeeDashboardPage /> : authUser.role === 'manager' ? <Navigate to="/manager" /> :<Navigate to="/login" />} />
-          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <ProfilePage /> : <Navigate to="/login" />} />
+          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <ProfilePage /> : authUser.role === 'employee' ? <EmployeeProfilePage /> : <Navigate to="/login" />} />
           <Route path="/booking" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <BookingPage /> : <Navigate to="/login" />} />
           <Route path="/appointment" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <AppointmentPage /> : <Navigate to="/login" />} />
           <Route path="/vaccination-info" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <VaccinationInfoPage /> : <Navigate to="/login" />} />
@@ -71,7 +71,6 @@ const App = () => {
           <Route path="/lookup-citizen" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <LookupCitizenProfilePage /> : <Navigate to="/login" />} />
           <Route path="/upcoming-appointments" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <UpcomingAppointmentsPage /> : <Navigate to="/login" />} />
           <Route path="/vaccine-stock" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <VaccineStockPage /> : <Navigate to="/login" />} />
-          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <EmployeeProfilePage /> : <Navigate to="/login" />} />
         
          {/* Manager Routes */}
           <Route path="/manager" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'manager' ? <ManagerDashboardPage /> : <Navigate to="/login" />} />
