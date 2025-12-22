@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from "react";
-import { useLookUpStore } from "../../store/useLookupStore";
+import { axiosInstance } from "../../lib/axios";
 import VaccinationDetails from "../../components/VaccinationDetails";
 import Header from "../../components/Header";
 import {
@@ -13,13 +13,27 @@ const LookUpCitizenProfile = () => {
   const [nationalId, setNationalId] = useState("");
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  
-  const { lookupResults, lookupCitizen, isLoading } = useLookUpStore();
+  const [lookupResults, setLookupResults] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const profile = useMemo(() => 
     lookupResults.length > 0 ? lookupResults[0] : null,
     [lookupResults]
   );
+
+  const lookupCitizen = async (nationalId) => {
+    setIsLoading(true);
+    try {
+      const res = await axiosInstance.get(`/administration/search/?nationalId=${nationalId}`);
+      setLookupResults(res.data);
+      toast.success("Search completed");
+    } catch (error) {
+      toast.error("Error searching for citizen profile");
+      setLookupResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearch = useCallback((e) => {
     e?.preventDefault();
@@ -30,13 +44,8 @@ const LookUpCitizenProfile = () => {
       return;
     }
     
-    // if (trimmedId.length < 9) {
-    //   toast.error("National ID must be at least 9 characters");
-    //   return;
-    // }
-    
     lookupCitizen(trimmedId);
-  }, [nationalId, lookupCitizen]);
+  }, [nationalId]);
 
   const handleKeyPress = useCallback((e) => {
     if (e.key === 'Enter') {
