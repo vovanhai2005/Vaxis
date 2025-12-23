@@ -12,6 +12,7 @@ export const useReportStore = create((set) => ({
 	totalVaccinationPages: 1,
 	vaccinationStatsLimit10: [], 
     // Loading flags
+	isLoading: false,
     isLoadingRate: false,
     isLoadingMonthly: false,
     isLoadingInventory: false,
@@ -83,6 +84,7 @@ export const useReportStore = create((set) => ({
 
    //  Thống kê mũi tiêm theo thời gian limit 10
  	getVaccinationStatsLimit10: async () => {
+		set({ isLoading: true });
         try {
             const res = await axiosInstance.get("/reports/vaccinations-limit-10"); // URL API của bạn
             
@@ -94,7 +96,9 @@ export const useReportStore = create((set) => ({
             console.error("Error fetching top 10 stats:", error);
             // Nếu lỗi, set lại về mảng rỗng để không crash trang
             set({ vaccinationStatsLimit10: [] }); 
-        }
+        } finally {
+    set({ isLoading: false }); // <--- Kết thúc load
+  }
     },
 
     // Tổng công dân

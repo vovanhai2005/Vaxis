@@ -1,14 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { X, Loader2, Save, Pencil, Undo2, Calendar, Package, ClipboardList, AlertCircle } from 'lucide-react';
-// [CHANGE] Import store của Lot
 import { useVaccineLotStore } from '../store/useVaccineLotStore';
 
 const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
-	//console.log("Dữ liệu Lot nhận được:", lotData);
-  // [CHANGE] Sử dụng editLot từ useVaccineLotStore
   const { editLot, getLotById, isLoadingLots } = useVaccineLotStore();
   const [isEditing, setIsEditing] = useState(false);
   
+  // State chặn spam click & Lưu mốc chuẩn
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [savedData, setSavedData] = useState(null);
+
+  // [ADD] State loading cục bộ để tránh hiện dữ liệu cũ khi chuyển tab
+  const [isInitializing, setIsInitializing] = useState(true);
+
   // State form data cho Lot (Batch)
   const [formData, setFormData] = useState({
     lot_number: '',
@@ -17,7 +21,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
     notes: ''
   });
 
-  // State hiển thị thông tin Vaccine cha (Read Only)
+  // State hiển thị thông tin Vaccine cha
   const [vaccineInfo, setVaccineInfo] = useState({
     name: '',
     code: '',
@@ -28,22 +32,28 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
   useEffect(() => {
     const fetchLatestData = async () => {
       if (isOpen && lotData?.id) {
-     
+        // [ADD] Bắt đầu load dữ liệu mới -> Bật màn hình chờ ngay lập tức
+        setIsInitializing(true);
+
+        // Giả lập delay cực nhỏ để đảm bảo UI kịp render trạng thái loading (optional)
+        // await new Promise(r => setTimeout(r, 0));
+
         const freshData = await getLotById(lotData.id);
-        
-        // Nếu lấy được dữ liệu mới thì dùng, nếu lỗi thì dùng tạm lotData cũ (fallback)
         const data = freshData || lotData;
 
         const expiry = data.expiry_date 
             ? new Date(data.expiry_date).toISOString().split('T')[0] 
             : '';
 
-        setFormData({
+        const initialData = {
             lot_number: data.lot_number || '',
             quantity: data.quantity || 0,
             expiry_date: expiry,
             notes: data.notes || ''
-        });
+        };
+
+        setFormData(initialData);
+        setSavedData(initialData);
 
         setVaccineInfo({
             name: data.name || 'Unknown Vaccine',
@@ -51,12 +61,15 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
             manufacturer: data.manufacturer || 'Unknown',
             imageUrl: data.image_url || ''
         });
+
+        // [ADD] Load xong -> Tắt màn hình chờ
+        setIsInitializing(false);
       }
     };
 
     fetchLatestData();
     setIsEditing(false);
-  }, [isOpen, lotData?.id]); 
+  }, [isOpen, lotData?.id]); // Chạy lại khi ID thay đổi
 
   const handleClose = () => {
     setIsEditing(false);
@@ -66,16 +79,9 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
   const handleToggleEdit = (e) => {
     if (e) e.preventDefault();
     if (isEditing) {
-      // Revert data nếu Cancel
-      const expiry = lotData.expiry_date 
-            ? new Date(lotData.expiry_date).toISOString().split('T')[0] 
-            : '';
-      setFormData({
-        lot_number: lotData.lot_number || '',
-        quantity: lotData.quantity || 0,
-        expiry_date: expiry,
-        notes: lotData.notes || ''
-      });
+      if (savedData) {
+          setFormData({ ...savedData });
+      }
     }
     setIsEditing(!isEditing);
   };
@@ -91,9 +97,20 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const hasChanges = useMemo(() => {
+    if (!savedData) return false;
+    return (
+        formData.lot_number !== savedData.lot_number ||
+        parseInt(formData.quantity || 0) !== parseInt(savedData.quantity || 0) ||
+        formData.expiry_date !== savedData.expiry_date ||
+        formData.notes !== savedData.notes
+    );
+  }, [formData, savedData]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+
     const payload = {
         lot_number: formData.lot_number,
         quantity: parseInt(formData.quantity) || 0,
@@ -101,21 +118,20 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
         notes: formData.notes
     };
 
-	if (lotData.id) {
-     
-        const updatedPartialData = await editLot(lotData.id, payload);
-        console.log("Dữ liệu mới từ Server:", updatedPartialData);      
-        const fullUpdatedData = {
-            ...lotData,           
-            ...updatedPartialData
-        };
-    
-        if (onSuccess) {
-            onSuccess(fullUpdatedData);
-        } 
-      
-        setIsEditing(false);
-        onClose(); 
+    try {
+        if (lotData.id) {
+            const updatedPartialData = await editLot(lotData.id, payload);
+            const fullUpdatedData = { ...lotData, ...updatedPartialData };
+        
+            if (onSuccess) onSuccess(fullUpdatedData);
+          
+            setSavedData({ ...formData });
+            setIsEditing(false);
+        }
+    } catch (error) {
+        console.error("Update lot failed", error);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
@@ -129,14 +145,22 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
       ></div>
 
       <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-        <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl border border-gray-100">
+        <div className="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-3xl border border-gray-100 min-h-[400px]">
           
+          {/* [ADD] Loading Overlay: Che nội dung cũ khi đang load cái mới */}
+          {isInitializing && (
+             <div className="absolute inset-0 z-50 bg-white flex flex-col items-center justify-center">
+                <Loader2 className="w-10 h-10 text-teal-600 animate-spin mb-3" />
+                <p className="text-sm text-gray-400">Loading batch details...</p>
+             </div>
+          )}
+
           {/* Header */}
           <div className="bg-gray-50 px-4 py-4 sm:px-6 flex justify-between items-center border-b border-gray-100">
             <div>
                 <h3 className="text-lg font-semibold leading-6 text-gray-900 flex items-center gap-2">
                     {isEditing ? 'Edit Batch Details' : 'Batch Information'}
-                    {!isEditing && (
+                    {!isEditing && !isInitializing && (
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium 
                             ${new Date(formData.expiry_date) < new Date() ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                             {new Date(formData.expiry_date) < new Date() ? 'Expired' : 'Active'}
@@ -166,15 +190,27 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                     <div className="bg-teal-50 rounded-xl p-4 border border-teal-100 shadow-sm">
                         <div className="aspect-square w-full rounded-lg overflow-hidden bg-white mb-3 border border-gray-200">
                              {vaccineInfo.imageUrl ? (
-                                <img src={vaccineInfo.imageUrl} alt="Vaccine" className="w-full h-full object-cover" />
+                                <img src={vaccineInfo.imageUrl} alt="Vaccine" className="w-full h-full object-fill" />
                              ) : (
                                 <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">No Image</div>
                              )}
                         </div>
-                        <h4 className="font-bold text-gray-900 text-sm line-clamp-2">{vaccineInfo.name}</h4>
+                        
+                        {/* [FIX] Truncate & Break All cho tên dài */}
+                        <h4 
+                            className="font-bold text-gray-900 text-sm line-clamp-2 break-all" 
+                            title={vaccineInfo.name}
+                        >
+                            {vaccineInfo.name}
+                        </h4>
+
                         <div className="mt-2 space-y-1">
-                            <p className="text-xs text-gray-500">Code: <span className="font-mono text-teal-700 font-medium">{vaccineInfo.code}</span></p>
-                            <p className="text-xs text-gray-500">Mfg: {vaccineInfo.manufacturer}</p>
+                            <p className="text-xs text-gray-500 truncate" title={vaccineInfo.code}>
+                                Code: <span className="font-mono text-teal-700 font-medium">{vaccineInfo.code}</span>
+                            </p>
+                            <p className="text-xs text-gray-500 truncate" title={vaccineInfo.manufacturer}>
+                                Mfg: {vaccineInfo.manufacturer}
+                            </p>
                         </div>
                     </div>
                     
@@ -240,7 +276,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                                     type="date"
                                     name="expiry_date"
                                     disabled={!isEditing}
-									style={{ colorScheme: 'light' }}
+                                    style={{ colorScheme: 'light' }}
                                     value={formData.expiry_date}
                                     onChange={handleChange}
                                     className={`block w-full pl-10 px-3 py-2.5 border outline-none rounded-xl leading-5 transition duration-150 ease-in-out sm:text-sm 
@@ -277,15 +313,20 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                 <>
                     <button
                         type="submit"
-                        disabled={isLoadingLots}
-                        className="flex items-center justify-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-all"
+                        disabled={isSubmitting || isLoadingLots || !hasChanges}
+                        className={`flex items-center justify-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white shadow-sm transition-all
+                            ${(!hasChanges && !isSubmitting && !isLoadingLots)
+                                ? 'bg-gray-400 cursor-not-allowed opacity-70' // Xám
+                                : 'bg-teal-600 hover:bg-teal-700'            // Xanh
+                            }`}
                     >
-                        {isLoadingLots ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                        {(isSubmitting || isLoadingLots) ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                         Save Changes
                     </button>
                     <button
                         type="button"
                         onClick={handleToggleEdit}
+                        disabled={isSubmitting}
                         className="flex items-center justify-center px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 shadow-sm transition-all"
                     >
                         <Undo2 className="w-4 h-4 mr-2" />
@@ -300,7 +341,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                         className="flex items-center justify-center px-4 py-2 border border-transparent rounded-xl text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 shadow-sm transition-all"
                     >
                         <Pencil className="w-4 h-4 mr-2" />
-                        Edit Batch
+                        Edit Lot
                     </button>
                     <button
                         type="button"
