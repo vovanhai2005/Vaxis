@@ -169,7 +169,7 @@ const CategoriesVaccinePage = () => {
                 {/* Action Buttons */}
                 <div className="flex gap-3 w-full md:w-auto relative"> 
                     
-                    {/* --- Nút Filter & Dropdown (Đã cập nhật) --- */}
+                    {/* --- Nút Filter & Dropdown --- */}
                     <div className="relative">
                         <button 
                             className={`flex items-center justify-center px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
@@ -221,7 +221,7 @@ const CategoriesVaccinePage = () => {
                                         />
                                     </div>
                                     
-                                    {/* Nút Apply (Chỉ đóng menu vì logic lọc chạy real-time) */}
+                                    {/* Nút Apply */}
                                     <button 
                                         onClick={() => setIsFilterOpen(false)}
                                         className="w-full bg-teal-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-teal-700 transition-colors mt-2"
@@ -244,30 +244,32 @@ const CategoriesVaccinePage = () => {
                 </div>
             </div>
 
-            {/* --- TABLE SECTION --- */}
+            {/* --- TABLE SECTION ĐÃ CỐ ĐỊNH --- */}
             <div className="overflow-x-auto flex-grow">
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+                {/* 1. Thêm table-fixed và w-full */}
+                <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                            {/* 2. Set width cố định cho các cột */}
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                                 No
                             </th>
-							<th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+							<th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-16">
                                 ID
                             </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32">
                                 Vaccine Code
                             </th>
                             <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
                                 Vaccine Name
                             </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-60">
                                 Manufacturer
                             </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32">
                                 Price
                             </th>
-                            <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24">
                                 Operation
                             </th>
                         </tr>
@@ -275,7 +277,7 @@ const CategoriesVaccinePage = () => {
                     <tbody className="bg-white divide-y divide-gray-200">
                         {isLoadingVaccines ? (
                             <tr>
-                               <td colSpan="6" className="px-6 py-20 text-center text-gray-500">
+                               <td colSpan="7" className="px-6 py-20 text-center text-gray-500">
                                 <div className="flex flex-col items-center justify-center h-full">
                                     <Loader2 className="w-8 h-8 text-teal-500 animate-spin mb-2" /> 
                                     <span className="text-sm font-medium">Loading vaccines...</span>
@@ -295,21 +297,19 @@ const CategoriesVaccinePage = () => {
                                             {vaccine.id}                
                                     </td>
 									
-                                    {/* Code */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium font-bold text-teal-700">
+                                    {/* Code: Truncate + Title */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium font-bold text-teal-700 truncate" title={vaccine.code}>
 										{vaccine.code}
                                     </td>
                                     
-                                    {/* Name */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
-                                        <div className="flex items-center">                                          
-                                            {vaccine.name}
-                                        </div>
+                                    {/* Name: Truncate + Title */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium truncate" title={vaccine.name}>
+                                        {vaccine.name}
                                     </td>
 
-                                    {/* Manufacturer */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100">
-                                         <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium border border-blue-100">
+                                    {/* Manufacturer: Truncate nội dung bên trong badge */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100" title={vaccine.manufacturer}>
+                                         <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium border border-blue-100 inline-block max-w-full truncate">
                                             {vaccine.manufacturer || 'Unknown'}
                                         </span>
                                     </td>
@@ -343,7 +343,7 @@ const CategoriesVaccinePage = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="6" className="px-6 py-10 text-center text-gray-500 italic">
+                                <td colSpan="7" className="px-6 py-10 text-center text-gray-500 italic">
                                    No vaccines found.
                                 </td>
                             </tr>

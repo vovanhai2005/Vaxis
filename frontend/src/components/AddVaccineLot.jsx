@@ -38,7 +38,7 @@ const AddVaccineLot = ({ isOpen, onClose, onSuccess }) => {
     const { name, value } = e.target;
     // Xử lý riêng cho quantity để chỉ nhận số
     if (name === 'quantity') {
-       // Chỉ cho phép nhập số nguyên dương
+    
       if (value === '' || /^\d+$/.test(value)) {
         setFormData((prev) => ({ ...prev, [name]: value }));
       }

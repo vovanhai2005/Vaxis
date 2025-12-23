@@ -17,6 +17,7 @@ import {
   Syringe,          // Icon cho mũi tiêm
   Package,          // Icon cho kho
   Users,            // Icon cho công dân
+  Loader2,
   AlertTriangle     // Icon cảnh báo hết hạn
 } from 'lucide-react';
 
@@ -37,6 +38,7 @@ const DashboardPage = () => {
     vaccinationRate, 
     monthlyStats,
     totalCitizens,
+	isLoading,
     vaccinationStatsLimit10,
     getVaccinationRate, 
     getMonthlyStats,
@@ -233,7 +235,7 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* TOP 10 VACCINES TABLE */}
+{/* TOP 10 VACCINES TABLE */}
       <div className="bg-white rounded-2xl p-6 shadow-sm mx-6 border border-gray-100">
         <div className="flex items-center gap-2 mb-6">
              {/* Thêm icon TrendingUp để nhấn mạnh thống kê */}
@@ -248,18 +250,33 @@ const DashboardPage = () => {
         </div>
         
         <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+            {/* THÊM table-fixed */}
+            <table className="w-full table-fixed text-left border-collapse">
                 <thead>
                     <tr className="border-b border-gray-100 text-sm uppercase tracking-wider">
-                        <th className="pb-4 font-semibold text-gray-500 pl-4">ID</th>
-                        <th className="pb-4 font-semibold text-gray-500">Code</th>
+                        {/* Cột ID: w-16 */}
+                        <th className="pb-4 font-semibold text-gray-500 pl-4 w-16">ID</th>
+                        {/* Cột Code: w-32 */}
+                        <th className="pb-4 font-semibold text-gray-500 w-40">Code</th>
+                        {/* Cột Name: Không set width để tự giãn */}
                         <th className="pb-4 font-semibold text-gray-500">Vaccine Name</th>
-                        <th className="pb-4 font-semibold text-gray-500">Doses Given</th>
-                        <th className="pb-4 font-semibold text-gray-500">Remaining Stock</th>
+                        {/* Cột Doses: w-32 */}
+                        <th className="pb-4 font-semibold text-gray-500 w-32">Doses Given</th>
+                        {/* Cột Stock: w-40 */}
+                        <th className="pb-4 font-semibold text-gray-500 w-40">Remaining Stock</th>
                     </tr>
                 </thead>
                 <tbody className="text-sm text-gray-700">
-                    {vaccinationStatsLimit10 && vaccinationStatsLimit10.length > 0 ? (
+                    {isLoading ? (
+                        <tr>
+                            <td colSpan="5" className="py-12 text-center">
+                                <div className="flex flex-col items-center justify-center text-gray-500">
+                                    <Loader2 className="w-8 h-8 animate-spin text-teal-500 mb-2" />
+                                    <span className="text-sm font-medium">Loading vaccination data...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    ) : vaccinationStatsLimit10 && vaccinationStatsLimit10.length > 0 ? (
                         vaccinationStatsLimit10.map((vac, index) => (
                             <tr key={vac.id || index} className="border-b last:border-0 border-gray-50 hover:bg-gray-50 transition-colors">
                                 {/* Cột 1: ID */}                               
@@ -269,22 +286,22 @@ const DashboardPage = () => {
                                     </span>
                                 </td>
 
-                                {/* Cột 2: Code */}
-                                <td className="py-4">
-                                    <span className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
+                                {/* Cột 2: Code - Thêm truncate + title */}
+                                <td className="py-4 truncate" title={vac.code}>
+                                    <span className="px-4 py-4 text-sm text-gray-500 border-l border-gray-100 font-mono">
                                         {vac.code || 'N/A'}
                                     </span>
                                 </td>
 
-                                {/* Cột 3: Tên Vaccine */}
-                                <td className="py-4 font-medium text-gray-800">
+                                {/* Cột 3: Tên Vaccine - Thêm truncate + title */}
+                                <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-bold text-teal-800 truncate" title={vac.name}>
                                     {vac.name || 'N/A'}
                                 </td>
 
                                 {/* Cột 4: Số mũi đã tiêm */}
                                 <td className="py-4">
-                                    <span className=" text-gray-700 px-2 py-1 rounded-md text-xs font-bold">
-                                        {vac.doses_given ? vac.doses_given.toLocaleString() : '0'}
+                                    <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md font-bold text-xs inline-block truncate max-w-full">
+                                        {vac.doses_given ? vac.doses_given.toLocaleString() : '0'} doses
                                     </span>
                                 </td>
                                 
@@ -308,7 +325,7 @@ const DashboardPage = () => {
                 </tbody>
             </table>
         </div>
-      </div>    
+      </div>   
     </div>
   );
 }

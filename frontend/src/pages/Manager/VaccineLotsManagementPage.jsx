@@ -16,18 +16,17 @@ const VaccineLotsManagementPage = () => {
     const { inventory, isLoadingInventory, getInventory, updateInventoryItem } = useReportStore();
     const { deleteLot } = useVaccineLotStore();
     
+    // ... (Giữ nguyên phần logic state và effect không đổi) ...
     // Local state cho tìm kiếm và phân trang
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
     const [totalPages, setTotalPages] = useState(0); 
 
-    // --- 1. STATE QUẢN LÝ FILTER (MỚI) ---
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [isTableLoading, setIsTableLoading] = useState(true);
 
-    // State lưu giá trị đang nhập trong menu filter 
     const [tempFilters, setTempFilters] = useState({
         status: '',       
         minQuantity: '',
@@ -36,7 +35,6 @@ const VaccineLotsManagementPage = () => {
         toDate: ''       
     });
 
-    // State lưu giá trị filter ĐÃ APPLY (dùng để gọi API)
     const [activeFilters, setActiveFilters] = useState({
         status: '',
         minQuantity: '',
@@ -45,14 +43,12 @@ const VaccineLotsManagementPage = () => {
         toDate: ''
     });
     
-    // State Modal Xem/Sửa/Xóa
     const [isAddOpen, setIsAddOpen] = useState(false);
     const [selectedLot, setSelectedLot] = useState(null);
     const [isViewModalOpen, setIsViewModalOpen] = useState(false);
     const [isDeleteOpen, setIsDeleteOpen] = useState(false);
     const [lotToDelete, setLotToDelete] = useState(null);
 
-    // --- 2. GỌI API KHI ACTIVE FILTERS THAY ĐỔI ---
     useEffect(() => {
         setIsTableLoading(true);
         const timer = setTimeout(async () => {
@@ -81,7 +77,6 @@ const VaccineLotsManagementPage = () => {
         setCurrentPage(1);
     }, [searchTerm, activeFilters]);
 
-    // Cập nhật totalPages khi inventory thay đổi
     useEffect(() => {
         const storeTotalPages = useReportStore.getState().totalPages || 1; 
         setTotalPages(storeTotalPages);
@@ -91,23 +86,19 @@ const VaccineLotsManagementPage = () => {
         setCurrentPage(pageNumber);
     };
    
-    // Xử lý nhập liệu trong menu dropdown
     const handleFilterChange = (e, field) => {
         const value = e.target.value;
-       
         if ((field === 'minQuantity' || field === 'maxQuantity') && value !== '' && !/^\d+$/.test(value)) {
             return;
         }
         setTempFilters(prev => ({ ...prev, [field]: value }));
     };
 
-    // Nút "Apply Filters"
     const applyFilters = () => {
         setActiveFilters(tempFilters);
         setIsFilterOpen(false);
     };
 
-    // Nút "Reset"
     const clearFilters = () => {
         const emptyState = {
             status: '',
@@ -121,7 +112,6 @@ const VaccineLotsManagementPage = () => {
         setIsFilterOpen(false);
     };
 
-    // --- Helper Functions UI ---
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         const date = new Date(dateString);
@@ -134,11 +124,11 @@ const VaccineLotsManagementPage = () => {
         const daysDiff = (expiry - now) / (1000 * 60 * 60 * 24);
 
         if (daysDiff < 0) {
-            return <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold border border-red-200">Expired</span>;
+            return <span className="inline-block bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold border border-red-200 whitespace-nowrap">Expired</span>;
         } else if (daysDiff <= 30) {
-            return <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-semibold border border-orange-200">Expiring Soon</span>;
+            return <span className="inline-block bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-semibold border border-orange-200 whitespace-nowrap">Expiring Soon</span>;
         } else {
-            return <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold border border-green-200">Valid</span>;
+            return <span className="inline-block bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold border border-green-200 whitespace-nowrap">Valid</span>;
         }
     };
 
@@ -157,7 +147,6 @@ const VaccineLotsManagementPage = () => {
             try {
                 await deleteLot(lotToDelete.id);
                  try {
-                    // Refresh lại data với các filter hiện tại
                     await getInventory({
                         search: searchTerm,
                         expiry_status: activeFilters.status,
@@ -253,7 +242,7 @@ const VaccineLotsManagementPage = () => {
                         </div>
 
                         <div className="flex gap-3 w-full md:w-auto relative">
-                            {/* --- FILTER DROPDOWN (Đã cập nhật) --- */}
+                             {/* --- FILTER DROPDOWN --- */}
                             <div className="relative">
                                 <button
                                     className={`flex items-center justify-center px-4 py-2.5 border rounded-xl text-sm font-medium transition-colors ${
@@ -275,7 +264,6 @@ const VaccineLotsManagementPage = () => {
                                                 <button onClick={clearFilters} className="text-xs text-red-500 hover:text-red-700 font-medium">Reset All</button>
                                             </div>
                                             
-                                            {/* 1. Status Filter (Giữ nguyên) */}
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-500 mb-1">Expiry Status</label>
                                                 <select
@@ -290,7 +278,6 @@ const VaccineLotsManagementPage = () => {
                                                 </select>
                                             </div>
 
-                                            {/* 2. Quantity Range Filter (Mới) */}
                                             <div className="grid grid-cols-2 gap-2">
                                                 <div>
                                                     <label className="block text-xs font-medium text-gray-500 mb-1">Min Quantity</label>
@@ -314,7 +301,6 @@ const VaccineLotsManagementPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* 3. Expiry Date Range Filter */}
                                             <div>
                                                 <label className="block text-xs font-medium text-gray-500 mb-1">Expiry Date Range</label>
                                                 <div className="grid grid-cols-2 gap-2">
@@ -335,7 +321,6 @@ const VaccineLotsManagementPage = () => {
                                                 </div>
                                             </div>
 
-                                            {/* Apply Button */}
                                             <button 
                                                 onClick={applyFilters} 
                                                 className="w-full bg-teal-600 text-white rounded-lg py-2 text-sm font-medium hover:bg-teal-700 transition-colors mt-2"
@@ -357,80 +342,97 @@ const VaccineLotsManagementPage = () => {
                         </div>
                     </div>
 
-                    {/* TABLE (Giữ nguyên) */}
+                    {/* TABLE  */}
                     <div className="overflow-x-auto flex-grow">
-                        <table className="min-w-full divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-10">No</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Lot Number</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccine Code</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccine Name</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Quantity</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Expiry Date</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Status</th>
-                                    <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
-                                {(isLoadingInventory || isRefreshing || isTableLoading) ? (
-                                    <tr>
-                                        <td colSpan="8" className="px-6 py-20 text-center text-gray-500 h-[400px]">
-                                            <div className="flex flex-col items-center justify-center h-full">
-                                                <Loader2 className="w-8 h-8 text-teal-500 animate-spin mb-2" /> 
-                                                <span className="text-sm font-medium">Loading vaccine lots...</span>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ) : (inventory && inventory.length > 0) ? (
-                                    inventory.map((lot, index) => (
-                                        <tr key={lot.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
-                                                {String((currentPage - 1) * itemsPerPage + index + 1).padStart(3, '0')}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-bold text-teal-700">
-                                                {lot.lot_number}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100">{lot.code}</td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">{lot.name}</td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-bold">{lot.quantity}</td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 flex items-center gap-2">
-                                                <Calendar size={14} className="text-gray-400" />
-                                                {formatDate(lot.expiry_date)}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
-                                                {renderStatus(lot.expiry_date)}
-                                            </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-center text-sm font-medium border-l border-gray-100">
-                                                <div className="flex items-center justify-center gap-2">
-                                                    <button
-                                                        className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
-                                                        title="View Details"
-                                                        onClick={() => handleRowClick(lot)}
-                                                    >
-                                                        <Eye size={18} />
-                                                    </button>
-                                                    <button 
-                                                        className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded" 
-                                                        title="Delete"
-                                                        onClick={() => handleDeleteClick(lot)}
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td colSpan="8" className="px-6 py-10 text-center text-gray-500 italic">
-                                            No vaccine batches found matching criteria.
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
+    <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+        <thead className="bg-gray-50">
+            <tr>
+                {/* Giữ nguyên độ rộng các cột để bố cục đẹp */}
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-12">No</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-32">Lot Number</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-28">Code</th>
+                {/* Cột Name chiếm phần còn lại */}
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccine Name</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-40">Quantity Import</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-32">Expiry Date</th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-24">Status</th>
+                <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-24">Action</th>
+            </tr>
+        </thead>
+        <tbody className="bg-white divide-y divide-gray-200">
+            {(isLoadingInventory || isRefreshing || isTableLoading) ? (
+                <tr>
+                    <td colSpan="8" className="px-6 py-20 text-center text-gray-500 h-[400px]">
+                        <div className="flex flex-col items-center justify-center h-full">
+                            <Loader2 className="w-8 h-8 text-teal-500 animate-spin mb-2" /> 
+                            <span className="text-sm font-medium">Loading vaccine lots...</span>
+                        </div>
+                    </td>
+                </tr>
+            ) : (inventory && inventory.length > 0) ? (
+                inventory.map((lot, index) => (
+                    <tr key={lot.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-medium">
+                            {String((currentPage - 1) * itemsPerPage + index + 1).padStart(3, '0')}
+                        </td>
+                        
+                        {/* 1. LOT NUMBER: Thêm truncate + title */}
+                        <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-bold text-teal-700 truncate" title={lot.lot_number}>
+                            {lot.lot_number}
+                        </td>
+                        
+                        {/* 2. CODE: Thêm truncate + title */}
+                        <td className="px-4 py-4 text-sm text-gray-500 border-l border-gray-100 truncate" title={lot.code}>
+                            {lot.code}
+                        </td>
+                        
+                        {/* 3. NAME: */}
+                        <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-medium truncate" title={lot.name}>
+                            {lot.name}
+                        </td>
+                        
+                        <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-bold">
+                            {lot.quantity}
+                        </td>
+                        <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100">
+                            <div className="flex items-center gap-2">
+                                <Calendar size={14} className="text-gray-400 flex-shrink-0" />
+                                {formatDate(lot.expiry_date)}
+                            </div>
+                        </td>
+                        <td className="px-4 py-4 text-sm border-l border-gray-100">
+                            {renderStatus(lot.expiry_date)}
+                        </td>
+                        <td className="px-4 py-4 text-center text-sm font-medium border-l border-gray-100">
+                            <div className="flex items-center justify-center gap-2">
+                                <button
+                                    className="text-blue-600 hover:text-blue-900 p-1 hover:bg-blue-50 rounded"
+                                    title="View Details"
+                                    onClick={() => handleRowClick(lot)}
+                                >
+                                    <Eye size={18} />
+                                </button>
+                                <button 
+                                    className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded" 
+                                    title="Delete"
+                                    onClick={() => handleDeleteClick(lot)}
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                ))
+            ) : (
+                <tr>
+                    <td colSpan="8" className="px-6 py-10 text-center text-gray-500 italic">
+                        No vaccine batches found matching criteria.
+                    </td>
+                </tr>
+            )}
+        </tbody>
+    </table>
+</div>
                     {/* PAGINATION */}
                     <div className="border-t border-gray-100 pt-4 flex items-center justify-end mt-auto">
                         <div className="flex gap-1">

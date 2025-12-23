@@ -152,7 +152,7 @@ const AddVaccine = ({ isOpen, onClose }) => {
                           required
                           value={formData.code}
                           onChange={handleChange}
-                          className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
+                          className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                           placeholder="VAC-001"
                         />
                       </div>
@@ -169,7 +169,7 @@ const AddVaccine = ({ isOpen, onClose }) => {
                           name="price"
                           value={formData.price}
                           onChange={handleChange}
-                          className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
+                          className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                           placeholder="0"
                         />
                       </div>
@@ -187,7 +187,7 @@ const AddVaccine = ({ isOpen, onClose }) => {
                           required
                           value={formData.name}
                           onChange={handleChange}
-						  className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
+						  className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                           placeholder="Influenza Vaccine..."
                         />
                       </div>
@@ -204,7 +204,7 @@ const AddVaccine = ({ isOpen, onClose }) => {
                           name="manufacturer"
                           value={formData.manufacturer}
                           onChange={handleChange}
-                        	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
+                        	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                           placeholder="e.g. Pfizer"
                         />
                       </div>
@@ -224,7 +224,7 @@ const AddVaccine = ({ isOpen, onClose }) => {
                     rows={4}
                     value={formData.description}
                     onChange={handleChange}
-                  	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
+                  	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                     placeholder="Details about the vaccine..."
                   />
                 </div>

@@ -5,16 +5,31 @@ import { useStaffStore } from '../store/useStaffStore';
 const AddStaff = ({ isOpen, onClose }) => {
   const { createEmployee, isLoadingStaff } = useStaffStore();
   
+  const JOB_TITLE_PREFIXES = {
+   "Doctor": "DOC",
+  "Medical Assistant": "MA",
+  "Nurse": "NUR",
+  "Pharmacist": "PHA",
+  "Receptionist": "REC",
+  "Cashier": "CAS",
+  "Screening Staff": "SCR",
+  "Vaccination Staff": "VS",
+  "Post-vaccination Monitoring Staff": "PMS",
+  "Emergency / Adverse Reaction Staff": "EAR",
+  "Laboratory Technician": "LAB",
+  "Customer Service": "CS"
+};
+  
   // Initial state khớp với DB schema
   const initialForm = {
     full_name: '',
 	username: '',
-    password: '', // Cần thiết để tạo user
+    password: '', 
 	email: '',
     phone: '',
-    national_id: '', // Cho bảng employees
-    role_title: '', // VD: Y tá, Bác sĩ...
-    employee_number: '', // Mã nhân viên
+    national_id: '',
+    role_title: '', 
+    employee_number: '', 
     dob: '',
   };
 
@@ -38,11 +53,19 @@ const AddStaff = ({ isOpen, onClose }) => {
       }
       return; 
     }
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+	
+	if (name === 'role_title') {
+        const prefix = JOB_TITLE_PREFIXES[value] || 'EMP';
+        setFormData((prev) => ({
+            ...prev,
+            role_title: value,
+            employee_number: `${prefix}-xxx`
+        }));
+        return;
+    }
+	setFormData((prev) => ({ ...prev, [name]: value }));
   };
+
 
 
   const handleSubmit = async (e) => {
@@ -94,7 +117,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="full_name"
                       value={formData.full_name}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
+                     	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                       placeholder="Nguyen Van A"
                     />
                   </div>
@@ -111,7 +134,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       required
                       value={formData.username}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
+                     	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
                     />
                   </div>
                 </div>
@@ -128,7 +151,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       required
                       value={formData.password}
                       onChange={handleChange}
-                      	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
+                      	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
                       placeholder="••••••••"
                     />
                   </div>
@@ -146,7 +169,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
+                     	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
                     />
                   </div>
                 </div>
@@ -162,7 +185,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
-						className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"      
+						className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"      
 						/>
                   </div>
                 </div>
@@ -178,12 +201,12 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="national_id"
                       value={formData.national_id}
                       onChange={handleChange}
-                      	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm appearance-none bg-white text-gray-900"      
+                      	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm appearance-none bg-white text-gray-900"      
 						/>
                   </div>
                 </div>
 
-                {/* Employee Number */}
+				{/* Employee Number */} 
                 <div>
                   <label className="block text-sm font-medium leading-6 text-gray-900">
                     Staff ID
@@ -192,28 +215,32 @@ const AddStaff = ({ isOpen, onClose }) => {
                     <input
                       type="text"
                       name="employee_number"
+                      disabled // KHÓA KHÔNG CHO NHẬP
                       value={formData.employee_number}
-                      onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"
-                      placeholder="NV001"
+                      className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl leading-5 bg-gray-100 text-gray-500 cursor-not-allowed sm:text-sm"
+                      placeholder="Select Job Title first..."
                     />
                   </div>
                 </div>
 
-                {/* Role Title */}
+               {/* Role Title */}
                 <div>
                   <label className="block text-sm font-medium leading-6 text-gray-900">
-                    Job Title
+                    Job Title <span className="text-red-500">*</span>
                   </label>
                   <div className="mt-1">
-                    <input
-                      type="text"
+                    <select
                       name="role_title"
+                      required
                       value={formData.role_title}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"   
-                      placeholder="e.g. Head Nurse"
-                    />
+                      className="block w-full px-3 py-2.5 border border-gray-200 rounded-xl leading-5 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 sm:text-sm bg-white"
+                    >
+                        <option value="">Select Job Title</option>
+                        {Object.keys(JOB_TITLE_PREFIXES).map((title) => (
+                            <option key={title} value={title}>{title}</option>
+                        ))}
+                    </select>
                   </div>
                 </div>
                 
@@ -228,7 +255,7 @@ const AddStaff = ({ isOpen, onClose }) => {
                       name="dob"
                       value={formData.dob}
                       onChange={handleChange}
-                     	className="block w-full pl-10 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900" 
+                     	className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900" 
                     />
                   </div>
                 </div>
