@@ -38,3 +38,21 @@ export const protectRoute = async (req, res, next) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
+
+// Middleware to check if user is a manager
+export const managerOnly = (req, res, next) => {
+    if (req.user && req.user.role === 'manager') {
+        next();
+    } else {
+        return res.status(403).json({ message: "Forbidden: Manager access required" });
+    }
+}
+
+// Middleware to check if user is an employee or manager
+export const employeeOnly = (req, res, next) => {
+    if (req.user && (req.user.role === 'employee' || req.user.role === 'manager')) {
+        next();
+    } else {
+        return res.status(403).json({ message: "Forbidden: Employee access required" });
+    }
+}

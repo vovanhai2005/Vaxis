@@ -6,11 +6,9 @@ export const useUserStore = create((set) => ({
     userProfile: null,
     employeeProfile: null,
     vaccineHistory: [],
-    notifications: [],
     isLoadingProfile: false,
     isUpdatingProfile: false,
     isLoadingHistory: false,
-    isLoadingNotifications: false,
 
     // Get citizen profile
     getCitizenProfile: async () => {
@@ -56,20 +54,6 @@ export const useUserStore = create((set) => ({
             toast.error(error.response?.data?.message || 'Failed to load vaccine history')
         } finally {
             set({ isLoadingHistory: false })
-        }
-    },
-
-    // Get notifications
-    getNotifications: async () => {
-        set({ isLoadingNotifications: true })
-        try {
-            const res = await axiosInstance.get('/users/me/notifications')
-            set({ notifications: res.data })
-        } catch (error) {
-            console.error('Error fetching notifications:', error)
-            toast.error(error.response?.data?.message || 'Failed to load notifications')
-        } finally {
-            set({ isLoadingNotifications: false })
         }
     },
 

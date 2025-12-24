@@ -1,4 +1,4 @@
-import { getCitizenProfile, updateCitizenProfile, getVaccineHistory, getNotifications, getEmployeeProfile, updateEmployeeProfile } from "../controllers/user.controller.js";
+import { getCitizenProfile, updateCitizenProfile, getVaccineHistory, getEmployeeProfile, updateEmployeeProfile } from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import express from "express";
 
@@ -9,5 +9,5 @@ router.get("/employee/me", protectRoute, getEmployeeProfile);
 router.put("/me", protectRoute, updateCitizenProfile);
 router.put("/employee/me", protectRoute, updateEmployeeProfile);
 router.get("/me/vaccine-history", protectRoute, getVaccineHistory);
-router.get("/me/notifications", protectRoute, getNotifications);
+
 export default router;

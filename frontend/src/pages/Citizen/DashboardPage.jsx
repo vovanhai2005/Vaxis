@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 const DashboardPage = () => {
   const navigate = useNavigate()
   const { authUser } = useAuthStore()
-  const { vaccineHistory, notifications, getVaccineHistory, getNotifications, isLoadingHistory, isLoadingNotifications } = useUserStore()
+  const { vaccineHistory, getVaccineHistory, isLoadingHistory } = useUserStore()
   const { appointments, isLoadingAppointments, getCitizenAppointments } = useAppointmentStore()
   const { selectedVaccines } = useVaccineStore()
   
@@ -21,9 +21,8 @@ const DashboardPage = () => {
 
   useEffect(() => {
     getVaccineHistory()
-    getNotifications()
     getCitizenAppointments()
-  }, [getVaccineHistory, getNotifications, getCitizenAppointments])
+  }, [getVaccineHistory, getCitizenAppointments])
 
   useEffect(() => {
     if (vaccineHistory) {
@@ -133,7 +132,6 @@ const DashboardPage = () => {
         title="Dashboard" 
         subtitle={`Welcome back, ${authUser?.full_name || authUser?.username || 'User'}`}
         icon={LayoutDashboard}
-        notificationCount={notifications.length}
       />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -180,56 +178,26 @@ const DashboardPage = () => {
           <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-6">
               <Newspaper className="h-6 w-6 text-gray-700" />
-              <h2 className="text-xl font-semibold text-gray-800">
-                {notifications.length > 0 ? 'Recent Notifications' : 'Daily Vaccination News'}
-              </h2>
+              <h2 className="text-xl font-semibold text-gray-800">Daily Vaccination News</h2>
             </div>
 
-            {isLoadingNotifications ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-              </div>
-            ) : (
-              <div className="space-y-2 flex-1 overflow-hidden">
-                {notifications.length > 0 ? (
-                  notifications.slice(0, 5).map((notification) => (
-                    <div key={notification.id} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${
-                          notification.type === 'reminder' ? 'bg-blue-100 text-blue-600' :
-                          notification.type === 'news' ? 'bg-purple-100 text-purple-600' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                          {notification.type.charAt(0).toUpperCase() + notification.type.slice(1)}
-                        </span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {getTimeAgo(notification.created_at)}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-gray-800 mb-1">{notification.subject}</h3>
-                      <p className="text-sm text-gray-500 line-clamp-2">{notification.body}</p>
-                    </div>
-                  ))
-                ) : (
-                  newsItems.slice(0, 5).map((news) => (
-                    <div key={news.id} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${news.categoryColor}`}>
-                          {news.category}
-                        </span>
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {news.time}
-                        </span>
-                      </div>
-                      <h3 className="font-semibold text-gray-800 mb-1">{news.title}</h3>
-                      <p className="text-sm text-gray-500 line-clamp-2">{news.description}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
+            <div className="space-y-2 flex-1 overflow-hidden">
+              {newsItems.slice(0, 5).map((news) => (
+                <div key={news.id} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${news.categoryColor}`}>
+                      {news.category}
+                    </span>
+                    <span className="text-xs text-gray-400 flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {news.time}
+                    </span>
+                  </div>
+                  <h3 className="font-semibold text-gray-800 mb-1">{news.title}</h3>
+                  <p className="text-sm text-gray-500 line-clamp-2">{news.description}</p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Middle Column - Quick Actions & Vaccination History */}

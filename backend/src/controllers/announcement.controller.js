@@ -46,11 +46,6 @@ export const createAnnouncement = async (req, res) => {
       announcement: announcement[0],
       notificationsSent: targetUsers.length
     });
-
-    res.status(201).json({ 
-      message: "Announcement created successfully",
-      announcement: announcement[0]
-    });
   } catch (error) {
     console.error("Error creating announcement:", error);
     res.status(500).json({ message: "Internal server error" });
@@ -63,39 +58,99 @@ export const getAnnouncements = async (req, res) => {
     const { is_active, target_audience, limit = 5, offset = 0 } = req.query;
     const userRole = req.user.role;
 
-    let query = sql`
-      SELECT a.*, u.full_name as creator_name
-      FROM announcements a
-      LEFT JOIN users u ON a.created_by = u.id
-      WHERE 1=1
-    `;
+    let announcements;
 
-    // Filter by active status
-    if (is_active !== undefined) {
-      query = sql`${query} AND a.is_active = ${is_active === 'true'}`;
-    }
-
-    // Filter by target audience based on user role
+    // Build query based on user role
     if (userRole === 'citizen') {
-      query = sql`${query} AND (a.target_audience = 'all' OR a.target_audience = 'citizens')`;
+      if (is_active !== undefined) {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE (a.target_audience = 'all' OR a.target_audience = 'citizens')
+            AND a.is_active = ${is_active === 'true'}
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
+      } else {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE (a.target_audience = 'all' OR a.target_audience = 'citizens')
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
+      }
     } else if (userRole === 'employee') {
-      query = sql`${query} AND (a.target_audience = 'all' OR a.target_audience = 'employees')`;
+      if (is_active !== undefined) {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE (a.target_audience = 'all' OR a.target_audience = 'employees')
+            AND a.is_active = ${is_active === 'true'}
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
+      } else {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE (a.target_audience = 'all' OR a.target_audience = 'employees')
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
+      }
     } else if (userRole === 'manager') {
       // Managers can see all announcements
-      if (target_audience) {
-        query = sql`${query} AND a.target_audience = ${target_audience}`;
+      if (target_audience && is_active !== undefined) {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE a.target_audience = ${target_audience}
+            AND a.is_active = ${is_active === 'true'}
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
+      } else if (target_audience) {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE a.target_audience = ${target_audience}
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
+      } else if (is_active !== undefined) {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE a.is_active = ${is_active === 'true'}
+            AND (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
+      } else {
+        announcements = await sql`
+          SELECT a.*, u.full_name as creator_name
+          FROM announcements a
+          LEFT JOIN users u ON a.created_by = u.id
+          WHERE (a.expires_at IS NULL OR a.expires_at > NOW())
+          ORDER BY a.priority DESC, a.created_at DESC
+          LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+        `;
       }
     }
-
-    // Filter expired announcements
-    query = sql`${query} AND (a.expires_at IS NULL OR a.expires_at > NOW())`;
-
-    query = sql`${query}
-      ORDER BY a.priority DESC, a.created_at DESC
-      LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
-    `;
-
-    const announcements = await query;
 
     res.status(200).json(announcements);
   } catch (error) {

@@ -312,6 +312,35 @@ export const completeAppointment = async (req, res) => {
         RETURNING *;
       `;
 
+      // Get citizen user_id for notification
+      const appointmentData = await sql`
+        SELECT c.user_id, u.full_name, v.name as vaccine_name
+        FROM appointments a
+        JOIN citizens c ON a.citizen_id = c.id
+        JOIN users u ON c.user_id = u.id
+        LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
+        LEFT JOIN vaccines v ON av.vaccine_id = v.id
+        WHERE a.id = ${appointmentId}
+        LIMIT 1
+      `;
+
+      if (appointmentData.length > 0) {
+        const citizenUserId = appointmentData[0].user_id;
+        const vaccineName = appointmentData[0].vaccine_name || 'vaccination';
+        
+        // Create notification for citizen
+        await sql`
+          INSERT INTO notifications (user_id, type, title, message, related_id)
+          VALUES (
+            ${citizenUserId}, 
+            'appointment', 
+            'Vaccination Complete',
+            ${`Your ${vaccineName} vaccination has been completed successfully. You can download your certificate from your profile.`},
+            ${appointmentId}
+          )
+        `;
+      }
+
       return res.status(200).json({
         message: "Appointment completed successfully",
         appointment: updated[0],
