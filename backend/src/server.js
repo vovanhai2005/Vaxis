@@ -15,6 +15,8 @@ import appointmentRoutes from "./routes/appointment.route.js";
 import administrationRoutes from "./routes/administration.route.js";
 import staffRoutes from "./routes/staff.route.js";
 import aiRoutes from "./routes/ai.route.js";
+import notificationRoutes from "./routes/notification.route.js";
+import announcementRoutes from "./routes/announcement.route.js";
 import cookieParser from "cookie-parser";
 
 const PORT = process.env.PORT || 8000;
@@ -46,11 +48,32 @@ async function initDB() {
                 END IF;
                 
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'appointment_status') THEN
-                    CREATE TYPE appointment_status AS ENUM ('booked', 'checked_in', 'completed', 'cancelled', 'no_show');
+                    CREATE TYPE appointment_status AS ENUM ('booked', 'checked_in', 'administered', 'completed', 'cancelled', 'no_show');
+                ELSE
+                    -- Add 'administered' status if it doesn't exist
+                    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'appointment_status'::regtype AND enumlabel = 'administered') THEN
+                        ALTER TYPE appointment_status ADD VALUE 'administered' AFTER 'checked_in';
+                    END IF;
                 END IF;
                 
+                -- Handle notification_type enum migration
                 IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'notification_type') THEN
-                    CREATE TYPE notification_type AS ENUM ('reminder', 'news', 'system');
+                    CREATE TYPE notification_type AS ENUM ('reminder', 'news', 'system', 'appointment', 'task', 'announcement');
+                ELSE
+                    -- Add missing enum values if they don't exist
+                    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'notification_type'::regtype AND enumlabel = 'appointment') THEN
+                        ALTER TYPE notification_type ADD VALUE 'appointment';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'notification_type'::regtype AND enumlabel = 'task') THEN
+                        ALTER TYPE notification_type ADD VALUE 'task';
+                    END IF;
+                    IF NOT EXISTS (SELECT 1 FROM pg_enum WHERE enumtypid = 'notification_type'::regtype AND enumlabel = 'announcement') THEN
+                        ALTER TYPE notification_type ADD VALUE 'announcement';
+                    END IF;
+                END IF;
+                
+                IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'announcement_target') THEN
+                    CREATE TYPE announcement_target AS ENUM ('all', 'citizens', 'employees', 'managers');
                 END IF;
             END $$
         `;
@@ -196,19 +219,55 @@ async function initDB() {
             )
         `;
 
+    // Create announcements table
+    await sql`
+            CREATE TABLE IF NOT EXISTS announcements (
+                id BIGSERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                content TEXT NOT NULL,
+                target_audience announcement_target NOT NULL DEFAULT 'all',
+                created_by UUID REFERENCES users(id),
+                is_active BOOLEAN DEFAULT TRUE,
+                priority INT DEFAULT 0,
+                expires_at TIMESTAMPTZ,
+                created_at TIMESTAMPTZ DEFAULT NOW(),
+                updated_at TIMESTAMPTZ DEFAULT NOW()
+            )
+        `;
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_announcements_active ON announcements(is_active, created_at DESC)`;
+
+    // Drop old notifications table if it exists with old schema, then recreate
+    await sql`
+            DO $$ 
+            BEGIN
+                -- Check if table exists with old schema (citizen_id column)
+                IF EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name = 'notifications' AND column_name = 'citizen_id'
+                ) THEN
+                    DROP TABLE notifications CASCADE;
+                END IF;
+            END $$;
+        `;
+
     // Create notifications table
     await sql`
             CREATE TABLE IF NOT EXISTS notifications (
                 id BIGSERIAL PRIMARY KEY,
-                citizen_id BIGINT REFERENCES citizens(id),
+                user_id UUID REFERENCES users(id),
                 type notification_type NOT NULL,
-                subject TEXT,
-                body TEXT,
-                sent_at TIMESTAMPTZ,
-                created_at TIMESTAMPTZ DEFAULT NOW(),
-                delivered BOOLEAN DEFAULT FALSE
+                title TEXT NOT NULL,
+                message TEXT NOT NULL,
+                link TEXT,
+                is_read BOOLEAN DEFAULT FALSE,
+                related_id BIGINT,
+                created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
+
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id, is_read, created_at DESC)`;
 
     // Create audit_logs table
     await sql`
@@ -251,6 +310,9 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/administration", administrationRoutes);
 app.use("/api/staff", staffRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/notifications", notificationRoutes);
+app.use("/api/announcements", announcementRoutes);
+
 // Start server
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

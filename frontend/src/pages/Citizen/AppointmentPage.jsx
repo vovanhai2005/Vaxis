@@ -64,6 +64,14 @@ const AppointmentPage = () => {
           icon: <AlertCircle className="h-4 w-4" />,
           opacity: ''
         }
+      case 'administered':
+        return { 
+          text: 'Administered', 
+          color: 'bg-purple-100 text-purple-800 border border-purple-200',
+          cardBorder: 'border-l-purple-500',
+          icon: <Syringe className="h-4 w-4" />,
+          opacity: ''
+        }
       case 'completed':
         return { 
           text: 'Completed', 
@@ -145,12 +153,13 @@ const AppointmentPage = () => {
     booked: activeBookedAppointments.length,
     expired: expiredAppointments.length,
     checked_in: appointments.filter(a => a.status === 'checked_in').length,
+    administered: appointments.filter(a => a.status === 'administered').length,
     completed: appointments.filter(a => a.status === 'completed').length,
     cancelled: appointments.filter(a => a.status === 'cancelled').length,
   }
 
   // Calculate stats
-  const upcomingCount = appointments.filter(a => a.status === 'booked' || a.status === 'checked_in').length
+  const upcomingCount = appointments.filter(a => a.status === 'booked' || a.status === 'checked_in' || a.status === 'administered').length
   const totalVaccinesReceived = appointments
     .filter(a => a.status === 'completed')
     .reduce((sum, a) => sum + (a.vaccines?.length || 0), 0)
@@ -287,6 +296,7 @@ const AppointmentPage = () => {
                   { value: 'booked', label: 'Scheduled', count: statusCounts.booked },
                   { value: 'expired', label: 'Expired', count: statusCounts.expired },
                   { value: 'checked_in', label: 'Checked In', count: statusCounts.checked_in },
+                  { value: 'administered', label: 'Administered', count: statusCounts.administered },
                   { value: 'completed', label: 'Completed', count: statusCounts.completed },
                   { value: 'cancelled', label: 'Cancelled', count: statusCounts.cancelled },
                 ].map((filter) => (

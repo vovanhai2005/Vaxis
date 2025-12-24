@@ -118,42 +118,6 @@ export const getVaccineHistory = async (req, res) => {
   }
 };
 
-export const getNotifications = async (req, res) => {
-  try {
-    const userId = req.user.id;
-
-    const citizenResult = await sql`
-            SELECT id FROM citizens WHERE user_id = ${userId}
-        `;
-
-    if (citizenResult.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Citizen profile not found for this user." });
-    }
-    const citizenId = citizenResult[0].id;
-
-    const notifications = await sql`
-            SELECT
-                id,
-                type,
-                subject,
-                body,
-                sent_at,
-                created_at,
-                delivered
-            FROM notifications
-            WHERE citizen_id = ${citizenId}
-            ORDER BY created_at DESC
-        `;
-
-    res.status(200).json(notifications);
-  } catch (error) {
-    console.error("Error fetching notifications:", error);
-    res.status(500).json({ message: "Internal server error" });
-  }
-};
-
 // Get employee profile
 export const getEmployeeProfile = async (req, res) => {
   try {

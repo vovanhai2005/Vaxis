@@ -6,22 +6,26 @@ export const getUserNotifications = async (req, res) => {
     const userId = req.user.id;
     const { is_read, limit = 20, offset = 0 } = req.query;
 
-    let query = sql`
-      SELECT *
-      FROM notifications
-      WHERE user_id = ${userId}
-    `;
+    let notifications;
 
     if (is_read !== undefined) {
-      query = sql`${query} AND is_read = ${is_read === 'true'}`;
+      const isReadBool = is_read === 'true';
+      notifications = await sql`
+        SELECT *
+        FROM notifications
+        WHERE user_id = ${userId} AND is_read = ${isReadBool}
+        ORDER BY created_at DESC
+        LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+      `;
+    } else {
+      notifications = await sql`
+        SELECT *
+        FROM notifications
+        WHERE user_id = ${userId}
+        ORDER BY created_at DESC
+        LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
+      `;
     }
-
-    query = sql`${query}
-      ORDER BY created_at DESC
-      LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
-    `;
-
-    const notifications = await query;
 
     res.status(200).json(notifications);
   } catch (error) {
@@ -41,7 +45,8 @@ export const getUnreadCount = async (req, res) => {
       WHERE user_id = ${userId} AND is_read = false
     `;
 
-    res.status(200).json({ unread_count: result[0].unread_count });
+    const unreadCount = result && result.length > 0 ? result[0].unread_count : 0;
+    res.status(200).json({ unread_count: unreadCount });
   } catch (error) {
     console.error("Error fetching unread count:", error);
     res.status(500).json({ message: "Internal server error" });

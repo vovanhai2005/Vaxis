@@ -1,7 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
 import { useAuthStore } from "../store/useAuthStore";
 import {Home, Calendar, Info, User, Users, LogOut, LogIn, UserPlus, Search,
-   Boxes, List, Table2, Layers, Package, Syringe, PackageCheck } from "lucide-react";
+   Boxes, List, Table2, Layers, Package, Syringe, PackageCheck, Megaphone } from "lucide-react";
 
 const Navbar = () => {
   const { authUser, logout } = useAuthStore();
@@ -38,6 +38,7 @@ const Navbar = () => {
       { to: "/categories-management", label: "Categories", icon: Layers },
       { to: "/vaccineLots-management", label: "Inventory", icon: Package },
       { to: "/vaccination-stats", label: "Statistics", icon: Syringe },
+      { to: "/announcements", label: "Announcements", icon: Megaphone },
     ],
 
   };

@@ -34,6 +34,36 @@ export const createAdministration = async (req, res) => {
       RETURNING *;
     `;
 
+    // Step 2.5: Get citizen user_id for notification
+    const appointmentData = await sql`
+      SELECT a.citizen_id, c.user_id, u.full_name, v.name as vaccine_name
+      FROM appointments a
+      JOIN citizens c ON a.citizen_id = c.id
+      JOIN users u ON c.user_id = u.id
+      LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
+      LEFT JOIN vaccines v ON av.vaccine_id = v.id
+      WHERE a.id = ${appointmentId}
+      LIMIT 1
+    `;
+
+    if (appointmentData.length > 0) {
+      const citizenUserId = appointmentData[0].user_id;
+      const citizenName = appointmentData[0].full_name;
+      const vaccineName = appointmentData[0].vaccine_name || 'vaccination';
+      
+      // Create notification for citizen
+      await sql`
+        INSERT INTO notifications (user_id, type, title, message, related_id)
+        VALUES (
+          ${citizenUserId}, 
+          'appointment', 
+          'Vaccination Administered',
+          ${`Your ${vaccineName} vaccination has been administered. Please proceed to payment to complete your appointment.`},
+          ${appointmentId}
+        )
+      `;
+    }
+
     // Step 3: Get vaccine details from appointment
     const vaccineDetails = await sql`
       SELECT DISTINCT ON (av.vaccine_id)
@@ -61,11 +91,15 @@ export const createAdministration = async (req, res) => {
     }
 
     // Step 5: Create bill
-    const appointmentData = await sql`
+    const billingCitizenData = await sql`
       SELECT citizen_id FROM appointments WHERE id = ${appointmentId}
     `;
 
-    const citizenId = appointmentData[0].citizen_id;
+    // SỬA: Lấy citizen_id từ biến mới
+    if (billingCitizenData.length === 0) {
+        return res.status(404).json({ message: "Appointment not found for billing" });
+    }
+    const citizenId = billingCitizenData[0].citizen_id;
 
     const details = await sql`
       SELECT v.price

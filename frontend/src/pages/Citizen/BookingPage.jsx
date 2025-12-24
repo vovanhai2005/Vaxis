@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Info, Calendar, Loader2, ShoppingCartIcon, Trash2, User, Mail, Phone, ShieldCheck, Check, CalendarPlus } from 'lucide-react'
+import { Info, Calendar, Loader2, ShoppingCartIcon, Trash2, User, Mail, Phone, ShieldCheck, Check, CalendarPlus, ArrowRight } from 'lucide-react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useAppointmentStore } from '../../store/useAppointmentStore'
 import { useVaccineStore } from '../../store/useVaccineStore'
 import DateTimePicker from '../../components/DateTimePicker'
 import Header from '../../components/Header'
+import { useNavigate } from 'react-router-dom'
 
 const Section = ({ icon, title, subtitle, children }) => (
   <div className="bg-white rounded-2xl shadow-sm mb-6">
@@ -35,6 +36,7 @@ const InfoField = ({ icon, label, value }) => (
 )
 
 const BookingPage = () => {
+  const navigate = useNavigate()
   const { authUser } = useAuthStore()
   const { userProfile, getCitizenProfile } = useUserStore()
   const { makeAppointment } = useAppointmentStore()
@@ -92,7 +94,14 @@ const BookingPage = () => {
             <div className="text-center py-12 border-2 border-dashed border-gray-200 rounded-lg">
               <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
               <h4 className="font-semibold text-gray-700">No vaccines selected yet.</h4>
-              <p className="text-gray-500 text-sm">Please add vaccines from the Vaccination Info page.</p>
+              <p className="text-gray-500 text-sm mb-4">Please add vaccines from the Vaccination Info page.</p>
+              <button
+                onClick={() => navigate('/vaccination-info')}
+                className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-semibold px-6 py-3 rounded-lg transition-all shadow-md hover:shadow-lg"
+              >
+                Browse Vaccines
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
           ) : (
             <div className="space-y-4">
@@ -164,7 +173,10 @@ const BookingPage = () => {
           </div>
           <div className="mt-6 pt-6 border-t border-white/20">
             <button
-              onClick={() => makeAppointment(appointmentDate, notes)}
+              onClick={() => makeAppointment(appointmentDate, notes, () => {
+                setAppointmentDate('')
+                setNotes('')
+              })}
               disabled={!appointmentDate || selectedVaccines.length === 0}
               className="w-full bg-white text-teal-600 font-bold py-4 rounded-lg text-lg hover:bg-gray-100 transition-all transform hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
