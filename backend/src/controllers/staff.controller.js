@@ -2,7 +2,37 @@ import { sql } from "../config/db.js";
 import { generateToken } from "../lib/utils.js";
 import bcrypt from "bcryptjs";
 
+const generateStaffId = async (roleTitle) => {
+    const JOB_TITLE_PREFIXES = {
+        "Doctor": "DOC",
+  "Medical Assistant": "MA",
+  "Nurse": "NUR",
+  "Pharmacist": "PHA",
+  "Receptionist": "REC",
+  "Cashier": "CAS",
+  "Screening Staff": "SCR",
+  "Vaccination Staff": "VS",
+  "Post-vaccination Monitoring Staff": "PMS",
+  "Emergency / Adverse Reaction Staff": "EAR",
+  "Laboratory Technician": "LAB",
+  "Customer Service": "CS"
+    };
+
+    const prefix = JOB_TITLE_PREFIXES[roleTitle] || "EMP";
+
+    const countResult = await sql`
+        SELECT COUNT(*) as count 
+        FROM employees 
+        WHERE role_title = ${roleTitle}
+    `;
+
+    const nextNumber = parseInt(countResult[0].count) + 1;
+  
+    return `${prefix}-${nextNumber}`; 
+};
+
 export const createEmployee = async (req, res) => {
+	
   // Destructuring dữ liệu gửi lên
   const { 
     full_name, 
@@ -24,9 +54,10 @@ export const createEmployee = async (req, res) => {
     }
 	const formattedDob = dob === "" ? null : dob;
     const formattedPhone = phone === "" ? null : phone;
-    const formattedNationalId = national_id === "" ? null : national_id;
-    const formattedEmployeeNumber = employee_number === "" ? null : employee_number;
+    const formattedNationalId = national_id === "" ? null : national_id;    
     const formattedRoleTitle = role_title === "" ? null : role_title;
+	const generatedEmployeeNumber = await generateStaffId(role_title);
+	
     if (password.length < 6) {
       return res.status(400).json({ message: "Password must be at least 6 characters long." });
     }
@@ -51,7 +82,7 @@ export const createEmployee = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // 1. INSERT USERS (Đã sửa cho khớp cột và giá trị)
+    // 1. INSERT USERS
     const newUser = await sql`
       INSERT INTO users (
         full_name, 
@@ -87,7 +118,7 @@ export const createEmployee = async (req, res) => {
         VALUES (
           ${newUser[0].id}, 
           ${formattedRoleTitle}, 
-          ${formattedEmployeeNumber}, 
+		  ${generatedEmployeeNumber},		  
           ${formattedNationalId}, 
           TRUE
         )
@@ -106,7 +137,7 @@ export const createEmployee = async (req, res) => {
 
   } catch (error) {
     console.error("Error during create Employee:", error);
-    // Bắt lỗi trùng lặp (nếu employee_number hoặc national_id trùng)
+   
     if (error.code === '23505') {
        return res.status(400).json({ message: "Duplicate data: Email, Username, Employee ID or National ID already exists." });
     }
@@ -116,9 +147,8 @@ export const createEmployee = async (req, res) => {
 
 export const updateEmployeeProfile = async (req, res) => {
   try {
-    // Lấy UUID từ URL (Frontend gửi user_id lên đây)
     const { id: userId } = req.params; 
-    // Lấy dữ liệu cần sửa từ Body
+    // Lấy dữ liệu từ Body (Chú ý tên biến)
     const { fullname, nationalId, email, phoneNumber, roleTitle, dob } = req.body; 
 
     // Kiểm tra tính hợp lệ của UUID
@@ -126,12 +156,24 @@ export const updateEmployeeProfile = async (req, res) => {
         return res.status(400).json({ message: "Invalid User ID format." });
     }
 
-	const formattedDob = dob === "" ? null : dob;
+    const formattedDob = dob === "" ? null : dob;
     const formattedPhone = phoneNumber === "" ? null : phoneNumber;
     const formattedNationalId = nationalId === "" ? null : nationalId;
     const formattedRoleTitle = roleTitle === "" ? null : roleTitle;
+    
+    // 1. Lấy thông tin chức vụ hiện tại trong DB để so sánh
+    const currentEmployee = await sql`
+        SELECT role_title FROM employees WHERE user_id = ${userId}
+    `;
+    
+    let newEmployeeNumber = undefined;
+   
+    if (currentEmployee.length > 0 && formattedRoleTitle && formattedRoleTitle !== currentEmployee[0].role_title) {       
+        newEmployeeNumber = await generateStaffId(formattedRoleTitle);
+    }
+    // ---------------------------------------------------------
 
-    // 1. Update bảng USERS
+    // 3. Update bảng USERS (Thông tin chung)
     await sql`
       UPDATE users 
       SET 
@@ -143,16 +185,31 @@ export const updateEmployeeProfile = async (req, res) => {
       WHERE id = ${userId}
     `;
 
-    // 2. Update bảng EMPLOYEES
-  const updateResult = await sql`
-      UPDATE employees 
-      SET 
-        national_id = ${formattedNationalId},
-        role_title = ${formattedRoleTitle}
-      WHERE user_id = ${userId}
-    `;
+    // 4. Update bảng EMPLOYEES (Có chia trường hợp)
+    if (newEmployeeNumber) {      
+        await sql`
+            UPDATE employees 
+            SET 
+                national_id = ${formattedNationalId},
+                role_title = ${formattedRoleTitle},
+                employee_number = ${newEmployeeNumber} 
+            WHERE user_id = ${userId}
+        `;
+    } else {        
+        await sql`
+            UPDATE employees 
+            SET 
+                national_id = ${formattedNationalId},
+                role_title = ${formattedRoleTitle}
+                -- Không update dòng employee_number ở đây
+            WHERE user_id = ${userId}
+        `;
+    }
 
-    res.status(200).json({ message: "Employee profile updated successfully." });
+    res.status(200).json({ 
+        message: "Employee profile updated successfully.",
+        newStaffId: newEmployeeNumber 
+    });
 
   } catch (error) {
     console.error("Error updating employee profile:", error);
@@ -181,8 +238,8 @@ export const getStaffList = async (req, res) => {
       LEFT JOIN employees e ON u.id = e.user_id
       WHERE u.role IN ('employee', 'manager') 
       ORDER BY 
-        CASE WHEN u.role = 'manager' THEN 1 ELSE 2 END, -- Manager lên đầu
-        e.active DESC, -- Active = True lên trước
+        CASE WHEN u.role = 'manager' THEN 1 ELSE 2 END,
+        e.active DESC,
         u.created_at DESC
     `;
 
@@ -227,10 +284,9 @@ export const restoreEmployee = async (req, res) => {
   try {
     const { id: employeeId } = req.params;
 
-    // Log kiểm tra xem ID có vào được đây không
-    console.log("--- START RESTORE --- ID:", employeeId);
+   
 
-    // BƯỚC 1: Lấy user_id giống hệt hàm Delete
+    // Lấy user_id
     const userResult = await sql`
       SELECT user_id 
       FROM employees 
@@ -246,7 +302,7 @@ export const restoreEmployee = async (req, res) => {
     const userId = userResult[0].user_id;
     console.log("Found UserID:", userId);
 
-    // BƯỚC 2: Update Active = TRUE (dựa trên user_id)
+    // BƯỚC 2:
     const restoredEmployee = await sql`
       UPDATE employees
       SET active = true

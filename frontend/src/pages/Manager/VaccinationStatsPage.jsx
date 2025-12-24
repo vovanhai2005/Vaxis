@@ -25,10 +25,7 @@ const VaccinationStatsPage = () => {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isTableLoading, setIsTableLoading] = useState(true);
 
-    // State lưu giá trị đang chọn trong menu filter 
     const [tempPeriod, setTempPeriod] = useState('');
-    
-    // State lưu giá trị filter ĐÃ APPLY
     const [activePeriod, setActivePeriod] = useState('');
 
     // --- GỌI API ---
@@ -52,7 +49,6 @@ const VaccinationStatsPage = () => {
         return () => clearTimeout(timer);
     }, [searchTerm, activePeriod, currentPage, getVaccinationStats]);
 
-    // Reset về trang 1 khi search/filter đổi
     useEffect(() => {
         setCurrentPage(1);
     }, [searchTerm, activePeriod]);
@@ -61,7 +57,6 @@ const VaccinationStatsPage = () => {
         setCurrentPage(pageNumber);
     };
 
-    // Filter Handlers
     const applyFilters = () => {
         setActivePeriod(tempPeriod);
         setIsFilterOpen(false);
@@ -74,7 +69,7 @@ const VaccinationStatsPage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-stel-50/30 pb-10">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30 pb-10">
             <Header
                 title="Vaccination Statistics"
                 subtitle="Report of doses administered and remaining stock"
@@ -151,16 +146,16 @@ const VaccinationStatsPage = () => {
                         </div>
                     </div>
 
-                    {/* TABLE */}
+                    {/* TABLE: Đã thêm table-fixed, w-full và set width cho các cột */}
                     <div className="overflow-x-auto flex-grow">
-                        <table className="min-w-full divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+                        <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
                             <thead className="bg-gray-50">
                                 <tr>
                                     <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-16">No</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccine Code</th>
+                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-40">Vaccine Code</th>
                                     <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccine Name</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Doses Given</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Remaining Quantity</th>
+                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-40">Doses Given</th>
+                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-48">Remaining Quantity</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
@@ -176,22 +171,27 @@ const VaccinationStatsPage = () => {
                                 ) : (vaccinationStats && vaccinationStats.length > 0) ? (
                                     vaccinationStats.map((item, index) => (
                                         <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
+                                            <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-medium">
                                                 {String((currentPage - 1) * itemsPerPage + index + 1).padStart(3, '0')}
                                             </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
+                                            
+                                            {/* Thêm truncate + title cho Code */}
+                                            <td className="px-4 py-4 text-sm text-gray-500 border-l border-gray-100 font-mono truncate" title={item.code}>
                                                 {item.code}
                                             </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-bold text-teal-800">
+                                            
+                                            {/* Thêm truncate + title cho Name */}
+                                            <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-bold text-teal-800 truncate" title={item.name}>
                                                 {item.name}
                                             </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100">
-                                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md font-bold text-xs">
+                                            
+                                            <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100">
+                                                <span className="bg-green-100 text-green-800 px-2 py-1 rounded-md font-bold text-xs inline-block truncate max-w-full">
                                                     {item.doses_given} doses
                                                 </span>
                                             </td>
-                                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-bold text-gray-800">                                               
-                                                    {item.remaining}                                                
+                                            <td className="px-4 py-4 text-sm text-gray-900 border-l border-gray-100 font-bold text-gray-800 truncate">                                               
+                                                {item.remaining}                                                
                                             </td>
                                         </tr>
                                     ))

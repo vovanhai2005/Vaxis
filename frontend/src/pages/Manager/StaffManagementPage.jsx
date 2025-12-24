@@ -44,7 +44,7 @@ const EmployeeManagementPage = () => {
   
   // Xử lý tìm kiếm & Filter kết hợp
   const filteredStaff = staffList.filter((employee) => {
-    // 1. Logic Search (Giữ nguyên logic cũ)
+    // 1. Logic Search 
     const term = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm || (
       (employee.full_name || '').toLowerCase().includes(term) ||
@@ -63,17 +63,17 @@ const EmployeeManagementPage = () => {
         ? true 
         : filters.status === 'active' ? employee.active : !employee.active;
 
-    // - Filter National ID (Kiểm tra có giá trị hay null/empty)
+    // - Filter National ID 
     const matchesNationalId = filters.hasNationalId === ''
         ? true
         : filters.hasNationalId === 'yes' ? !!employee.national_id : !employee.national_id;
 
-    // - Filter Staff ID (Kiểm tra có giá trị hay null/empty)
+    // - Filter Staff ID 
     const matchesStaffId = filters.hasStaffId === ''
         ? true
         : filters.hasStaffId === 'yes' ? !!employee.employee_number : !employee.employee_number;
 
-    // Kết hợp tất cả điều kiện (AND)
+    
     return matchesSearch && matchesRole && matchesStatus && matchesNationalId && matchesStaffId;
   });
 
@@ -113,9 +113,9 @@ const EmployeeManagementPage = () => {
           );
       };
       
-      // Nếu là Employee, hiển thị role_title (ví dụ: Y tá trưởng), nếu không có thì ghi Nhân viên
+     
       return (
-        <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium border border-blue-100">
+        <span className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium border border-blue-100 whitespace-nowrap">
             {employee.role_title || 'N/A'}
         </span>
       );
@@ -128,11 +128,8 @@ const EmployeeManagementPage = () => {
 };
 
   // HÀM XỬ LÝ UNDO
-  const handleUndo = async (id) => {
-      // Có thể thêm confirm nếu muốn, nhưng Undo thường nên nhanh gọn
-      // if (window.confirm("Restore this employee?")) {
-          await restoreEmployee(id);
-      // }
+  const handleUndo = async (id) => {      
+          await restoreEmployee(id);     
   };
   
   // Hàm reset filter về mặc định
@@ -241,8 +238,8 @@ const EmployeeManagementPage = () => {
                                             onChange={(e) => setFilters({...filters, status: e.target.value})}
                                         >
                                             <option value="">All Statuses</option>
-                                            <option value="active">Available (Active)</option>
-                                            <option value="inactive">Unavailable (Inactive)</option>
+                                            <option value="active">Active</option>
+                                            <option value="inactive">Inactive</option>
                                         </select>
                                     </div>
 
@@ -295,47 +292,41 @@ const EmployeeManagementPage = () => {
                 </div>
             </div>
 
-            {/* --- TABLE SECTION --- */}
+            {/* --- TABLE SECTION: Đã thêm table-fixed, w-full và set width --- */}
             <div className="overflow-x-auto flex-grow">
-                <table className="min-w-full divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+                <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
                     <thead className="bg-gray-50">
                         <tr>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-10">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
                                 No
                             </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-20">
                                 Staff ID
                             </th>
                             <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
                                 Full name
                             </th>
-                            { /* <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
-                                Ngày sinh
-                            </th> */}
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-40">
                                 Email
                             </th>
-                            { /* <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
-                                Email
-                            </th> */}
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32">
                                 National ID
                             </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-60">
                                 Job Title 
                             </th>
-							 <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
+							 <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-20">
                                 Status
                             </th>
-                            <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
-                                Operation
+                            <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24">
+                                Action
                             </th>
                         </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {isLoadingStaff ? (
                             <tr>
-                               <td colSpan="9" className="px-6 py-20 text-center text-gray-500">
+                               <td colSpan="8" className="px-6 py-20 text-center text-gray-500">
                                 <div className="flex flex-col items-center justify-center h-full">
                                     <Loader2 className="w-8 h-8 text-teal-500 animate-spin mb-2" /> 
                                     <span className="text-sm font-medium">Loading staff...</span>
@@ -350,23 +341,23 @@ const EmployeeManagementPage = () => {
                                         {String(index + 1 + indexOfFirstItem).padStart(3, '0')}
                                     </td>
                                     
-                                    {/* employee_number*/}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
+                                    {/* employee_number: Truncate + Title */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium truncate" title={employee.employee_number}>
                                         {employee.employee_number || 'N/A'}
                                     </td>
                                     
-                                    {/* Họ tên */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium">
+                                    {/* Họ tên: Truncate + Title */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 font-medium truncate" title={employee.full_name || employee.username}>
                                         {employee.full_name || employee.username}
                                     </td>
 
-                                    {/* Email */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100">
+                                    {/* Email: Truncate + Title */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 truncate" title={employee.email}>
                                         {employee.email || 'N/A'}
                                     </td>
                                     
-                                    {/* CCCD */}
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100">
+                                    {/* CCCD: Truncate */}
+                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900 border-l border-gray-100 truncate" title={employee.national_id}>
                                         {employee.national_id || 'N/A'}
                                     </td>
 
@@ -379,11 +370,11 @@ const EmployeeManagementPage = () => {
                                      <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
 										{employee.active ? (
 											<span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-semibold border border-green-200">
-												available
+												active
 											</span>
 										) : (
 											<span className="bg-red-100 text-red-700 px-2 py-1 rounded-full text-xs font-semibold border border-red-200">
-												unavailable
+												inactive
 											</span>
 										)}
 									</td>
@@ -434,7 +425,7 @@ const EmployeeManagementPage = () => {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan="9" className="px-6 py-10 text-center text-gray-500 italic">
+                                <td colSpan="8" className="px-6 py-10 text-center text-gray-500 italic">
                                    No staff found.
                                 </td>
                             </tr>
