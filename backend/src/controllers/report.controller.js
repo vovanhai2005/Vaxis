@@ -81,18 +81,22 @@ export const inventory = async (req, res) => {
     const limitNumber = parseInt(limit) || 10;
     const offset = (pageNumber - 1) * limitNumber;
 
-    let whereClause = `WHERE 1=1`;
-    
+    let whereClause = `WHERE v.active = TRUE AND vl.active = TRUE`;
+    const today = "(NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE"; 
+
     if (search) {
       whereClause += ` AND (vl.lot_number ILIKE '%${search}%' OR v.code ILIKE '%${search}%' OR v.name ILIKE '%${search}%')`;
     }
-   
+    
     if (expiry_status === "sap_het") {
-      whereClause += ` AND vl.expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days'`;
+      // Sửa: Dùng >= CURRENT_DATE để lấy cả ngày hôm nay
+      whereClause += ` AND vl.expiry_date >= ${today} AND vl.expiry_date <= ${today} + INTERVAL '30 days'`;
     } else if (expiry_status === "qua_han") {
-      whereClause += ` AND vl.expiry_date < NOW()`;
+      // Sửa: Nhỏ hơn hẵn ngày hôm nay (tức là từ hôm qua trở về trước)
+      whereClause += ` AND vl.expiry_date < ${today}`;
     } else if (expiry_status === "con_han") {
-      whereClause += ` AND vl.expiry_date > NOW() + INTERVAL '30 days'`;
+      // Sửa: Lớn hơn 30 ngày tới
+      whereClause += ` AND vl.expiry_date > ${today} + INTERVAL '30 days'`;
     }
    
     if (min_quantity) {
@@ -232,6 +236,7 @@ export const vaccinationStats = async (req, res) => {
     ) usage ON usage.vaccine_lot_id = l.id
     
     WHERE l.expiry_date >= (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE
+	AND l.active = TRUE
     GROUP BY l.vaccine_id
   ) stock ON stock.vaccine_id = v.id
   
@@ -293,14 +298,13 @@ const query = `
 
     -- 2. Số lượng còn lại (chỉ tính lô còn hạn và trừ đi số đã dùng)
     COALESCE(stock.available_qty, 0)::int AS remaining
-
   FROM vaccines v
 
   -- Subquery 1: Tính tổng số mũi đã tiêm (để sắp xếp và hiển thị)
   LEFT JOIN (
     SELECT 
         vaccine_id, 
-        COUNT(*) AS total_doses -- Sửa từ SUM(dose_number) thành COUNT(*)
+        COUNT(*) AS total_doses
     FROM administrations
     GROUP BY vaccine_id
   ) stats ON stats.vaccine_id = v.id
@@ -321,10 +325,12 @@ const query = `
     
     -- Chỉ lấy lô còn hạn (ép kiểu về giờ VN để tránh lỗi ngày như Lô 002)
     WHERE l.expiry_date >= (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE
+	AND l.active = TRUE
     GROUP BY l.vaccine_id
   ) stock ON stock.vaccine_id = v.id
 
   -- Sắp xếp theo số lượng đã tiêm giảm dần (Top 10)
+  WHERE stats.total_doses > 0
   ORDER BY doses_given DESC
   LIMIT 10;
 `;

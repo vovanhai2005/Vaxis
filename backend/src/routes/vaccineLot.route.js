@@ -6,9 +6,9 @@ const router = express.Router();
 
 router.get("/expiring", protectRoute, expiringBatches);
 router.get("/total-stock", protectRoute, totalStock);
-router.post("/", addLot);
-router.delete("/:id", deleteLot);
-router.put("/:id", editLot);
-router.get("/:id", getLotById);
+router.post("/", protectRoute, addLot);
+router.put("/delete/:id", protectRoute, deleteLot);
+router.put("/:id", protectRoute, editLot);
+router.get("/:id", protectRoute, getLotById);
 
 export default router;

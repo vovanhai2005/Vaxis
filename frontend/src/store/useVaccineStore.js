@@ -113,7 +113,7 @@ export const useVaccineStore = create((set, get) => ({
     deleteVaccine: async(id) => {
         set({ isDeletingVaccine: true })
         try {
-            await axiosInstance.delete(`/vaccines/${id}`)
+            await axiosInstance.put(`/vaccines/delete/${id}`)
             toast.success('Vaccine deleted successfully')
             // Refresh vaccine list after deleting
             const updatedRes = await axiosInstance.get('/vaccines')

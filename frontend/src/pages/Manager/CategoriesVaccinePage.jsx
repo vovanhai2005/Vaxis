@@ -235,7 +235,7 @@ const CategoriesVaccinePage = () => {
 
                     {/* Nút Add */}
                     <button 
-                        className="flex items-center justify-center px-4 py-2.5 border border-transparent rounded-xl text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow-lg shadow-gray-900/20 transition-all hover:scale-105"
+                        className="flex items-center justify-center px-4 py-2.5 border border-transparent rounded-xl text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-gray-900/20 transition-all hover:scale-105"
                         onClick={() => setIsAddOpen(true)}
                     >
                         <Plus className="h-4 w-4 mr-2" />
