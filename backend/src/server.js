@@ -6,6 +6,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
 import { sql } from "./config/db.js";
+import { connectRedis } from "./config/redis.js";
 import authRoutes from "./routes/auth.route.js";
 import reportRoutes from "./routes/report.route.js";
 import vaccineLotRoutes from "./routes/vaccineLot.route.js";
@@ -299,6 +300,7 @@ async function initDB() {
 }
 
 initDB();
+connectRedis();
 
 // Routes
 app.use("/api/auth", authRoutes);

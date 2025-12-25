@@ -1,4 +1,5 @@
 import { sql } from '../config/db.js';
+import { getCache, setCache, cacheKeys } from '../lib/cache.js';
 
    // Số mũi tiêm completed, booked (biểu đồ tròn) (dashboard admin)
 export const vaccinationRate = async (req, res) => {
@@ -7,6 +8,12 @@ export const vaccinationRate = async (req, res) => {
 
     if (userRole !== 'manager') {
       return res.status(403).json({ message: 'Access denied. Manager only.' });
+    }
+
+    const cacheKey = cacheKeys.stats('vaccination_rate');
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
     }
 
     const result = await sql`
@@ -19,11 +26,16 @@ export const vaccinationRate = async (req, res) => {
 
     const row = (result && result[0]) ? result[0] : { da_tiem: 0, chua_tiem: 0, qua_han: 0 };
 
-    res.status(200).json({
+    const stats = {
       da_tiem: Number(row.da_tiem) || 0,
       chua_tiem: Number(row.chua_tiem) || 0,
       qua_han: Number(row.qua_han) || 0,
-    });
+    };
+
+    // Cache for 2 minutes
+    await setCache(cacheKey, stats, 120);
+
+    res.status(200).json(stats);
   } catch (error) {
     console.error('Error fetching vaccination rate:', error);
     res.status(500).json({ message: 'Internal server error.' });
@@ -39,6 +51,12 @@ export const monthlyStats = async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Manager only.' });
     }
 
+    const cacheKey = cacheKeys.stats('monthly_stats');
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
+    }
+
     const result = await sql`
       SELECT
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)::int AS da_tiem,
@@ -51,11 +69,16 @@ export const monthlyStats = async (req, res) => {
    
     const row = (result && result[0]) ? result[0] : { da_tiem: 0, chua_tiem: 0, qua_han: 0 };
 
-    res.status(200).json({
+    const stats = {
       da_tiem: Number(row.da_tiem) || 0,
       chua_tiem: Number(row.chua_tiem) || 0,
       qua_han: Number(row.qua_han) || 0,
-    });
+    };
+
+    // Cache for 5 minutes
+    await setCache(cacheKey, stats, 300);
+
+    res.status(200).json(stats);
   } catch (error) {
     console.error('Error fetching monthly vaccination stats:', error);
     res.status(500).json({ message: 'Internal server error.' });

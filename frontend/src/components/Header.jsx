@@ -18,19 +18,14 @@ const Header = ({ title, subtitle, icon: Icon = Calendar }) => {
   useEffect(() => {
     if (authUser) {
       getUnreadCount()
-      // Refresh unread count every 30 seconds
-      const interval = setInterval(() => {
-        getUnreadCount()
-      }, 30000)
-      return () => clearInterval(interval)
     }
-  }, [authUser, getUnreadCount])
+  }, [authUser])
 
   useEffect(() => {
     if (showNotifications) {
       getNotifications({ limit: 10 })
     }
-  }, [showNotifications, getNotifications])
+  }, [showNotifications])
 
   // Close notification panel when clicking outside
   useEffect(() => {

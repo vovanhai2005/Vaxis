@@ -1,9 +1,22 @@
 import { sql } from '../config/db.js';
 import cloudinary from "../lib/cloudinary.js";
+import { getCache, setCache, deleteCache, cacheKeys } from "../lib/cache.js";
 
 export const getVaccines = async (req, res) => {
     try {
+        const cacheKey = cacheKeys.vaccines();
+        
+        // Try to get from cache first
+        const cached = await getCache(cacheKey);
+        if (cached) {
+            return res.status(200).json(cached);
+        }
+        
         const vaccines = await sql`SELECT * FROM vaccines`;
+        
+        // Cache for 10 minutes
+        await setCache(cacheKey, vaccines, 600);
+        
         res.status(200).json(vaccines);
     } catch (error) {
         console.error('Error fetching vaccines:', error);
@@ -14,10 +27,22 @@ export const getVaccines = async (req, res) => {
 export const getVaccinesByID = async (req, res) => {
     try {
         const { id } = req.params;
+        const cacheKey = cacheKeys.vaccine(id);
+        
+        // Try to get from cache first
+        const cached = await getCache(cacheKey);
+        if (cached) {
+            return res.status(200).json(cached);
+        }
+        
         const vaccine = await sql`SELECT * FROM vaccines WHERE id = ${id}`;
         if (vaccine.length === 0) {
             return res.status(404).json({ message: 'Vaccine not found.' });
         }
+        
+        // Cache for 10 minutes
+        await setCache(cacheKey, vaccine[0], 600);
+        
         res.status(200).json(vaccine[0]);
     } catch (error) {
         console.error('Error fetching vaccine by ID:', error);
@@ -50,6 +75,10 @@ export const addVaccine = async (req, res) => {
             VALUES (${code}, ${name}, ${manufacturer}, ${description}, ${price}, ${vaccineImageUrl}) 
             RETURNING *
         `;
+        
+        // Invalidate vaccines cache
+        await deleteCache(cacheKeys.vaccines());
+        
         res.status(201).json(newVaccine[0]);
     } catch (error) {
         console.error('Error adding new vaccine:', error);
@@ -95,6 +124,10 @@ export const editVaccine = async (req, res) => {
       return res.status(404).json({ error: "Vaccine not found" });
     }
 
+    // Invalidate caches
+    await deleteCache(cacheKeys.vaccines());
+    await deleteCache(cacheKeys.vaccine(id));
+
     res.status(200).json(result[0]);
   } catch (error) {
     console.error("Error editing vaccine:", error);
@@ -115,6 +148,10 @@ export const deleteVaccine = async (req, res) => {
     if (result.length === 0) {
       return res.status(404).json({ error: "Vaccine not found" });
     }
+
+    // Invalidate caches
+    await deleteCache(cacheKeys.vaccines());
+    await deleteCache(cacheKeys.vaccine(id));
 
     res.status(200).json({ message: "Vaccine deleted", deleted: result[0] });
   } catch (error) {
