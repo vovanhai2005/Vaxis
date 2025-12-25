@@ -15,6 +15,7 @@ const LookUpCitizenProfile = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [lookupResults, setLookupResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const profile = useMemo(() => 
     lookupResults.length > 0 ? lookupResults[0] : null,
@@ -23,6 +24,7 @@ const LookUpCitizenProfile = () => {
 
   const lookupCitizen = async (nationalId) => {
     setIsLoading(true);
+    setHasSearched(true);
     try {
       const res = await axiosInstance.get(`/administration/search/?nationalId=${nationalId}`);
       setLookupResults(res.data);
@@ -81,7 +83,7 @@ const LookUpCitizenProfile = () => {
 
         {isLoading && <LoadingState />}
         
-        {!isLoading && lookupResults.length === 0 && nationalId && (
+        {!isLoading && hasSearched && lookupResults.length === 0 && (
           <EmptyState nationalId={nationalId} />
         )}
 
