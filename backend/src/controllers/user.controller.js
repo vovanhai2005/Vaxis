@@ -1,9 +1,17 @@
 import { sql } from "../config/db.js";
 import cloudinary from '../lib/cloudinary.js';
+import { getCache, setCache, deleteCache, cacheKeys } from "../lib/cache.js";
 
 export const getCitizenProfile = async (req, res) => {
   try {
     const userId = req.user.id;
+    const cacheKey = cacheKeys.userProfile(userId);
+
+    // Try to get from cache first
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
+    }
 
     const userProfile = await sql`
             SELECT 
@@ -24,6 +32,9 @@ export const getCitizenProfile = async (req, res) => {
     if (userProfile.length === 0) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Cache for 5 minutes
+    await setCache(cacheKey, userProfile[0], 300);
 
     res.status(200).json(userProfile[0]);
   } catch (error) {
@@ -77,6 +88,9 @@ export const updateCitizenProfile = async (req, res) => {
                 `;
             }
         });
+
+    // Invalidate user profile cache
+    await deleteCache(cacheKeys.userProfile(userId));
 
     res.status(200).json({ message: "Profile updated successfully" });
   } catch (error) {

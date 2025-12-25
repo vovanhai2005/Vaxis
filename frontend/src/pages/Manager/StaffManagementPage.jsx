@@ -84,11 +84,12 @@ const EmployeeManagementPage = () => {
         : filters.hasNationalId === 'yes' ? !!employee.national_id : !employee.national_id;
 
     // - Filter Staff ID 
-    const matchesStaffPrefix = filters.staffPrefix === ''
+    const matchesStaffId = filters.hasStaffId === ''
         ? true
-        : (employee.employee_number || '').startsWith(filters.staffPrefix);
+        : filters.hasStaffId === 'yes' ? !!employee.employee_number : !employee.employee_number;
+
     
-    return matchesSearch && matchesRole && matchesStatus && matchesNationalId && matchesStaffPrefix;
+    return matchesSearch && matchesRole && matchesStatus && matchesNationalId && matchesStaffId;
   });
 
   // Xử lý phân trang
@@ -319,7 +320,7 @@ const EmployeeManagementPage = () => {
                                 No
                             </th>
                             <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-20">
-                                ID
+                                Staff ID
                             </th>
                             <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
                                 Full name

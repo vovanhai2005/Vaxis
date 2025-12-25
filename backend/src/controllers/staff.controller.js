@@ -1,6 +1,36 @@
 import { sql } from "../config/db.js";
 import { generateToken } from "../lib/utils.js";
 import bcrypt from "bcryptjs";
+import { getCache, setCache, deleteCache } from "../lib/cache.js";
+
+const generateStaffId = async (roleTitle) => {
+    const JOB_TITLE_PREFIXES = {
+        "Doctor": "DOC",
+  "Medical Assistant": "MA",
+  "Nurse": "NUR",
+  "Pharmacist": "PHA",
+  "Receptionist": "REC",
+  "Cashier": "CAS",
+  "Screening Staff": "SCR",
+  "Vaccination Staff": "VS",
+  "Post-vaccination Monitoring Staff": "PMS",
+  "Emergency / Adverse Reaction Staff": "EAR",
+  "Laboratory Technician": "LAB",
+  "Customer Service": "CS"
+    };
+
+    const prefix = JOB_TITLE_PREFIXES[roleTitle] || "EMP";
+
+    const countResult = await sql`
+        SELECT COUNT(*) as count 
+        FROM employees 
+        WHERE role_title = ${roleTitle}
+    `;
+
+    const nextNumber = parseInt(countResult[0].count) + 1;
+  
+    return `${prefix}-${nextNumber}`; 
+};
 
 const generateStaffId = async (roleTitle) => {
     const JOB_TITLE_PREFIXES = {
@@ -127,6 +157,9 @@ export const createEmployee = async (req, res) => {
 
     //generateToken(newUser[0].id, res);
 
+    // Invalidate staff cache
+    await deleteCache('staff:list');
+
     res.status(201).json({
       id: newUser[0].id,
       username: newUser[0].username,
@@ -206,6 +239,9 @@ export const updateEmployeeProfile = async (req, res) => {
         `;
     }
 
+    // Invalidate staff cache
+    await deleteCache('staff:list');
+
     res.status(200).json({ 
         message: "Employee profile updated successfully.",
         newStaffId: newEmployeeNumber 
@@ -219,6 +255,14 @@ export const updateEmployeeProfile = async (req, res) => {
 
 export const getStaffList = async (req, res) => {
   try {
+    const cacheKey = 'staff:list';
+
+    // Try to get from cache
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
+    }
+
     const staffList = await sql`
       SELECT 
         e.id,
@@ -242,6 +286,9 @@ export const getStaffList = async (req, res) => {
         e.active DESC,
         u.created_at DESC
     `;
+
+    // Cache for 3 minutes
+    await setCache(cacheKey, staffList, 180);
 
     res.status(200).json(staffList);
   } catch (error) {
