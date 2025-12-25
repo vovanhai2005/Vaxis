@@ -3,7 +3,7 @@ import cloudinary from "../lib/cloudinary.js";
 
 export const getVaccines = async (req, res) => {
     try {
-        const vaccines = await sql`SELECT * FROM vaccines`;
+        const vaccines = await sql`SELECT * FROM vaccines WHERE active = TRUE`;
         res.status(200).json(vaccines);
     } catch (error) {
         console.error('Error fetching vaccines:', error);
@@ -106,28 +106,87 @@ export const deleteVaccine = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const result = await sql`
-      DELETE FROM vaccines
-      WHERE id = ${id}
-      RETURNING *
-    `;
+    // Sử dụng Transaction để đảm bảo an toàn dữ liệu
+    // Nếu cập nhật vaccine thành công mà cập nhật lô lỗi, nó sẽ tự hoàn tác (rollback)
+    const result = await sql.begin(async (sql) => {
+      // 1. Deactivate Vaccine
+      const [vaccine] = await sql`
+        UPDATE vaccines
+        SET active = false
+        WHERE id = ${id}
+        RETURNING *
+      `;
 
-    if (result.length === 0) {
+      if (!vaccine) {
+        throw new Error("VACCINE_NOT_FOUND");
+      }
+
+      // 2. Deactivate tất cả các Lô thuốc thuộc vaccine này
+      await sql`
+        UPDATE vaccine_lots
+        SET active = false
+        WHERE vaccine_id = ${id}
+      `;
+
+      return vaccine;
+    });
+
+    res.status(200).json({ 
+      message: "Vaccine and related lots deactivated successfully", 
+      vaccine: result 
+    });
+
+  } catch (error) {
+    console.error("Error deactivating vaccine:", error);
+    
+    if (error.message === "VACCINE_NOT_FOUND") {
       return res.status(404).json({ error: "Vaccine not found" });
     }
 
-    res.status(200).json({ message: "Vaccine deleted", deleted: result[0] });
-  } catch (error) {
-    console.error("Error deleting vaccine:", error);
-
-    if (error.constraint) {
-      // foreign key violation
-      return res.status(400).json({
-        error: "Cannot delete vaccine because it is being used",
-      });
-    }
-
-    res.status(500).json({ error: "Unable to delete vaccine" });
+    res.status(500).json({ error: "Unable to deactivate vaccine" });
   }
 };
 
+export const restoreVaccine = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const result = await sql.begin(async (sql) => {
+      // 1. Activate Vaccine
+      const [vaccine] = await sql`
+        UPDATE vaccines
+        SET active = true
+        WHERE id = ${id}
+        RETURNING *
+      `;
+
+      if (!vaccine) {
+        throw new Error("VACCINE_NOT_FOUND");
+      }
+
+      // 2. Activate lại tất cả các Lô thuốc thuộc vaccine này
+      // (Lô hết hạn vẫn sẽ active=true, nhưng query tiêm chủng sẽ tự lọc bỏ)
+      await sql`
+        UPDATE vaccine_lots
+        SET active = true
+        WHERE vaccine_id = ${id}
+      `;
+
+      return vaccine;
+    });
+
+    res.status(200).json({ 
+      message: "Vaccine and related lots restored successfully", 
+      vaccine: result 
+    });
+
+  } catch (error) {
+    console.error("Error restoring vaccine:", error);
+
+    if (error.message === "VACCINE_NOT_FOUND") {
+      return res.status(404).json({ error: "Vaccine not found" });
+    }
+
+    res.status(500).json({ error: "Unable to restore vaccine" });
+  }
+};

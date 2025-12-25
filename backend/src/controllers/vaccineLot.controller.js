@@ -120,10 +120,26 @@ export const editLot = async (req, res) => {
 export const deleteLot = async (req, res) => {
   try {
     const { id } = req.params;
-    await sql`DELETE FROM vaccine_lots WHERE id = ${id}`;
-    res.json({ message: "Vaccine batch deleted" });
+
+    // Chuyển sang Xóa Mềm: Chỉ update active = false
+    const result = await sql`
+      UPDATE vaccine_lots 
+      SET active = false 
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+    if (result.length === 0) {
+      return res.status(404).json({ error: "Vaccine lot not found" });
+    }
+
+    res.status(200).json({ 
+      message: "Vaccine lot deactivated successfully", 
+      lot: result[0] 
+    });
+
   } catch (error) {
-    console.error("Error deleting lot:", error);
-    res.status(500).json({ error: "Unable to delete vaccine batch" });
+    console.error("Error deactivating lot:", error);
+    res.status(500).json({ error: "Unable to deactivate vaccine lot" });
   }
 };
