@@ -174,7 +174,7 @@ export const deleteLot = async (req, res) => {
 
     res.json({ message: "Vaccine batch deleted" });
   } catch (error) {
-    console.error("Error deleting lot:", error);
-    res.status(500).json({ error: "Unable to delete vaccine batch" });
+    console.error("Error deactivating lot:", error);
+    res.status(500).json({ error: "Unable to deactivate vaccine lot" });
   }
 };

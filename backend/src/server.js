@@ -138,6 +138,7 @@ async function initDB() {
                 manufacturer TEXT,
                 description TEXT,
                 price NUMERIC(10,2) DEFAULT 0,
+				active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
@@ -152,7 +153,8 @@ async function initDB() {
                 quantity BIGINT DEFAULT 0,
                 expiry_date DATE,
                 received_at TIMESTAMPTZ DEFAULT NOW(),
-                UNIQUE (vaccine_id, lot_number)
+                UNIQUE (vaccine_id, lot_number),
+				active BOOLEAN DEFAULT TRUE
             )
         `;
 

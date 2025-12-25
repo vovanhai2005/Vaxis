@@ -8,6 +8,21 @@ import AddStaff from '../../components/AddStaff';
 import ViewEditStaff from '../../components/ViewEditStaff';
 import DeleteConfirmationModal from '../../components/DeleteConfirmationModal';
 
+const JOB_TITLE_PREFIXES = {
+  "Doctor": "DOC",
+  "Medical Assistant": "MA",
+  "Nurse": "NUR",
+  "Pharmacist": "PHA",
+  "Receptionist": "REC",
+  "Cashier": "CAS",
+  "Screening Staff": "SCR",
+  "Vaccination Staff": "VS",
+  "Post-vaccination Monitoring Staff": "PMS",
+  "Emergency / Adverse Reaction Staff": "EAR",
+  "Laboratory Technician": "LAB",
+  "Customer Service": "CS"
+};
+
 const EmployeeManagementPage = () => {
   const { staffList, isLoadingStaff, getStaffList, deleteEmployee, restoreEmployee } = useStaffStore();
   
@@ -29,7 +44,7 @@ const EmployeeManagementPage = () => {
     role: '',           // '' (All), 'manager', 'employee'
     status: '',         // '' (All), 'active', 'inactive'
     hasNationalId: '',  // '' (All), 'yes', 'no'
-    hasStaffId: '',     // '' (All), 'yes', 'no'
+    staffPrefix: '',     // '' (All), 'yes', 'no'
   });
   
   // Lấy dữ liệu khi component mount
@@ -134,7 +149,7 @@ const EmployeeManagementPage = () => {
   
   // Hàm reset filter về mặc định
   const clearFilters = () => {
-    setFilters({ role: '', status: '', hasNationalId: '', hasStaffId: '' });
+    setFilters({ role: '', status: '', hasNationalId: '', staffPrefix: '' });
     setIsFilterOpen(false);
   };
   
@@ -262,12 +277,16 @@ const EmployeeManagementPage = () => {
                                         <label className="block text-xs font-medium text-gray-500 mb-1">Staff ID</label>
                                         <select 
                                             className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
-                                            value={filters.hasStaffId}
-                                            onChange={(e) => setFilters({...filters, hasStaffId: e.target.value})}
+                                            value={filters.staffPrefix}
+                                            onChange={(e) => setFilters({...filters, staffPrefix: e.target.value})}
                                         >
-                                            <option value="">All</option>
-                                            <option value="yes">Has Staff ID</option>
-                                            <option value="no">N/A (Missing)</option>
+                                            <option value="">All ID</option>
+                                            {/* Map qua danh sách Prefix */}
+                                            {Object.entries(JOB_TITLE_PREFIXES).map(([title, prefix]) => (
+                                                <option key={prefix} value={prefix}>
+                                                    {title} ({prefix})
+                                                </option>
+                                            ))}
                                         </select>
                                     </div>
                                     
@@ -283,7 +302,7 @@ const EmployeeManagementPage = () => {
                         )}
                     </div>
                     <button 
-                        className="flex items-center justify-center px-4 py-2.5 border border-transparent rounded-xl text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 shadow-lg shadow-gray-900/20 transition-all hover:scale-105"
+                        className="flex items-center justify-center px-4 py-2.5 border border-transparent rounded-xl text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 shadow-lg shadow-gray-900/20 transition-all hover:scale-105"
                         onClick={() =>  setIsAddOpen(true)}
                     >
                         <Plus className="h-4 w-4 mr-2" />

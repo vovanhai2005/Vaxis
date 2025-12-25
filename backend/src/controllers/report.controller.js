@@ -104,18 +104,22 @@ export const inventory = async (req, res) => {
     const limitNumber = parseInt(limit) || 10;
     const offset = (pageNumber - 1) * limitNumber;
 
-    let whereClause = `WHERE 1=1`;
-    
+    let whereClause = `WHERE v.active = TRUE AND vl.active = TRUE`;
+    const today = "(NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE"; 
+
     if (search) {
       whereClause += ` AND (vl.lot_number ILIKE '%${search}%' OR v.code ILIKE '%${search}%' OR v.name ILIKE '%${search}%')`;
     }
-   
+    
     if (expiry_status === "sap_het") {
-      whereClause += ` AND vl.expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days'`;
+      // Sửa: Dùng >= CURRENT_DATE để lấy cả ngày hôm nay
+      whereClause += ` AND vl.expiry_date >= ${today} AND vl.expiry_date <= ${today} + INTERVAL '30 days'`;
     } else if (expiry_status === "qua_han") {
-      whereClause += ` AND vl.expiry_date < NOW()`;
+      // Sửa: Nhỏ hơn hẵn ngày hôm nay (tức là từ hôm qua trở về trước)
+      whereClause += ` AND vl.expiry_date < ${today}`;
     } else if (expiry_status === "con_han") {
-      whereClause += ` AND vl.expiry_date > NOW() + INTERVAL '30 days'`;
+      // Sửa: Lớn hơn 30 ngày tới
+      whereClause += ` AND vl.expiry_date > ${today} + INTERVAL '30 days'`;
     }
    
     if (min_quantity) {

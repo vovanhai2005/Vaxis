@@ -32,6 +32,35 @@ const generateStaffId = async (roleTitle) => {
     return `${prefix}-${nextNumber}`; 
 };
 
+const generateStaffId = async (roleTitle) => {
+    const JOB_TITLE_PREFIXES = {
+        "Doctor": "DOC",
+  "Medical Assistant": "MA",
+  "Nurse": "NUR",
+  "Pharmacist": "PHA",
+  "Receptionist": "REC",
+  "Cashier": "CAS",
+  "Screening Staff": "SCR",
+  "Vaccination Staff": "VS",
+  "Post-vaccination Monitoring Staff": "PMS",
+  "Emergency / Adverse Reaction Staff": "EAR",
+  "Laboratory Technician": "LAB",
+  "Customer Service": "CS"
+    };
+
+    const prefix = JOB_TITLE_PREFIXES[roleTitle] || "EMP";
+
+    const countResult = await sql`
+        SELECT COUNT(*) as count 
+        FROM employees 
+        WHERE role_title = ${roleTitle}
+    `;
+
+    const nextNumber = parseInt(countResult[0].count) + 1;
+  
+    return `${prefix}-${nextNumber}`; 
+};
+
 export const createEmployee = async (req, res) => {
 	
   // Destructuring dữ liệu gửi lên
