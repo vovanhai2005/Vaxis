@@ -1,4 +1,5 @@
 import { sql } from "../config/db.js";
+import { getCache, setCache, deleteCache, cacheKeys } from "../lib/cache.js";
 
 export const makeAppointment = async (req, res) => {
   try {
@@ -51,6 +52,9 @@ export const makeAppointment = async (req, res) => {
     // Execute all insert queries
     await Promise.all(queries);
 
+    // Invalidate appointments cache
+    await deleteCache(cacheKeys.appointments(userId));
+
     res.status(201).json({
       message: "Appointment made successfully.",
       appointment: newAppointment,
@@ -64,6 +68,13 @@ export const makeAppointment = async (req, res) => {
 export const getCitizenAppointments = async (req, res) => {
   try {
     const userId = req.user.id;
+    const cacheKey = cacheKeys.appointments(userId);
+
+    // Try to get from cache first
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
+    }
 
     // Find the citizen ID linked to the user ID
     const citizenResult = await sql`
@@ -84,7 +95,7 @@ export const getCitizenAppointments = async (req, res) => {
           a.scheduled_at,
           a.status,
           a.notes,
-          json_agg(json_build_object('id', v.id, 'name', v.name, 'price', v.price)) AS vaccines
+          json_agg(json_build_object('id', v.id, 'name', v.name, 'price', v.price, 'manufacturer', v.manufacturer)) AS vaccines
       FROM appointments a
       LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
       LEFT JOIN vaccines v ON av.vaccine_id = v.id
@@ -92,6 +103,9 @@ export const getCitizenAppointments = async (req, res) => {
       GROUP BY a.id
       ORDER BY a.scheduled_at DESC
     `;
+
+    // Cache for 3 minutes
+    await setCache(cacheKey, appointments, 180);
 
     res.status(200).json(appointments);
   } catch (error) {

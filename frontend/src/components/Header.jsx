@@ -11,18 +11,21 @@ const Header = ({ title, subtitle, icon: Icon = Calendar }) => {
   const { authUser } = useAuthStore()
   const { userProfile } = useUserStore()
   const { selectedVaccines } = useVaccineStore()
-  const { notifications, unreadCount, getNotifications, getUnreadCount, markAsRead } = useNotificationStore()
+  const { 
+    notifications, 
+    unreadCount, 
+    getNotifications, 
+    getUnreadCount, 
+    markAsRead,
+    isSocketConnected 
+  } = useNotificationStore()
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef(null)
 
+  // Fetch initial unread count when component mounts or auth changes
   useEffect(() => {
     if (authUser) {
       getUnreadCount()
-      // Refresh unread count every 30 seconds
-      const interval = setInterval(() => {
-        getUnreadCount()
-      }, 30000)
-      return () => clearInterval(interval)
     }
   }, [authUser, getUnreadCount])
 
@@ -30,7 +33,7 @@ const Header = ({ title, subtitle, icon: Icon = Calendar }) => {
     if (showNotifications) {
       getNotifications({ limit: 10 })
     }
-  }, [showNotifications, getNotifications])
+  }, [showNotifications])
 
   // Close notification panel when clicking outside
   useEffect(() => {
@@ -144,9 +147,13 @@ const Header = ({ title, subtitle, icon: Icon = Calendar }) => {
                 >
                   <Bell className="h-5 w-5 text-gray-600" />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-sm">
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold shadow-sm animate-pulse">
                       {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
+                  )}
+                  {/* Socket connection indicator - small green dot when connected */}
+                  {isSocketConnected && (
+                    <span className="absolute bottom-0 right-0 w-2 h-2 bg-green-500 rounded-full border border-white"></span>
                   )}
                 </button>
 

@@ -9,4 +9,5 @@ router.get("/:id", protectRoute, getVaccinesByID);
 router.post("/", protectRoute, addVaccine);
 router.put("/:id", protectRoute, editVaccine);
 router.delete("/:id", protectRoute, deleteVaccine);
+
 export default router;

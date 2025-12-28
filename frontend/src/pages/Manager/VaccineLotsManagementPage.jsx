@@ -120,7 +120,9 @@ const VaccineLotsManagementPage = () => {
 
     const renderStatus = (expiryDate) => {
         const now = new Date();
+		now.setHours(0, 0, 0, 0);
         const expiry = new Date(expiryDate);
+		expiry.setHours(0, 0, 0, 0);
         const daysDiff = (expiry - now) / (1000 * 60 * 60 * 24);
 
         if (daysDiff < 0) {
@@ -337,7 +339,7 @@ const VaccineLotsManagementPage = () => {
                                 onClick={() => setIsAddOpen(true)}
                             >
                                 <Plus className="h-4 w-4 mr-2" />
-                                Import Batch
+                                Import Lot
                             </button>
                         </div>
                     </div>

@@ -1,4 +1,5 @@
 import { sql } from "../config/db.js";
+import { getCache, setCache, deleteCache, deleteCachePattern } from "../lib/cache.js";
 
 // Create announcement (Manager only)
 export const createAnnouncement = async (req, res) => {
@@ -40,6 +41,9 @@ export const createAnnouncement = async (req, res) => {
         )
       );
     }
+
+    // Invalidate announcements cache for all roles
+    await deleteCachePattern('announcements:*');
     
     res.status(201).json({ 
       message: `Announcement created successfully and sent to ${targetUsers.length} user(s)`,
@@ -57,6 +61,17 @@ export const getAnnouncements = async (req, res) => {
   try {
     const { is_active, target_audience, limit = 5, offset = 0 } = req.query;
     const userRole = req.user.role;
+
+    // Cache only first page with no filters
+    const shouldCache = offset == 0 && limit == 5 && !is_active && !target_audience;
+    const cacheKey = shouldCache ? `announcements:${userRole}` : null;
+
+    if (cacheKey) {
+      const cached = await getCache(cacheKey);
+      if (cached) {
+        return res.status(200).json(cached);
+      }
+    }
 
     let announcements;
 
@@ -150,6 +165,11 @@ export const getAnnouncements = async (req, res) => {
           LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
         `;
       }
+    }
+
+    // Cache for 3 minutes
+    if (cacheKey) {
+      await setCache(cacheKey, announcements, 180);
     }
 
     res.status(200).json(announcements);

@@ -100,7 +100,7 @@ export const useVaccineLotStore = create((set, get) => ({
     // ================== deleteLot Controller ==================
     deleteLot: async (id) => {
         try {
-            await axiosInstance.delete(`/vaccine-lots/${id}`);
+            await axiosInstance.put(`/vaccine-lots/delete/${id}`);
             toast.success('Lot deleted');
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to delete lot');

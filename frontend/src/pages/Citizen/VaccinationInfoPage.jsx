@@ -94,6 +94,11 @@ const VaccinationInfoPage = () => {
   }, [getVaccines])
 
   const filteredVaccines = vaccines.filter(vaccine => {
+    // Only show vaccines with available quantity > 0 (excluding expired lots)
+    if (!vaccine.available_quantity || vaccine.available_quantity <= 0) {
+      return false
+    }
+    
     const nameMatch = vaccine.name && vaccine.name.toLowerCase().includes(searchTerm.toLowerCase())
     const diseaseMatch = vaccine.disease_type && vaccine.disease_type.toLowerCase().includes(searchTerm.toLowerCase())
     return nameMatch || diseaseMatch
@@ -129,7 +134,7 @@ const VaccinationInfoPage = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredVaccines.map(vaccine => (
+          {filteredVaccines.slice(0,20).map(vaccine => (
             <VaccineCard key={vaccine.id} vaccine={vaccine} onViewDetail={setSelectedVaccine} />
           ))}
         </div>

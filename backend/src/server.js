@@ -5,7 +5,10 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
+import { createServer } from "http";
 import { sql } from "./config/db.js";
+import { connectRedis } from "./config/redis.js";
+import { initSocket } from "./lib/socket.js";
 import authRoutes from "./routes/auth.route.js";
 import reportRoutes from "./routes/report.route.js";
 import vaccineLotRoutes from "./routes/vaccineLot.route.js";
@@ -137,6 +140,7 @@ async function initDB() {
                 manufacturer TEXT,
                 description TEXT,
                 price NUMERIC(10,2) DEFAULT 0,
+				active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
         `;
@@ -151,7 +155,8 @@ async function initDB() {
                 quantity BIGINT DEFAULT 0,
                 expiry_date DATE,
                 received_at TIMESTAMPTZ DEFAULT NOW(),
-                UNIQUE (vaccine_id, lot_number)
+                UNIQUE (vaccine_id, lot_number),
+				active BOOLEAN DEFAULT TRUE
             )
         `;
 
@@ -299,6 +304,7 @@ async function initDB() {
 }
 
 initDB();
+connectRedis();
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -313,7 +319,11 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/announcements", announcementRoutes);
 
+// Create HTTP server and initialize Socket.io
+const server = createServer(app);
+initSocket(server);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

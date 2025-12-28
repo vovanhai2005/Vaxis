@@ -1,12 +1,19 @@
 import { sql } from '../config/db.js';
+import { getCache, setCache, cacheKeys } from '../lib/cache.js';
 
-   // Số mũi tiêm completed, booked (biểu đồ tròn) (dashboard admin)
+// Số mũi tiêm completed, booked (biểu đồ tròn) (dashboard admin)
 export const vaccinationRate = async (req, res) => {
   try {
     const userRole = req.user.role;
 
     if (userRole !== 'manager') {
       return res.status(403).json({ message: 'Access denied. Manager only.' });
+    }
+
+    const cacheKey = cacheKeys.stats('vaccination_rate');
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
     }
 
     const result = await sql`
@@ -19,11 +26,16 @@ export const vaccinationRate = async (req, res) => {
 
     const row = (result && result[0]) ? result[0] : { da_tiem: 0, chua_tiem: 0, qua_han: 0 };
 
-    res.status(200).json({
+    const stats = {
       da_tiem: Number(row.da_tiem) || 0,
       chua_tiem: Number(row.chua_tiem) || 0,
       qua_han: Number(row.qua_han) || 0,
-    });
+    };
+
+    // Cache for 2 minutes
+    await setCache(cacheKey, stats, 120);
+
+    res.status(200).json(stats);
   } catch (error) {
     console.error('Error fetching vaccination rate:', error);
     res.status(500).json({ message: 'Internal server error.' });
@@ -39,6 +51,12 @@ export const monthlyStats = async (req, res) => {
       return res.status(403).json({ message: 'Access denied. Manager only.' });
     }
 
+    const cacheKey = cacheKeys.stats('monthly_stats');
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.status(200).json(cached);
+    }
+
     const result = await sql`
       SELECT
         SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END)::int AS da_tiem,
@@ -51,11 +69,16 @@ export const monthlyStats = async (req, res) => {
    
     const row = (result && result[0]) ? result[0] : { da_tiem: 0, chua_tiem: 0, qua_han: 0 };
 
-    res.status(200).json({
+    const stats = {
       da_tiem: Number(row.da_tiem) || 0,
       chua_tiem: Number(row.chua_tiem) || 0,
       qua_han: Number(row.qua_han) || 0,
-    });
+    };
+
+    // Cache for 5 minutes
+    await setCache(cacheKey, stats, 300);
+
+    res.status(200).json(stats);
   } catch (error) {
     console.error('Error fetching monthly vaccination stats:', error);
     res.status(500).json({ message: 'Internal server error.' });
@@ -81,18 +104,22 @@ export const inventory = async (req, res) => {
     const limitNumber = parseInt(limit) || 10;
     const offset = (pageNumber - 1) * limitNumber;
 
-    let whereClause = `WHERE 1=1`;
-    
+    let whereClause = `WHERE v.active = TRUE AND vl.active = TRUE`;
+    const today = "(NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE"; 
+
     if (search) {
       whereClause += ` AND (vl.lot_number ILIKE '%${search}%' OR v.code ILIKE '%${search}%' OR v.name ILIKE '%${search}%')`;
     }
-   
+    
     if (expiry_status === "sap_het") {
-      whereClause += ` AND vl.expiry_date BETWEEN NOW() AND NOW() + INTERVAL '30 days'`;
+      // Sửa: Dùng >= CURRENT_DATE để lấy cả ngày hôm nay
+      whereClause += ` AND vl.expiry_date >= ${today} AND vl.expiry_date <= ${today} + INTERVAL '30 days'`;
     } else if (expiry_status === "qua_han") {
-      whereClause += ` AND vl.expiry_date < NOW()`;
+      // Sửa: Nhỏ hơn hẵn ngày hôm nay (tức là từ hôm qua trở về trước)
+      whereClause += ` AND vl.expiry_date < ${today}`;
     } else if (expiry_status === "con_han") {
-      whereClause += ` AND vl.expiry_date > NOW() + INTERVAL '30 days'`;
+      // Sửa: Lớn hơn 30 ngày tới
+      whereClause += ` AND vl.expiry_date > ${today} + INTERVAL '30 days'`;
     }
    
     if (min_quantity) {
