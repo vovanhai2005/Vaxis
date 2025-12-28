@@ -43,7 +43,7 @@ export const useAppointmentStore = create((set, get) => ({
     getCitizenAppointments: async () => {
         set({ isLoadingAppointments: true })
         try {
-            const res = await axiosInstance.get('/appointments/me')
+            const res = await axiosInstance.get('/appointments/my-appointments')
             set({ appointments: res.data })
         } catch (error) {
             console.error('Error fetching appointments:', error)

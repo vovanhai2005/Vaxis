@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 export const useUserStore = create((set) => ({
     userProfile: null,
     employeeProfile: null,
-    vaccineHistory: [],
+    appointmentHistory: [],
     isLoadingProfile: false,
     isUpdatingProfile: false,
     isLoadingHistory: false,
@@ -43,15 +43,17 @@ export const useUserStore = create((set) => ({
         }
     },
 
-    // Get vaccine history
-    getVaccineHistory: async () => {
+    // Get appointment history (completed appointments with vaccines)
+    getAppointmentHistory: async () => {
         set({ isLoadingHistory: true })
         try {
-            const res = await axiosInstance.get('/users/me/vaccine-history')
-            set({ vaccineHistory: res.data })
+            const res = await axiosInstance.get('/appointments/my-appointments')
+            // Filter only completed appointments
+            const completedAppointments = res.data.filter(apt => apt.status === 'completed')
+            set({ appointmentHistory: completedAppointments })
         } catch (error) {
-            console.error('Error fetching vaccine history:', error)
-            toast.error(error.response?.data?.message || 'Failed to load vaccine history')
+            console.error('Error fetching appointment history:', error)
+            toast.error(error.response?.data?.message || 'Failed to load appointment history')
         } finally {
             set({ isLoadingHistory: false })
         }

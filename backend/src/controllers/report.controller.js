@@ -1,7 +1,7 @@
 import { sql } from '../config/db.js';
 import { getCache, setCache, cacheKeys } from '../lib/cache.js';
 
-   // Số mũi tiêm completed, booked (biểu đồ tròn) (dashboard admin)
+// Số mũi tiêm completed, booked (biểu đồ tròn) (dashboard admin)
 export const vaccinationRate = async (req, res) => {
   try {
     const userRole = req.user.role;

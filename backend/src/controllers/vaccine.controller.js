@@ -12,7 +12,17 @@ export const getVaccines = async (req, res) => {
             return res.status(200).json(cached);
         }
         
-        const vaccines = await sql`SELECT * FROM vaccines`;
+        const vaccines = await sql`
+            SELECT 
+                v.*,
+                COALESCE(SUM(CASE 
+                    WHEN vl.expiry_date > NOW() THEN vl.quantity 
+                    ELSE 0 
+                END), 0)::int AS available_quantity
+            FROM vaccines v
+            LEFT JOIN vaccine_lots vl ON v.id = vl.vaccine_id
+            GROUP BY v.id
+        `;
         
         // Cache for 10 minutes
         await setCache(cacheKey, vaccines, 600);
@@ -139,10 +149,9 @@ export const deleteVaccine = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Sử dụng Transaction để đảm bảo an toàn dữ liệu
-    // Nếu cập nhật vaccine thành công mà cập nhật lô lỗi, nó sẽ tự hoàn tác (rollback)
+    // 1. Thực hiện Transaction Database
     const result = await sql.begin(async (sql) => {
-      // 1. Deactivate Vaccine
+      // A. Deactivate Vaccine
       const [vaccine] = await sql`
         UPDATE vaccines
         SET active = false
@@ -154,7 +163,7 @@ export const deleteVaccine = async (req, res) => {
         throw new Error("VACCINE_NOT_FOUND");
       }
 
-      // 2. Deactivate tất cả các Lô thuốc thuộc vaccine này
+      // B. Deactivate tất cả các Lô thuốc thuộc vaccine này
       await sql`
         UPDATE vaccine_lots
         SET active = false
@@ -164,6 +173,20 @@ export const deleteVaccine = async (req, res) => {
       return vaccine;
     });
 
+    // 2. Xóa Cache (Chỉ chạy khi Transaction thành công)
+    // Sửa lỗi: Đưa đoạn này từ catch lên đây
+    try {
+        // Xóa cache danh sách tổng
+        await deleteCache(cacheKeys.vaccines());
+        
+        // Xóa cache chi tiết của vaccine này (nếu bạn có lưu key này)
+        // await deleteCache(cacheKeys.vaccine(id)); 
+    } catch (cacheError) {
+        console.error("Redis Cache Error (Non-blocking):", cacheError);
+        // Lưu ý: Lỗi xóa cache không nên làm fail request chính, nên ta try/catch riêng hoặc lờ đi
+    }
+
+    // 3. Trả về kết quả thành công
     res.status(200).json({ 
       message: "Vaccine and related lots deactivated successfully", 
       vaccine: result 
@@ -172,22 +195,12 @@ export const deleteVaccine = async (req, res) => {
   } catch (error) {
     console.error("Error deactivating vaccine:", error);
     
+    // Xử lý các loại lỗi cụ thể
     if (error.message === "VACCINE_NOT_FOUND") {
       return res.status(404).json({ error: "Vaccine not found" });
     }
 
-    // Invalidate caches
-    await deleteCache(cacheKeys.vaccines());
-    await deleteCache(cacheKeys.vaccine(id));
-
-    res.status(200).json({ message: "Vaccine deleted", deleted: result[0] });
-  } catch (error) {
-    console.error("Error restoring vaccine:", error);
-
-    if (error.message === "VACCINE_NOT_FOUND") {
-      return res.status(404).json({ error: "Vaccine not found" });
-    }
-
-    res.status(500).json({ error: "Unable to restore vaccine" });
+    // Lỗi server chung
+    res.status(500).json({ error: "Unable to deactivate vaccine" });
   }
 };

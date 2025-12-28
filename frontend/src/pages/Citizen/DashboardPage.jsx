@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom'
 const DashboardPage = () => {
   const navigate = useNavigate()
   const { authUser } = useAuthStore()
-  const { vaccineHistory, getVaccineHistory, isLoadingHistory } = useUserStore()
+  const { appointmentHistory, getAppointmentHistory, isLoadingHistory } = useUserStore()
   const { appointments, isLoadingAppointments, getCitizenAppointments } = useAppointmentStore()
   const { selectedVaccines } = useVaccineStore()
   
@@ -20,21 +20,25 @@ const DashboardPage = () => {
   })
 
   useEffect(() => {
-    getVaccineHistory()
+    getAppointmentHistory()
     getCitizenAppointments()
-  }, [getVaccineHistory, getCitizenAppointments])
+  }, [getAppointmentHistory, getCitizenAppointments])
 
   useEffect(() => {
-    if (vaccineHistory) {
+    if (appointmentHistory) {
+      // Count total vaccines from completed appointments
+      const totalVaccines = appointmentHistory.reduce((sum, apt) => {
+        return sum + (apt.vaccines?.length || 0)
+      }, 0)
       setStats(prev => ({
         ...prev,
-        completedVaccines: vaccineHistory.length
+        completedVaccines: totalVaccines
       }))
     }
     if (appointments) {
       // Only count appointments that are upcoming (booked or checked_in) and in the future
       const upcomingCount = appointments.filter(apt => 
-        (apt.status === 'booked' || apt.status === 'checked_in') && 
+        (apt.status === 'booked' || apt.status === 'checked_in' || apt.status === 'administered') && 
         new Date(apt.scheduled_at) >= new Date()
       ).length
       setStats(prev => ({
@@ -42,7 +46,7 @@ const DashboardPage = () => {
         upcomingAppointments: upcomingCount
       }))
     }
-  }, [vaccineHistory, appointments])
+  }, [appointmentHistory, appointments])
 
   const getTimeAgo = (dateString) => {
     const date = new Date(dateString)
@@ -310,58 +314,90 @@ const DashboardPage = () => {
               </div>
             </div>
 
-            {/* Recent Vaccination History */}
+            {/* Upcoming Appointments */}
             <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
-                  <Syringe className="h-6 w-6 text-emerald-600" />
-                  <h2 className="text-xl font-semibold text-gray-800">Vaccination History</h2>
+                  <Calendar className="h-6 w-6 text-blue-600" />
+                  <h2 className="text-xl font-semibold text-gray-800">Upcoming Appointments</h2>
                 </div>
               </div>
 
-              {isLoadingHistory ? (
+              {isLoadingAppointments ? (
                 <div className="flex justify-center items-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
                 </div>
-              ) : vaccineHistory && vaccineHistory.length > 0 ? (
+              ) : appointments && appointments.filter(apt => 
+                  (apt.status === 'booked' || apt.status === 'checked_in' || apt.status === 'administered') && 
+                  new Date(apt.scheduled_at) >= new Date()
+                ).length > 0 ? (
                 <div className="space-y-3 flex-1 overflow-y-auto">
-                  {vaccineHistory.slice(0, 6).map((record, index) => {
-                    const administeredDate = new Date(record.administered_at)
-                    return (
-                      <div key={record.id || index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                        <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                          <CheckCircle className="h-5 w-5 text-emerald-600" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-gray-800 truncate">{record.vaccine_name || 'Vaccine'}</p>
-                          <p className="text-sm text-gray-500">
-                            {administeredDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                            {record.dose_number && ` • Dose ${record.dose_number}`}
-                          </p>
-                        </div>
-                      </div>
+                  {appointments
+                    .filter(apt => 
+                      (apt.status === 'booked' || apt.status === 'checked_in' || apt.status === 'administered') && 
+                      new Date(apt.scheduled_at) >= new Date()
                     )
-                  })}
-                  {vaccineHistory.length > 6 && (
-                    <p className="text-center text-sm text-gray-500 pt-2">
-                      +{vaccineHistory.length - 6} more records
-                    </p>
-                  )}
+                    .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
+                    .slice(0, 4)
+                    .map((appointment) => {
+                      const { date, time } = formatDate(appointment.scheduled_at)
+                      const statusInfo = getStatusInfo(appointment.status)
+                      const vaccineCount = appointment.vaccines?.length || 0
+                      
+                      return (
+                        <div key={appointment.id} className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl border border-blue-100 hover:shadow-md transition-shadow cursor-pointer" onClick={() => navigate('/appointment')}>
+                          <div className="flex items-start gap-3">
+                            <div className="w-12 h-12 bg-white rounded-lg flex flex-col items-center justify-center flex-shrink-0 shadow-sm">
+                              <span className="text-xs font-medium text-blue-600">
+                                {new Date(appointment.scheduled_at).toLocaleDateString('en-US', { month: 'short' }).toUpperCase()}
+                              </span>
+                              <span className="text-lg font-bold text-gray-900">
+                                {new Date(appointment.scheduled_at).getDate()}
+                              </span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <span className={`inline-block w-2 h-2 rounded-full ${statusInfo.color}`}></span>
+                                <p className="font-semibold text-gray-800">Appointment #{appointment.id}</p>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-sm text-gray-600 mb-1">
+                                <Clock className="h-3.5 w-3.5" />
+                                <span>{time}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                                <Syringe className="h-3 w-3" />
+                                <span>{vaccineCount} vaccine{vaccineCount !== 1 ? 's' : ''}</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    })}
                 </div>
               ) : (
                 <div className="text-center py-8 flex-1 flex flex-col items-center justify-center">
-                  <Syringe className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">No vaccination records yet</p>
-                  <p className="text-sm text-gray-400 mt-1">Your history will appear here after vaccination</p>
+                  <Calendar className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-500 font-medium">No upcoming appointments</p>
+                  <p className="text-sm text-gray-400 mt-1">Book an appointment to get started</p>
+                  <button
+                    onClick={() => navigate('/booking')}
+                    className="mt-4 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition flex items-center gap-2"
+                  >
+                    <CalendarPlus className="h-4 w-4" />
+                    Book Now
+                  </button>
                 </div>
               )}
 
-              {vaccineHistory && vaccineHistory.length > 0 && (
+              {appointments && appointments.filter(apt => 
+                  (apt.status === 'booked' || apt.status === 'checked_in' || apt.status === 'administered') && 
+                  new Date(apt.scheduled_at) >= new Date()
+                ).length > 0 && (
                 <button
-                  onClick={() => navigate('/profile')}
-                  className="mt-4 w-full px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium rounded-lg border border-emerald-200 transition flex items-center justify-center gap-2"
+                  onClick={() => navigate('/appointment')}
+                  className="mt-4 w-full px-4 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium rounded-lg border border-blue-200 transition flex items-center justify-center gap-2"
                 >
-                  View Full History
+                  View All Appointments
                   <ChevronRight className="h-4 w-4" />
                 </button>
               )}
