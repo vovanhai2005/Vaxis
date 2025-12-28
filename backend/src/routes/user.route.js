@@ -1,4 +1,4 @@
-import { getCitizenProfile, updateCitizenProfile, getVaccineHistory, getNotifications, getEmployeeProfile, updateEmployeeProfile } from "../controllers/user.controller.js";
+import { getCitizenProfile, updateCitizenProfile, getVaccineHistory, getEmployeeProfile, updateEmployeeProfile } from "../controllers/user.controller.js";
 import { protectRoute } from "../middleware/auth.middleware.js";
 import express from "express";
 

@@ -1,5 +1,6 @@
 import { sql } from "../config/db.js";
 import { getCache, setCache, deleteCache, cacheKeys } from "../lib/cache.js";
+import { emitNotificationToUser } from "../lib/socket.js";
 
 // Get user's notifications
 export const getUserNotifications = async (req, res) => {
@@ -102,6 +103,12 @@ export const markAsRead = async (req, res) => {
     await deleteCache(cacheKeys.unreadCount(userId));
     await deleteCache(cacheKeys.notifications(userId, 20));
 
+    // Emit socket event
+    emitNotificationToUser(userId, "notification:read", {
+      notificationId: id,
+      notification: notification[0]
+    });
+
     res.status(200).json({ 
       message: "Notification marked as read",
       notification: notification[0]
@@ -126,6 +133,9 @@ export const markAllAsRead = async (req, res) => {
     // Invalidate cache
     await deleteCache(cacheKeys.unreadCount(userId));
     await deleteCache(cacheKeys.notifications(userId, 20));
+
+    // Emit socket event
+    emitNotificationToUser(userId, "notification:readAll", {});
 
     res.status(200).json({ message: "All notifications marked as read" });
   } catch (error) {
@@ -154,6 +164,9 @@ export const deleteNotification = async (req, res) => {
     await deleteCache(cacheKeys.unreadCount(userId));
     await deleteCache(cacheKeys.notifications(userId, 20));
 
+    // Emit socket event
+    emitNotificationToUser(userId, "notification:deleted", { notificationId: id });
+
     res.status(200).json({ message: "Notification deleted successfully" });
   } catch (error) {
     console.error("Error deleting notification:", error);
@@ -170,7 +183,7 @@ export const createAppointmentNotification = async (citizenId, appointmentData) 
 
     if (citizen.length === 0) return;
 
-    await sql`
+    const notification = await sql`
       INSERT INTO notifications (user_id, type, title, message, related_id)
       VALUES (
         ${citizen[0].user_id},
@@ -179,7 +192,16 @@ export const createAppointmentNotification = async (citizenId, appointmentData) 
         ${`Your vaccination appointment has been completed successfully. You can now download your certificate.`},
         ${appointmentData.appointmentId}
       )
+      RETURNING *
     `;
+
+    // Emit socket event for real-time notification
+    if (notification.length > 0) {
+      emitNotificationToUser(citizen[0].user_id, "notification:new", notification[0]);
+      // Invalidate cache
+      await deleteCache(cacheKeys.unreadCount(citizen[0].user_id));
+      await deleteCache(cacheKeys.notifications(citizen[0].user_id, 20));
+    }
   } catch (error) {
     console.error("Error creating appointment notification:", error);
   }
@@ -211,19 +233,28 @@ export const createDailyTaskNotification = async () => {
     const count = appointmentsCount[0].count;
 
     if (count > 0 && employees.length > 0) {
-      await Promise.all(
-        employees.map(employee =>
-          sql`
-            INSERT INTO notifications (user_id, type, title, message)
-            VALUES (
-              ${employee.id},
-              'task',
-              'Daily Task Reminder',
-              ${`You have ${count} appointment${count > 1 ? 's' : ''} scheduled for today. Please check your upcoming appointments.`}
-            )
-          `
-        )
-      );
+      const notificationPromises = employees.map(async (employee) => {
+        const notification = await sql`
+          INSERT INTO notifications (user_id, type, title, message)
+          VALUES (
+            ${employee.id},
+            'task',
+            'Daily Task Reminder',
+            ${`You have ${count} appointment${count > 1 ? 's' : ''} scheduled for today. Please check your upcoming appointments.`}
+          )
+          RETURNING *
+        `;
+        
+        // Emit socket event for each employee
+        if (notification.length > 0) {
+          emitNotificationToUser(employee.id, "notification:new", notification[0]);
+          // Invalidate cache
+          await deleteCache(cacheKeys.unreadCount(employee.id));
+          await deleteCache(cacheKeys.notifications(employee.id, 20));
+        }
+      });
+      
+      await Promise.all(notificationPromises);
     }
   } catch (error) {
     console.error("Error creating daily task notifications:", error);

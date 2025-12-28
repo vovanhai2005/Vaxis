@@ -107,28 +107,30 @@ const AppointmentPage = () => {
     }
   }
 
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = (appointment.vaccines && appointment.vaccines.some(v => 
-      v?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-    )) || (appointment.notes && appointment.notes.toLowerCase().includes(searchTerm.toLowerCase()))
-    
-    const now = new Date()
-    const isExpired = appointment.status === 'booked' && new Date(appointment.scheduled_at) < now
-    const isActiveBooked = appointment.status === 'booked' && new Date(appointment.scheduled_at) >= now
-    
-    let matchesFilter = false
-    if (filterStatus === 'all') {
-      matchesFilter = true
-    } else if (filterStatus === 'expired') {
-      matchesFilter = isExpired
-    } else if (filterStatus === 'booked') {
-      matchesFilter = isActiveBooked
-    } else {
-      matchesFilter = appointment.status === filterStatus
-    }
-    
-    return matchesSearch && matchesFilter
-  })
+  const filteredAppointments = appointments
+    .filter(appointment => appointment.status !== 'completed') // Exclude completed appointments
+    .filter(appointment => {
+      const matchesSearch = (appointment.vaccines && appointment.vaccines.some(v => 
+        v?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      )) || (appointment.notes && appointment.notes.toLowerCase().includes(searchTerm.toLowerCase()))
+      
+      const now = new Date()
+      const isExpired = appointment.status === 'booked' && new Date(appointment.scheduled_at) < now
+      const isActiveBooked = appointment.status === 'booked' && new Date(appointment.scheduled_at) >= now
+      
+      let matchesFilter = false
+      if (filterStatus === 'all') {
+        matchesFilter = true
+      } else if (filterStatus === 'expired') {
+        matchesFilter = isExpired
+      } else if (filterStatus === 'booked') {
+        matchesFilter = isActiveBooked
+      } else {
+        matchesFilter = appointment.status === filterStatus
+      }
+      
+      return matchesSearch && matchesFilter
+    })
 
   // Sort appointments: upcoming first, then by date
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
@@ -141,28 +143,30 @@ const AppointmentPage = () => {
   })
 
   const now = new Date()
-  const expiredAppointments = appointments.filter(a => 
+  const activeAppointments = appointments.filter(a => 
+    a.status !== 'completed' && a.status !== 'cancelled'
+  )
+  const expiredAppointments = activeAppointments.filter(a => 
     a.status === 'booked' && new Date(a.scheduled_at) < now
   )
-  const activeBookedAppointments = appointments.filter(a => 
+  const activeBookedAppointments = activeAppointments.filter(a => 
     a.status === 'booked' && new Date(a.scheduled_at) >= now
   )
 
   const statusCounts = {
-    all: appointments.length,
+    all: activeAppointments.length,
     booked: activeBookedAppointments.length,
     expired: expiredAppointments.length,
-    checked_in: appointments.filter(a => a.status === 'checked_in').length,
-    administered: appointments.filter(a => a.status === 'administered').length,
-    completed: appointments.filter(a => a.status === 'completed').length,
-    cancelled: appointments.filter(a => a.status === 'cancelled').length,
+    checked_in: activeAppointments.filter(a => a.status === 'checked_in').length,
+    administered: activeAppointments.filter(a => a.status === 'administered').length,
+    completed: 0,
+    cancelled: 0,
   }
 
   // Calculate stats
-  const upcomingCount = appointments.filter(a => a.status === 'booked' || a.status === 'checked_in' || a.status === 'administered').length
-  const totalVaccinesReceived = appointments
-    .filter(a => a.status === 'completed')
-    .reduce((sum, a) => sum + (a.vaccines?.length || 0), 0)
+  const upcomingCount = activeAppointments.filter(a => a.status === 'booked' || a.status === 'checked_in' || a.status === 'administered').length
+  const totalAppointmentsEver = appointments.length
+  const completedCount = appointments.filter(a => a.status === 'completed').length
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30">
       {/* Cancel Confirmation Modal */}
@@ -232,10 +236,10 @@ const AppointmentPage = () => {
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-blue-600" />
               </div>
-              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Total</span>
+              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded-full">Active</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{appointments.length}</p>
-            <p className="text-sm text-gray-500 mt-1">All Appointments</p>
+            <p className="text-3xl font-bold text-gray-900">{activeAppointments.length}</p>
+            <p className="text-sm text-gray-500 mt-1">Active Appointments</p>
           </div>
 
           <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
@@ -256,7 +260,7 @@ const AppointmentPage = () => {
               </div>
               <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">Done</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{statusCounts.completed}</p>
+            <p className="text-3xl font-bold text-gray-900">{completedCount}</p>
             <p className="text-sm text-gray-500 mt-1">Completed</p>
           </div>
 
@@ -265,10 +269,10 @@ const AppointmentPage = () => {
               <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                 <Syringe className="h-5 w-5 text-purple-600" />
               </div>
-              <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">Vaccines</span>
+              <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded-full">Total</span>
             </div>
-            <p className="text-3xl font-bold text-gray-900">{totalVaccinesReceived}</p>
-            <p className="text-sm text-gray-500 mt-1">Vaccines Received</p>
+            <p className="text-3xl font-bold text-gray-900">{totalAppointmentsEver}</p>
+            <p className="text-sm text-gray-500 mt-1">Total Appointments</p>
           </div>
         </div>
 
@@ -297,8 +301,6 @@ const AppointmentPage = () => {
                   { value: 'expired', label: 'Expired', count: statusCounts.expired },
                   { value: 'checked_in', label: 'Checked In', count: statusCounts.checked_in },
                   { value: 'administered', label: 'Administered', count: statusCounts.administered },
-                  { value: 'completed', label: 'Completed', count: statusCounts.completed },
-                  { value: 'cancelled', label: 'Cancelled', count: statusCounts.cancelled },
                 ].map((filter) => (
                   <button
                     key={filter.value}

@@ -5,7 +5,7 @@ import express from "express";
 const router = express.Router();
 
 router.post("/", protectRoute, makeAppointment);
-router.get("/me", protectRoute, getCitizenAppointments);
+router.get("/my-appointments", protectRoute, getCitizenAppointments);
 router.get("/total-completed", protectRoute, totalCompleted);
 router.get("/upcoming", protectRoute, upcomingAppointments);
 router.put("/:id/complete", protectRoute, completeAppointment);

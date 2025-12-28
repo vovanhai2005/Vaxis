@@ -5,8 +5,10 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
+import { createServer } from "http";
 import { sql } from "./config/db.js";
 import { connectRedis } from "./config/redis.js";
+import { initSocket } from "./lib/socket.js";
 import authRoutes from "./routes/auth.route.js";
 import reportRoutes from "./routes/report.route.js";
 import vaccineLotRoutes from "./routes/vaccineLot.route.js";
@@ -317,7 +319,11 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/announcements", announcementRoutes);
 
+// Create HTTP server and initialize Socket.io
+const server = createServer(app);
+initSocket(server);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
