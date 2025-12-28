@@ -1,6 +1,6 @@
-import {User, Calendar, Syringe, Thermometer, AlertTriangle, FileText, MapPin, Hash, X} from "lucide-react";
+import {User, Calendar, Syringe, Thermometer, AlertTriangle, FileText, MapPin, Hash, X, Download} from "lucide-react";
 
-const VaccinationDetails = ({ isOpen, onClose, data }) => {
+const VaccinationDetails = ({ isOpen, onClose, data, onDownload }) => {
   if (!isOpen || !data) return null;
 
   const formatDate = (date) =>
@@ -139,10 +139,12 @@ const VaccinationDetails = ({ isOpen, onClose, data }) => {
           </button>
 
           <button
-            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg flex items-center gap-2"
+            onClick={() => onDownload && onDownload(data)}
+            className="px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+            disabled={!onDownload}
           >
-            <FileText className="w-4 h-4" />
-            Export PDF
+            <Download className="w-4 h-4" />
+            Download Certificate
           </button>
         </div>
 
