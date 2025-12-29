@@ -1,5 +1,6 @@
 import { sql } from "../config/db.js";
 import { getCache, setCache, deleteCache, deleteCachePattern } from "../lib/cache.js";
+import { emitNotificationToUser } from "../lib/socket.js";
 
 // Create announcement (Manager only)
 export const createAnnouncement = async (req, res) => {
@@ -32,14 +33,32 @@ export const createAnnouncement = async (req, res) => {
 
     // Create notification for each target user
     if (targetUsers.length > 0) {
-      await Promise.all(
-        targetUsers.map(user => 
-          sql`
-            INSERT INTO notifications (user_id, type, title, message, related_id)
-            VALUES (${user.id}, 'announcement', ${title}, ${content}, ${announcement[0].id})
-          `
-        )
-      );
+      const notificationPromises = targetUsers.map(async (user) => {
+        // Insert notification into database
+        const notification = await sql`
+          INSERT INTO notifications (user_id, type, title, message, related_id)
+          VALUES (${user.id}, 'announcement', ${title}, ${content}, ${announcement[0].id})
+          RETURNING *
+        `;
+        
+        // Emit real-time socket event
+        try {
+          emitNotificationToUser(user.id, 'notification:new', {
+            id: notification[0].id,
+            type: 'announcement',
+            title: title,
+            message: content,
+            related_id: announcement[0].id,
+            created_at: notification[0].created_at,
+            is_read: false
+          });
+        } catch (socketError) {
+          console.error('Error emitting socket notification:', socketError);
+          // Continue even if socket fails - notification is still in database
+        }
+      });
+      
+      await Promise.all(notificationPromises);
     }
 
     // Invalidate announcements cache for all roles
@@ -226,6 +245,9 @@ export const updateAnnouncement = async (req, res) => {
       return res.status(404).json({ message: "Announcement not found" });
     }
 
+    // Invalidate announcements cache for all roles
+    await deleteCachePattern('announcements:*');
+
     res.status(200).json({
       message: "Announcement updated successfully",
       announcement: announcement[0]
@@ -256,6 +278,9 @@ export const deleteAnnouncement = async (req, res) => {
       DELETE FROM notifications
       WHERE type = 'announcement' AND related_id = ${id}
     `;
+
+    // Invalidate announcements cache for all roles
+    await deleteCachePattern('announcements:*');
 
     res.status(200).json({ message: "Announcement deleted successfully" });
   } catch (error) {

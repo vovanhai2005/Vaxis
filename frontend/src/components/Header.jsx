@@ -22,18 +22,7 @@ const Header = ({ title, subtitle, icon: Icon = Calendar }) => {
   const [showNotifications, setShowNotifications] = useState(false)
   const notificationRef = useRef(null)
 
-  // Fetch initial unread count when component mounts or auth changes
-  useEffect(() => {
-    if (authUser) {
-      getUnreadCount()
-    }
-  }, [authUser, getUnreadCount])
-
-  useEffect(() => {
-    if (showNotifications) {
-      getNotifications({ limit: 10 })
-    }
-  }, [showNotifications])
+  // Notifications are loaded in real-time via socket, no need to fetch on click
 
   // Close notification panel when clicking outside
   useEffect(() => {
