@@ -95,12 +95,16 @@ export const getCitizenAppointments = async (req, res) => {
           a.scheduled_at,
           a.status,
           a.notes,
-          json_agg(json_build_object('id', v.id, 'name', v.name, 'price', v.price, 'manufacturer', v.manufacturer)) AS vaccines
+          json_agg(DISTINCT jsonb_build_object('id', v.id, 'name', v.name, 'price', v.price, 'manufacturer', v.manufacturer)) AS vaccines,
+          doc_user.full_name AS administered_by
       FROM appointments a
       LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
       LEFT JOIN vaccines v ON av.vaccine_id = v.id
+      LEFT JOIN administrations ad ON a.id = ad.appointment_id
+      LEFT JOIN employees e ON ad.doctor_id = e.id
+      LEFT JOIN users doc_user ON e.user_id = doc_user.id
       WHERE a.citizen_id = ${citizenId}
-      GROUP BY a.id
+      GROUP BY a.id, doc_user.full_name
       ORDER BY a.scheduled_at DESC
     `;
 
@@ -146,17 +150,22 @@ export const upcomingAppointments = async (req, res) => {
         u.phone,
         c.address,
         c.national_id,
-        string_agg(v.name, ', ') AS vaccine_names,
+        string_agg(DISTINCT v.name, ', ') AS vaccine_names,
         a.scheduled_at as time,
         a.status as status,
-        a.notes as notes
+        a.notes as notes,
+        doc_user.full_name AS doctor_name,
+        e.employee_number AS doctor_employee_number
       FROM appointments a
       JOIN citizens c ON a.citizen_id = c.id
       JOIN users u ON c.user_id = u.id
       LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
       LEFT JOIN vaccines v ON av.vaccine_id = v.id
+      LEFT JOIN administrations ad ON a.id = ad.appointment_id
+      LEFT JOIN employees e ON ad.doctor_id = e.id
+      LEFT JOIN users doc_user ON e.user_id = doc_user.id
       WHERE a.scheduled_at > ${now} AND a.status IN ('booked', 'checked_in', 'administered')
-      GROUP BY a.id, u.full_name, a.scheduled_at, a.status, a.notes, u.phone, c.address, c.national_id
+      GROUP BY a.id, u.full_name, a.scheduled_at, a.status, a.notes, u.phone, c.address, c.national_id, doc_user.full_name, e.employee_number
       ORDER BY a.scheduled_at ASC
       LIMIT 10;
     `;
@@ -248,6 +257,33 @@ export const updateAppointmentStatus = async (req, res) => {
         .json({ message: "Temperature and blood pressure are required." });
     }
 
+    // Find an available doctor (employee with role_title = 'Doctor')
+    // Using least connection algorithm to assign doctor with least current assignments
+    const availableDoctors = await sql`
+      SELECT 
+        e.id as employee_id,
+        e.user_id,
+        u.full_name as doctor_name,
+        e.employee_number,
+        COUNT(ad.id) as current_assignments
+      FROM employees e
+      JOIN users u ON e.user_id = u.id
+      LEFT JOIN administrations ad ON ad.doctor_id = e.id 
+        AND ad.administered_at IS NULL
+      WHERE e.role_title = 'Doctor'
+      GROUP BY e.id, e.user_id, u.full_name, e.employee_number
+      ORDER BY current_assignments ASC, RANDOM()
+      LIMIT 1
+    `;
+
+    if (availableDoctors.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "No doctors available. Please try again later." });
+    }
+
+    const assignedDoctor = availableDoctors[0];
+
     const updatedStatus = await sql`
       UPDATE appointments
       SET status = 'checked_in'
@@ -273,11 +309,11 @@ export const updateAppointmentStatus = async (req, res) => {
         .status(404)
         .json({ message: "No vaccines found for this appointment." });
     }
-    // Link the check-in details to administrations table
+    // Link the check-in details to administrations table with assigned doctor
     const queries = vaccineId.map(
       (vaccine) => sql`
-      INSERT INTO administrations (appointment_id, citizen_id, vaccine_id, vaccine_lot_id, temperature, blood_pressure)
-      VALUES (${appointmentId}, ${citizenId}, ${vaccine.vaccine_id}, ${vaccine.vaccine_lot_id} , ${temperature}, ${blood_pressure})
+      INSERT INTO administrations (appointment_id, citizen_id, vaccine_id, vaccine_lot_id, temperature, blood_pressure, doctor_id)
+      VALUES (${appointmentId}, ${citizenId}, ${vaccine.vaccine_id}, ${vaccine.vaccine_lot_id}, ${temperature}, ${blood_pressure}, ${assignedDoctor.employee_id})
       RETURNING *;
     `
     );
@@ -286,6 +322,11 @@ export const updateAppointmentStatus = async (req, res) => {
     res.status(200).json({
       message: "Check-in successful",
       appointment: updatedStatus[0],
+      assigned_doctor: {
+        id: assignedDoctor.employee_id,
+        name: assignedDoctor.doctor_name,
+        employee_number: assignedDoctor.employee_number
+      }
     });
   } catch (error) {
     console.error("Error during check-in:", error);
