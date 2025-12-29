@@ -6,7 +6,7 @@ import { User, ChevronDown, ChevronUp, Mail, Phone, MapPin, Droplet, Calendar, S
 import toast from 'react-hot-toast'
 import { useNavigate } from 'react-router-dom'
 import Header from '../../components/Header'
-import VaccinationDetailModal from '../../components/VaccinationDetailModal'
+import AppointmentDetailModal from '../../components/AppointmentDetailModal'
 import VaccinationCertificateTemplate from '../../components/VaccinationCertificateTemplate'
 import html2canvas from 'html2canvas-pro'
 import jsPDF from 'jspdf'
@@ -15,13 +15,13 @@ const ProfilePage = () => {
   const navigate = useNavigate()
   const certificateRef = useRef()
   const { authUser } = useAuthStore()
-  const { userProfile, vaccineHistory, getCitizenProfile, getVaccineHistory, updateCitizenProfile, isLoadingProfile, isLoadingHistory, isUpdatingProfile } = useUserStore()
+  const { userProfile, appointmentHistory, getCitizenProfile, getAppointmentHistory, updateCitizenProfile, isLoadingProfile, isLoadingHistory, isUpdatingProfile } = useUserStore()
   const { selectedVaccines } = useVaccineStore()
   
   const [isBasicInfoExpanded, setIsBasicInfoExpanded] = useState(true)
-  const [isVaccineHistoryExpanded, setIsVaccineHistoryExpanded] = useState(true)
+  const [isAppointmentHistoryExpanded, setIsAppointmentHistoryExpanded] = useState(true)
   const [isEditing, setIsEditing] = useState(false)
-  const [selectedVaccine, setSelectedVaccine] = useState(null)
+  const [selectedAppointment, setSelectedAppointment] = useState(null)
   
   const [formData, setFormData] = useState({
     fullname: '',
@@ -36,8 +36,8 @@ const ProfilePage = () => {
   const [profilePictureFile, setProfilePictureFile] = useState(null)
 
   useEffect(() => {
-    getVaccineHistory()
-  }, [getVaccineHistory])
+    getAppointmentHistory()
+  }, [getAppointmentHistory])
 
   useEffect(() => {
     if (userProfile) {
@@ -54,17 +54,17 @@ const ProfilePage = () => {
     }
   }, [userProfile])
 
-  const [certificateVaccine, setCertificateVaccine] = useState(null)
+  const [certificateAppointment, setCertificateAppointment] = useState(null)
 
-  const handleDownloadCertificate = (vaccine) => {
-    setCertificateVaccine(vaccine)
+  const handleDownloadCertificate = (appointment) => {
+    setCertificateAppointment(appointment)
     // Allow time for the hidden component to re-render with new data
     setTimeout(() => {
-      generatePDF(vaccine)
+      generatePDF(appointment)
     }, 500)
   }
 
-  const generatePDF = async (vaccine) => {
+  const generatePDF = async (appointment) => {
     const element = certificateRef.current
     if (!element) return
 
@@ -86,7 +86,7 @@ const ProfilePage = () => {
       const pdfHeight = pdf.internal.pageSize.getHeight()
       
       pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight)
-      pdf.save(`Vaxis_Certificate_${vaccine.vaccine_name.replace(/\s+/g, '_')}_${userProfile?.full_name || 'User'}.pdf`)
+      pdf.save(`Vaxis_Certificate_Appointment_${appointment.id}_${userProfile?.full_name || 'User'}.pdf`)
       toast.success('Certificate downloaded', { id: toastId })
     } catch (error) {
       console.error('PDF Generation Error:', error)
@@ -442,7 +442,7 @@ const ProfilePage = () => {
         {/* Vaccination History Section */}
         <div className="bg-white rounded-3xl shadow-sm">
           <button
-            onClick={() => setIsVaccineHistoryExpanded(!isVaccineHistoryExpanded)}
+            onClick={() => setIsAppointmentHistoryExpanded(!isAppointmentHistoryExpanded)}
             className="w-full px-8 py-4 flex items-center justify-between hover:bg-gray-50 transition rounded-t-3xl"
           >
             <div className="flex items-center gap-3">
@@ -450,85 +450,95 @@ const ProfilePage = () => {
                 <Syringe className="h-5 w-5 text-teal-600" />
               </div>
               <div className="text-left">
-                <h3 className="font-semibold text-gray-800">Vaccination History</h3>
-                <p className="text-sm text-gray-500">Your complete vaccination records</p>
+                <h3 className="font-semibold text-gray-800">Appointment History</h3>
+                <p className="text-sm text-gray-500">Your completed vaccination appointments</p>
               </div>
             </div>
-            {isVaccineHistoryExpanded ? (
+            {isAppointmentHistoryExpanded ? (
               <ChevronUp className="h-5 w-5 text-gray-400" />
             ) : (
               <ChevronDown className="h-5 w-5 text-gray-400" />
             )}
           </button>
 
-          {isVaccineHistoryExpanded && (
+          {isAppointmentHistoryExpanded && (
             <div className="px-8 pb-6">
               {isLoadingHistory ? (
                 <div className="flex justify-center items-center py-12">
                   <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
                 </div>
-              ) : vaccineHistory.length === 0 ? (
+              ) : appointmentHistory.length === 0 ? (
                 <div className="text-center py-12">
                   <Syringe className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500">No vaccination records found</p>
+                  <p className="text-gray-500">No completed appointments found</p>
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {vaccineHistory.map((vaccine, index) => (
-                    <div key={index} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 group">
-                      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <div className="flex items-start gap-4">
-                          <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-teal-100 transition-colors">
-                            <Syringe className="h-6 w-6 text-teal-600" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-bold text-gray-900 text-lg">{vaccine.vaccine_name}</h4>
-                              <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium border ${
-                                vaccine.status === 'Completed' 
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
-                                  : 'bg-blue-50 text-blue-700 border-blue-200'
-                              }`}>
-                                {vaccine.status || 'Completed'}
-                              </span>
+                  {appointmentHistory.map((appointment, index) => {
+                    const vaccines = appointment.vaccines || []
+                    const vaccineCount = vaccines.length
+                    return (
+                      <div key={index} className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-200 group">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:bg-teal-100 transition-colors">
+                              <Syringe className="h-6 w-6 text-teal-600" />
                             </div>
-                            <p className="text-sm text-gray-500 font-medium">{vaccine.manufacturer}</p>
-                            <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                              <div className="flex items-center gap-1.5">
-                                <Calendar className="h-4 w-4 text-gray-400" />
-                                <span>{formatDate(vaccine.administered_at)}</span>
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-bold text-gray-900 text-lg">Appointment #{appointment.id}</h4>
+                                <span className="text-xs px-2.5 py-0.5 rounded-full font-medium border bg-emerald-50 text-emerald-700 border-emerald-200">
+                                  Completed
+                                </span>
                               </div>
-                              <div className="flex items-center gap-1.5">
-                                <MapPinIcon className="h-4 w-4 text-gray-400" />
-                                <span>{vaccine.location || 'Main Clinic'}</span>
+                              <p className="text-sm text-gray-500 font-medium">{vaccineCount} Vaccine{vaccineCount !== 1 ? 's' : ''} Administered</p>
+                              <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                                <div className="flex items-center gap-1.5">
+                                  <Calendar className="h-4 w-4 text-gray-400" />
+                                  <span>{formatDate(appointment.scheduled_at)}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <MapPinIcon className="h-4 w-4 text-gray-400" />
+                                  <span>Vaxis Center</span>
+                                </div>
                               </div>
+                              {vaccines.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mt-2">
+                                  {vaccines.slice(0, 2).map((vaccine, vIdx) => (
+                                    <span key={vIdx} className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded-md">
+                                      {vaccine.name}
+                                    </span>
+                                  ))}
+                                  {vaccines.length > 2 && (
+                                    <span className="text-xs px-2 py-1 bg-teal-100 text-teal-700 rounded-md font-medium">
+                                      +{vaccines.length - 2} more
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center gap-4 pl-16 md:pl-0 border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
-                          <div className="text-right hidden md:block mr-4">
-                            <p className="text-xs text-gray-400 uppercase font-semibold tracking-wider">Dose Number</p>
-                            <p className="text-xl font-bold text-gray-800">#{vaccine.dose_number || 1}</p>
+                          <div className="flex items-center gap-4 pl-16 md:pl-0 border-t md:border-t-0 pt-4 md:pt-0 mt-2 md:mt-0">
+                            <button 
+                              onClick={() => handleDownloadCertificate(appointment)}
+                              className="p-2.5 bg-gray-50 hover:bg-teal-50 text-gray-700 hover:text-teal-700 rounded-lg border border-gray-200 hover:border-teal-200 transition-all group/btn"
+                              title="Download Certificate"
+                            >
+                              <Download className="h-4 w-4 text-gray-400 group-hover/btn:text-teal-500 transition-colors" />
+                            </button>
+                            <button 
+                              onClick={() => setSelectedAppointment(appointment)}
+                              className="flex-1 md:flex-none px-4 py-2.5 bg-gray-50 hover:bg-teal-50 text-gray-700 hover:text-teal-700 font-medium rounded-lg border border-gray-200 hover:border-teal-200 transition-all flex items-center justify-center gap-2 group/btn"
+                            >
+                              View Details
+                              <ChevronRight className="h-4 w-4 text-gray-400 group-hover/btn:text-teal-500 transition-colors" />
+                            </button>
                           </div>
-                          <button 
-                            onClick={() => handleDownloadCertificate(vaccine)}
-                            className="p-2.5 bg-gray-50 hover:bg-teal-50 text-gray-700 hover:text-teal-700 rounded-lg border border-gray-200 hover:border-teal-200 transition-all group/btn"
-                            title="Download Certificate"
-                          >
-                            <Download className="h-4 w-4 text-gray-400 group-hover/btn:text-teal-500 transition-colors" />
-                          </button>
-                          <button 
-                            onClick={() => setSelectedVaccine(vaccine)}
-                            className="flex-1 md:flex-none px-4 py-2.5 bg-gray-50 hover:bg-teal-50 text-gray-700 hover:text-teal-700 font-medium rounded-lg border border-gray-200 hover:border-teal-200 transition-all flex items-center justify-center gap-2 group/btn"
-                          >
-                            View Details
-                            <ChevronRight className="h-4 w-4 text-gray-400 group-hover/btn:text-teal-500 transition-colors" />
-                          </button>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
@@ -536,11 +546,13 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Vaccination Detail Modal */}
-      <VaccinationDetailModal 
-        vaccine={selectedVaccine} 
-        onClose={() => setSelectedVaccine(null)} 
-      />
+      {/* Appointment Detail Modal */}
+      {selectedAppointment && (
+        <AppointmentDetailModal 
+          appointment={selectedAppointment} 
+          onClose={() => setSelectedAppointment(null)} 
+        />
+      )}
 
       {/* Help Button */}
       <button className="fixed bottom-8 right-8 bg-gray-800 hover:bg-gray-900 text-white w-12 h-12 rounded-full shadow-lg flex items-center justify-center transition">
@@ -551,7 +563,7 @@ const ProfilePage = () => {
       <VaccinationCertificateTemplate 
         ref={certificateRef}
         userProfile={userProfile}
-        vaccine={certificateVaccine}
+        appointment={certificateAppointment}
       />
 
       {/* Help Button */}

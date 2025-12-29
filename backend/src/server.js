@@ -5,7 +5,10 @@ import express from "express";
 import helmet from "helmet";
 import morgan from "morgan";
 import cors from "cors";
+import { createServer } from "http";
 import { sql } from "./config/db.js";
+import { connectRedis } from "./config/redis.js";
+import { initSocket } from "./lib/socket.js";
 import authRoutes from "./routes/auth.route.js";
 import reportRoutes from "./routes/report.route.js";
 import vaccineLotRoutes from "./routes/vaccineLot.route.js";
@@ -204,10 +207,12 @@ async function initDB() {
     await sql`
             ALTER TABLE administrations
                 ADD COLUMN IF NOT EXISTS temperature VARCHAR(10),
-                ADD COLUMN IF NOT EXISTS blood_pressure VARCHAR(20);
+                ADD COLUMN IF NOT EXISTS blood_pressure VARCHAR(20),
+                ADD COLUMN IF NOT EXISTS doctor_id BIGINT REFERENCES employees(id);
         `;
 
     await sql`CREATE INDEX IF NOT EXISTS idx_administrations_citizen_time ON administrations(citizen_id, administered_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_administrations_doctor ON administrations(doctor_id)`;
 
     // Create certificates table
     await sql`
@@ -301,6 +306,7 @@ async function initDB() {
 }
 
 initDB();
+connectRedis();
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -315,7 +321,11 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/announcements", announcementRoutes);
 
+// Create HTTP server and initialize Socket.io
+const server = createServer(app);
+initSocket(server);
+
 // Start server
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

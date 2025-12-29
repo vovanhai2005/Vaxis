@@ -16,6 +16,8 @@ const VaccineLotsManagementPage = () => {
     const { inventory, isLoadingInventory, getInventory, updateInventoryItem } = useReportStore();
     const { deleteLot } = useVaccineLotStore();
     
+    // ... (Giữ nguyên phần logic state và effect không đổi) ...
+    // Local state cho tìm kiếm và phân trang
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;

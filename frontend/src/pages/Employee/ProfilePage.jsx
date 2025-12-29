@@ -253,8 +253,8 @@ const ProfilePage = () => {
                     type="text"
                     name="employeeNumber"
                     value={formData.employeeNumber}
-                    onChange={handleInputChange}
-                    className="w-full p-3 rounded-lg border-teal-500 ring-2 ring-teal-100 bg-white focus:outline-none"
+                    disabled
+                    className="w-full p-3 rounded-lg border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
                   />
                 ) : (
                   <p className="text-gray-800 font-medium">{formData.employeeNumber || 'Not provided'}</p>
@@ -271,8 +271,8 @@ const ProfilePage = () => {
                     type="text"
                     name="roleTitle"
                     value={formData.roleTitle}
-                    onChange={handleInputChange}
-                    className="w-full p-3 rounded-lg border-teal-500 ring-2 ring-teal-100 bg-white focus:outline-none"
+                    disabled
+                    className="w-full p-3 rounded-lg border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
                   />
                 ) : (
                   <p className="text-gray-800 font-medium">{formData.roleTitle || 'Not provided'}</p>

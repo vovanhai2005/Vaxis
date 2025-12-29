@@ -168,7 +168,8 @@ export const searchCitizensByNationalId = async (req, res) => {
             JOIN citizens c ON a.citizen_id = c.id
             LEFT JOIN administrations ad ON a.id = ad.appointment_id
             JOIN users u ON c.user_id = u.id
-            LEFT JOIN vaccines v ON ad.vaccine_id = v.id
+            LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
+            LEFT JOIN vaccines v ON av.vaccine_id = v.id
             WHERE c.national_id = ${nationalId}
             GROUP BY full_name, scheduled_at, status, notes, ad.dose_number, ad.temperature,
             ad.adverse_events, ad.bill_id, c.address, c.gender, dob, u.phone, c.blood_type, ad.blood_pressure

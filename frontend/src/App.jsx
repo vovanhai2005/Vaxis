@@ -22,6 +22,7 @@ import VaccinationStatsPage from './pages/Manager/VaccinationStatsPage'
 import AnnouncementsPage from './pages/Manager/AnnouncementsPage'
 import { useAuthStore } from './store/useAuthStore'
 import { useUserStore } from './store/useUserStore'
+import { useNotificationStore } from './store/useNotificationStore'
 
 import { Loader } from 'lucide-react'
 import { Toaster } from 'react-hot-toast'
@@ -29,6 +30,7 @@ import { Toaster } from 'react-hot-toast'
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore()
   const { getCitizenProfile } = useUserStore()
+  const { initSocket, disconnectSocket, getUnreadCount } = useNotificationStore()
 
   useEffect(() => {
     checkAuth()
@@ -39,6 +41,19 @@ const App = () => {
       getCitizenProfile()
     }
   }, [authUser, getCitizenProfile]);
+
+  // Initialize socket connection when user is authenticated
+  useEffect(() => {
+    if (authUser) {
+      initSocket(authUser.id);
+      getUnreadCount();
+      
+      // Cleanup on unmount or logout
+      return () => {
+        disconnectSocket(authUser.id);
+      };
+    }
+  }, [authUser, initSocket, disconnectSocket, getUnreadCount]);
 
   console.log( authUser ? "True" : "False");
 

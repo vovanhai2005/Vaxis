@@ -1,6 +1,6 @@
 import React, { forwardRef } from 'react'
 
-const VaccinationCertificateTemplate = forwardRef(({ userProfile, vaccine }, ref) => {
+const VaccinationCertificateTemplate = forwardRef(({ userProfile, appointment }, ref) => {
   const formatDate = (dateString) => {
     if (!dateString) return ''
     const date = new Date(dateString)
@@ -255,6 +255,11 @@ const VaccinationCertificateTemplate = forwardRef(({ userProfile, vaccine }, ref
             <p style={{ fontStyle: 'italic', fontSize: '16px', color: '#374151', fontWeight: '500' }}>
                 (CERTIFICATE OF VACCINATION)
             </p>
+            {appointment && appointment.id && (
+              <p style={{ fontSize: '13px', color: '#6b7280', marginTop: '8px', fontWeight: '600' }}>
+                Appointment #{appointment.id}
+              </p>
+            )}
           </div>
 
           {/* User Info */}
@@ -298,28 +303,30 @@ const VaccinationCertificateTemplate = forwardRef(({ userProfile, vaccine }, ref
             <table style={styles.table}>
               <thead>
                 <tr>
-                  <th style={{ ...styles.thCenter, width: '60px' }}>Mũi số<br/>(Dose)</th>
-                  <th style={{ ...styles.th, width: '25%' }}>Tên vắc xin<br/>(Vaccine Name)</th>
-                  <th style={{ ...styles.thCenter, width: '100px' }}>Ngày giờ tiêm<br/>(Date & Time)</th>
-                  <th style={{ ...styles.th, width: '18%' }}>Nhà sản xuất<br/>(Manufacturer)</th>
-                  <th style={{ ...styles.th, width: '15%' }}>Số lô<br/>(Lot Number)</th>
-                  <th style={{ ...styles.th, width: '18%' }}>Người tiêm<br/>(Administered by)</th>
+                  <th style={{ ...styles.thCenter, width: '50px' }}>STT<br/>(No.)</th>
+                  <th style={{ ...styles.th, width: '28%' }}>Tên vắc xin<br/>(Vaccine Name)</th>
+                  <th style={{ ...styles.thCenter, width: '110px' }}>Ngày giờ tiêm<br/>(Date & Time)</th>
+                  <th style={{ ...styles.th, width: '22%' }}>Nhà sản xuất<br/>(Manufacturer)</th>
+                  <th style={{ ...styles.thCenter, width: '90px' }}>Giá<br/>(Price)</th>
+                  <th style={{ ...styles.th, width: '18%' }}>Người tiêm<br/>(Administered)</th>
                 </tr>
               </thead>
               <tbody>
-                {vaccine ? (
-                  <tr>
-                    <td style={{ ...styles.tdCenter, fontWeight: 'bold', fontSize: '14px', backgroundColor: '#f9fafb' }}>{vaccine.dose_number || 1}</td>
-                    <td style={{ ...styles.td, fontWeight: '600' }}>{vaccine.vaccine_name}</td>
-                    <td style={styles.tdCenter}>
-                      {formatDate(vaccine.administered_at)}
-                      <br/>
-                      <span style={{ fontSize: '11px', color: '#6b7280' }}>{formatTime(vaccine.administered_at)}</span>
-                    </td>
-                    <td style={styles.td}>{vaccine.manufacturer}</td>
-                    <td style={{ ...styles.tdCenter, fontWeight: '600' }}>{vaccine.lot_number || 'N/A'}</td>
-                    <td style={styles.td}>{vaccine.administered_by || 'Nhân viên y tế'}</td>
-                  </tr>
+                {appointment && appointment.vaccines && appointment.vaccines.length > 0 ? (
+                  appointment.vaccines.map((vaccine, index) => (
+                    <tr key={index}>
+                      <td style={{ ...styles.tdCenter, fontWeight: 'bold', fontSize: '14px', backgroundColor: '#f9fafb' }}>{index + 1}</td>
+                      <td style={{ ...styles.td, fontWeight: '600' }}>{vaccine.name}</td>
+                      <td style={styles.tdCenter}>
+                        {formatDate(appointment.scheduled_at)}
+                        <br/>
+                        <span style={{ fontSize: '11px', color: '#6b7280' }}>{formatTime(appointment.scheduled_at)}</span>
+                      </td>
+                      <td style={styles.td}>{vaccine.manufacturer}</td>
+                      <td style={{ ...styles.tdCenter, fontWeight: '600', color: '#059669' }}>${parseFloat(vaccine.price || 0).toFixed(2)}</td>
+                      <td style={styles.td}>{appointment.administered_by || 'Nhân viên y tế'}</td>
+                    </tr>
+                  ))
                 ) : (
                   <tr>
                     <td colSpan="6" style={{ ...styles.td, textAlign: 'center', fontStyle: 'italic', padding: '16px', color: '#6b7280' }}>
@@ -330,12 +337,15 @@ const VaccinationCertificateTemplate = forwardRef(({ userProfile, vaccine }, ref
               </tbody>
             </table>
             
-            {vaccine && (
+            {appointment && (
               <div style={styles.notes}>
                 <p style={{ fontWeight: '600', marginBottom: '8px', margin: 0 }}>GHI CHÚ (Notes):</p>
-                <p style={{ marginBottom: '4px', margin: 0 }}>• Tình trạng sức khỏe sau tiêm: {vaccine.health_status || 'Bình thường'}</p>
-                <p style={{ marginBottom: '4px', margin: 0 }}>• Nhiệt độ: {vaccine.temperature || 'Không ghi nhận'} | Huyết áp: {vaccine.blood_pressure || 'Không ghi nhận'}</p>
-                <p style={{margin: 0}}>• Địa điểm tiêm: {vaccine.location || 'Trung tâm Tiêm chủng Vaxis'}</p>
+                <p style={{ marginBottom: '4px', margin: 0 }}>• Tình trạng sức khỏe: Bình thường</p>
+                <p style={{ marginBottom: '4px', margin: 0 }}>• Số lượng vắc xin: {appointment.vaccines?.length || 0} loại</p>
+                <p style={{margin: 0}}>• Địa điểm tiêm: Trung tâm Tiêm chủng Vaxis</p>
+                {appointment.notes && (
+                  <p style={{margin: 0, marginTop: '4px'}}>• Ghi chú: {appointment.notes}</p>
+                )}
               </div>
             )}
           </div>

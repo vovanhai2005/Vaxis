@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/useAuthStore';
 import Header from '../../components/Header';
-import { Users, Calendar, Syringe, CheckCircle, Clock, AlertCircle, TrendingUp, Activity } from 'lucide-react';
+import { Users, Calendar, Syringe, CheckCircle, Clock, AlertCircle, TrendingUp, Activity, Home } from 'lucide-react';
 import { axiosInstance } from '../../lib/axios';
 import toast from 'react-hot-toast';
 
@@ -24,13 +24,11 @@ const EmployeeDashboardPage = () => {
   const fetchDashboardData = async () => {
     setIsLoading(true);
     try {
-      // Fetch employee dashboard stats
       const statsRes = await axiosInstance.get('/appointments/upcoming');
       
-      // Process the data
       const today = new Date().toDateString();
       const todayAppts = statsRes.data.filter(apt => 
-        new Date(apt.scheduled_at).toDateString() === today
+        new Date(apt.time || apt.scheduled_at).toDateString() === today
       );
       
       setStats({
@@ -76,7 +74,7 @@ const EmployeeDashboardPage = () => {
     }
   };
 
-  const StatCard = ({ icon: Icon, title, value, color, bgColor }) => (
+  const StatCard = ({ icon: IconComponent, title, value, color, bgColor }) => (
     <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between">
         <div>
@@ -84,7 +82,7 @@ const EmployeeDashboardPage = () => {
           <p className="text-3xl font-bold text-gray-900">{value}</p>
         </div>
         <div className={`${bgColor} p-4 rounded-lg`}>
-          <Icon className={`h-8 w-8 ${color}`} />
+          <IconComponent className={`h-8 w-8 ${color}`} />
         </div>
       </div>
     </div>
@@ -94,8 +92,8 @@ const EmployeeDashboardPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30 pb-10">
       <Header
         title={`Welcome back, ${authUser?.full_name || 'Employee'}!`}
-        subtitle="Employee Dashboard - Manage daily operations"
-        icon={Activity}
+        subtitle="Employee Dashboard"
+        icon={Home}
       />
 
       <div className="px-6 mt-6">
@@ -155,16 +153,16 @@ const EmployeeDashboardPage = () => {
               </div>
             ) : upcomingAppointments.length > 0 ? (
               <div className="space-y-3 max-h-[500px] overflow-y-auto">
-                {upcomingAppointments.map((appointment) => (
+                {upcomingAppointments.map((appointment, index) => (
                   <div
-                    key={appointment.id}
+                    key={appointment.id || index}
                     className="p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
                           <p className="font-semibold text-gray-900">
-                            {appointment.full_name || 'Citizen'}
+                            {appointment.citizen_name || appointment.full_name || 'Citizen'}
                           </p>
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(
@@ -177,7 +175,7 @@ const EmployeeDashboardPage = () => {
                         <div className="text-sm text-gray-600 space-y-1">
                           <p className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            {formatDate(appointment.scheduled_at)}
+                            {formatDate(appointment.time || appointment.scheduled_at)}
                           </p>
                           {appointment.vaccine_names && (
                             <p className="flex items-center gap-2">

@@ -15,6 +15,7 @@ const LookUpCitizenProfile = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [lookupResults, setLookupResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const profile = useMemo(() => 
     lookupResults.length > 0 ? lookupResults[0] : null,
@@ -23,6 +24,7 @@ const LookUpCitizenProfile = () => {
 
   const lookupCitizen = async (nationalId) => {
     setIsLoading(true);
+    setHasSearched(true);
     try {
       const res = await axiosInstance.get(`/administration/search/?nationalId=${nationalId}`);
       setLookupResults(res.data);
@@ -47,7 +49,7 @@ const LookUpCitizenProfile = () => {
     lookupCitizen(trimmedId);
   }, [nationalId]);
 
-  const handleKeyPress = useCallback((e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       handleSearch(e);
     }
@@ -75,13 +77,13 @@ const LookUpCitizenProfile = () => {
           nationalId={nationalId}
           setNationalId={setNationalId}
           handleSearch={handleSearch}
-          handleKeyPress={handleKeyPress}
+          handleKeyDown={handleKeyDown}
           isLoading={isLoading}
         />
 
         {isLoading && <LoadingState />}
         
-        {!isLoading && lookupResults.length === 0 && nationalId && (
+        {!isLoading && hasSearched && lookupResults.length === 0 && (
           <EmptyState nationalId={nationalId} />
         )}
 
@@ -127,7 +129,7 @@ const getStatusBadge = (status) => {
 };
 
 // Search Section Component
-const SearchSection = React.memo(({ nationalId, setNationalId, handleSearch, handleKeyPress, isLoading }) => (
+const SearchSection = React.memo(({ nationalId, setNationalId, handleSearch, handleKeyDown, isLoading }) => (
   <div className="max-w-2xl mx-auto mb-8">
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
       <form onSubmit={handleSearch} className="flex gap-3">
@@ -137,7 +139,7 @@ const SearchSection = React.memo(({ nationalId, setNationalId, handleSearch, han
             placeholder="Enter National ID (e.g., 123456789)"
             value={nationalId}
             onChange={(e) => setNationalId(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             className="w-full p-3 pl-10 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
             disabled={isLoading}
             maxLength={20}
@@ -280,7 +282,7 @@ const VaccinationHistoryCard = React.memo(({ lookupResults, handleViewDetails })
     <div className="space-y-4">
       {lookupResults.map((item, index) => (
         <VaccinationRecord 
-          key={index} 
+          key={item.id || item.appointment_id || index} 
           item={item} 
           index={index} 
           handleViewDetails={handleViewDetails}
@@ -303,7 +305,7 @@ const VaccinationRecord = React.memo(({ item, index, handleViewDetails }) => {
           <h4 className="font-semibold text-gray-900 mb-1">Vaccination #{index + 1}</h4>
           <div className="flex items-center gap-2 text-sm text-gray-600">
             <Calendar className="w-4 h-4" />
-            {formatDate(item.scheduled_at)}
+            {formatDate(item.scheduled_at || item.time)}
           </div>
         </div>
         {getStatusBadge(item.status)}
