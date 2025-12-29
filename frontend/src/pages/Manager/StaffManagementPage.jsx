@@ -84,9 +84,6 @@ const EmployeeManagementPage = () => {
         ? true
         : filters.hasNationalId === 'yes' ? !!employee.national_id : !employee.national_id;
 
-    // --- SỬA LẠI ĐOẠN NÀY ---
-    // - Filter Job Title (Dựa vào staffPrefix)
-    // Nếu chọn prefix (VD: "DOC"), kiểm tra xem employee_number có bắt đầu bằng "DOC" không
     const matchesJobTitle = filters.staffPrefix === ''
         ? true
         : (employee.employee_number || '').startsWith(filters.staffPrefix);
@@ -314,37 +311,39 @@ const EmployeeManagementPage = () => {
                 </div>
             </div>
 
-            {/* --- TABLE SECTION: Đã thêm table-fixed, w-full và set width --- */}
-            <div className="overflow-x-auto flex-grow">
-                <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                                No
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-20">
-                                Staff ID
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
-                                Full name
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-40">
-                                Email
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32">
-                                National ID
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-60">
-                                Job Title 
-                            </th>
-							 <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-20">
-                                Status
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24">
-                                Action
-                            </th>
-                        </tr>
-                    </thead>
+            {/* --- TABLE SECTION: --- */}
+          <div className="overflow-x-auto flex-grow shadow-sm rounded-lg"> 
+ 
+    <table className="min-w-[1000px] w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+        <thead className="bg-gray-50">
+            <tr>
+               
+                <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12 whitespace-nowrap">
+                    No
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-20 whitespace-nowrap">
+                    ID
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 whitespace-nowrap">
+                    Full name
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 whitespace-nowrap">
+                    Email
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 whitespace-nowrap">
+                    National ID
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 whitespace-nowrap">
+                    Job Title
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24 whitespace-nowrap">
+                    Status
+                </th>
+                <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24 whitespace-nowrap">
+                    Action
+                </th>
+            </tr>
+        </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {isLoadingStaff ? (
                             <tr>

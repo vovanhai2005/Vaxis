@@ -345,22 +345,40 @@ const VaccineLotsManagementPage = () => {
                     </div>
 
                     {/* TABLE  */}
-                    <div className="overflow-x-auto flex-grow">
-    <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
-        <thead className="bg-gray-50">
-            <tr>
-                {/* Giữ nguyên độ rộng các cột để bố cục đẹp */}
-                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-12">No</th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-32">Lot Number</th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-28">Code</th>
-                {/* Cột Name chiếm phần còn lại */}
-                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccine Name</th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-40">Quantity Import</th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-32">Expiry Date</th>
-                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-24">Status</th>
-                <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-24">Action</th>
-            </tr>
-        </thead>
+		<div className="overflow-x-auto flex-grow shadow-sm rounded-lg">
+			
+			<table className="min-w-[1000px] w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+				<thead className="bg-gray-50">
+					<tr>
+						
+						<th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-12 whitespace-nowrap">
+							No
+						</th>
+						<th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 whitespace-nowrap">
+							Lot Number
+						</th>
+						<th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-15 whitespace-nowrap">
+							Code
+						</th>
+											
+						<th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 whitespace-nowrap">
+							Vaccine Name
+						</th>
+
+						<th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-20 whitespace-nowrap">
+							Quantity
+						</th>
+						<th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 whitespace-nowrap">
+							Expiry Date
+						</th>
+						<th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-28 whitespace-nowrap">
+							Status
+						</th>
+						<th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-24 whitespace-nowrap">
+							Action
+						</th>
+					</tr>
+				</thead>
         <tbody className="bg-white divide-y divide-gray-200">
             {(isLoadingInventory || isRefreshing || isTableLoading) ? (
                 <tr>

@@ -146,18 +146,31 @@ const VaccinationStatsPage = () => {
                         </div>
                     </div>
 
-                    {/* TABLE: Đã thêm table-fixed, w-full và set width cho các cột */}
-                    <div className="overflow-x-auto flex-grow">
-                        <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
-                            <thead className="bg-gray-50">
-                                <tr>
-                                    <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-16">No</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-40">Vaccine Code</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccine Name</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-40">Doses Given</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-48">Remaining Quantity</th>
-                                </tr>
-                            </thead>
+                    {/* TABLE: */}
+                  <div className="overflow-x-auto flex-grow shadow-sm rounded-lg">
+    
+    <table className="min-w-[900px] w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+        <thead className="bg-gray-50">
+            <tr>
+                
+                <th className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase w-16 whitespace-nowrap">
+                    No
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-32 whitespace-nowrap">
+                    Vaccine Code
+                </th>
+               
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 whitespace-nowrap">
+                    Vaccine Name
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-32 whitespace-nowrap">
+                    Doses Given
+                </th>
+                <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100 w-40 whitespace-nowrap">
+                    Remaining Stock
+                </th>
+            </tr>
+        </thead>
                             <tbody className="bg-white divide-y divide-gray-200">
                                 {(isLoadingVaccinationStats || isTableLoading) ? (
                                     <tr>

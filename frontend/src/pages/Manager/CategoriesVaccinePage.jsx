@@ -244,36 +244,35 @@ const CategoriesVaccinePage = () => {
                 </div>
             </div>
 
-            {/* --- TABLE SECTION ĐÃ CỐ ĐỊNH --- */}
-            <div className="overflow-x-auto flex-grow">
-                {/* 1. Thêm table-fixed và w-full */}
-                <table className="w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
-                    <thead className="bg-gray-50">
-                        <tr>
-                            {/* 2. Set width cố định cho các cột */}
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12">
-                                No
-                            </th>
-							<th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-16">
-                                ID
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32">
-                                Vaccine Code
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100">
-                                Vaccine Name
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-60">
-                                Manufacturer
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32">
-                                Price
-                            </th>
-                            <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24">
-                                Action
-                            </th>
-                        </tr>
-                    </thead>
+            {/* --- TABLE SECTION --- */}
+         <div className="overflow-x-auto flex-grow shadow-sm rounded-lg">
+    <table className="min-w-[1000px] w-full table-fixed divide-y divide-gray-200 border border-gray-100 rounded-lg overflow-hidden">
+        <thead className="bg-gray-50">
+            <tr>
+            
+                <th scope="col" className="px-4 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-12 whitespace-nowrap">
+                    No
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-16 whitespace-nowrap">
+                    ID
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32 whitespace-nowrap">
+                    Vaccine Code
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 whitespace-nowrap">
+                    Vaccine Name
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 whitespace-nowrap">
+                    Manufacturer
+                </th>
+                <th scope="col" className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-32 whitespace-nowrap">
+                    Price
+                </th>
+                <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24 whitespace-nowrap">
+                    Action
+                </th>
+            </tr>
+        </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                         {isLoadingVaccines ? (
                             <tr>
