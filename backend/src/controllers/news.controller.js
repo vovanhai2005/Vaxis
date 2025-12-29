@@ -11,23 +11,41 @@ export const getVaccineNews = async (req, res) => {
     }
 
     // Fetch vaccine-related news from NewsAPI
+    // Use more specific search terms and English language for better results
     const response = await axios.get('https://newsapi.org/v2/everything', {
       params: {
-        q: 'vaccine OR vắc xin OR tiêm chủng',
-        language: 'vi',
+        // More specific vaccine-related search query
+        q: '(vaccine OR vaccination OR immunization) AND (COVID OR flu OR health OR disease OR outbreak OR pandemic)',
+        language: 'en',
         sortBy: 'publishedAt',
-        pageSize: 10,
+        pageSize: 15,
         apiKey: NEWS_API_KEY
       }
     });
 
-    // Filter out removed articles
-    const validArticles = response.data.articles.filter(article => 
-      article.title && article.title !== '[Removed]'
-    );
+    // Filter out removed articles and ensure vaccine relevance
+    const vaccineKeywords = [
+      'vaccine', 'vaccination', 'immunization', 'immunize', 'jab', 'shot',
+      'booster', 'dose', 'pfizer', 'moderna', 'covid', 'flu', 'measles',
+      'polio', 'hepatitis', 'hpv', 'tetanus', 'diphtheria', 'whooping',
+      'mmr', 'cdc', 'who', 'health', 'pandemic', 'outbreak', 'infectious'
+    ];
+
+    const validArticles = response.data.articles.filter(article => {
+      // Must have valid title
+      if (!article.title || article.title === '[Removed]') return false;
+      
+      // Check if article is actually about vaccines
+      const titleLower = (article.title || '').toLowerCase();
+      const descLower = (article.description || '').toLowerCase();
+      const combined = titleLower + ' ' + descLower;
+      
+      // Must contain at least one vaccine-related keyword
+      return vaccineKeywords.some(keyword => combined.includes(keyword));
+    });
 
     // Format articles
-    const finalArticles = validArticles.map(article => ({
+    const finalArticles = validArticles.slice(0, 10).map(article => ({
       title: article.title,
       description: article.description,
       url: article.url,
