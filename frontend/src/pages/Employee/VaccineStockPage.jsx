@@ -94,7 +94,7 @@ const VaccineStockPage = () => {
                                     <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Code</th>
                                     <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Name</th>
                                     <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Manufacturer</th>
-                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Description</th>
+                                    <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Quantity</th>
                                     <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Price</th>
                                 </tr>
                             </thead>
@@ -143,8 +143,14 @@ const VaccineStockPage = () => {
                                                     {vaccine.manufacturer}
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-4 text-sm text-gray-500 border-l border-gray-100 max-w-xs truncate" title={vaccine.description}>
-                                                {vaccine.description}
+                                            <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
+                                                <span className={`px-2 py-1 rounded-full text-xs font-bold ${
+                                                    vaccine.available_quantity > 0 
+                                                        ? 'bg-green-100 text-green-700 border border-green-200' 
+                                                        : 'bg-red-100 text-red-700 border border-red-200'
+                                                }`}>
+                                                    {vaccine.available_quantity > 0 ? `${vaccine.available_quantity} doses` : 'Out of Stock'}
+                                                </span>
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-l border-gray-100">
                                                 {formatCurrency(vaccine.price)}
