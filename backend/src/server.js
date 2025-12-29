@@ -207,10 +207,12 @@ async function initDB() {
     await sql`
             ALTER TABLE administrations
                 ADD COLUMN IF NOT EXISTS temperature VARCHAR(10),
-                ADD COLUMN IF NOT EXISTS blood_pressure VARCHAR(20);
+                ADD COLUMN IF NOT EXISTS blood_pressure VARCHAR(20),
+                ADD COLUMN IF NOT EXISTS doctor_id BIGINT REFERENCES employees(id);
         `;
 
     await sql`CREATE INDEX IF NOT EXISTS idx_administrations_citizen_time ON administrations(citizen_id, administered_at)`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_administrations_doctor ON administrations(doctor_id)`;
 
     // Create certificates table
     await sql`
