@@ -224,7 +224,7 @@ export const vaccinationStats = async (req, res) => {
     v.name,
     
     -- 1. TỔNG SỐ MŨI ĐÃ TIÊM (Lịch sử tiêm chủng)
-    -- Vẫn đếm tất cả, kể cả các mũi thuộc lô đã hết hạn (vì mũi đó đã tiêm vào người rồi)
+    -- Vẫn đếm tất cả, kể cả các mũi thuộc lô đã hết hạn 
     COALESCE(stats.total_doses, 0)::int AS doses_given,
 
     -- 2. SỐ LƯỢNG CÒN LẠI (Tồn kho khả dụng)
@@ -233,7 +233,7 @@ export const vaccinationStats = async (req, res) => {
 
   FROM vaccines v
   
-  -- Subquery 1: Tính tổng số mũi đã tiêm (để hiển thị báo cáo hoạt động)
+  -- Subquery 1: Tính tổng số mũi đã tiêm
   LEFT JOIN (
     SELECT 
         vaccine_id, 
@@ -270,7 +270,6 @@ export const vaccinationStats = async (req, res) => {
 
     const result = await sql.unsafe(query);
 
-    // 5. Trả về cấu trúc có pagination
     res.json({
         data: result,
         pagination: {
@@ -315,15 +314,15 @@ const query = `
     v.id,
     v.code,
     v.name,
-    -- 1. Số mũi đã tiêm (đếm tổng số record)
+    -- 1. Số mũi đã tiêm 
     COALESCE(stats.total_doses, 0)::int AS doses_given,
 
-    -- 2. Số lượng còn lại (chỉ tính lô còn hạn và trừ đi số đã dùng)
+    -- 2. Số lượng còn lại 
     COALESCE(stock.available_qty, 0)::int AS remaining
 
   FROM vaccines v
 
-  -- Subquery 1: Tính tổng số mũi đã tiêm (để sắp xếp và hiển thị)
+  -- Subquery 1: Tính tổng số mũi đã tiêm 
   LEFT JOIN (
     SELECT 
         vaccine_id, 
@@ -346,7 +345,7 @@ const query = `
         GROUP BY vaccine_lot_id
     ) usage ON usage.vaccine_lot_id = l.id
     
-    -- Chỉ lấy lô còn hạn (ép kiểu về giờ VN để tránh lỗi ngày như Lô 002)
+    -- Chỉ lấy lô còn hạn 
     WHERE l.expiry_date >= (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE
     GROUP BY l.vaccine_id
   ) stock ON stock.vaccine_id = v.id
@@ -358,7 +357,6 @@ const query = `
 
     const result = await sql.unsafe(query);
 
-    // Trả về dữ liệu gọn nhẹ
     res.json({
         data: result
     });
