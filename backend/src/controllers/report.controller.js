@@ -182,7 +182,6 @@ export const vaccinationStats = async (req, res) => {
     const limitNumber = parseInt(limit) || 10;
     const offset = (pageNumber - 1) * limitNumber;
 
-    // 1. Xử lý Filter thời gian (cho số mũi ĐÃ TIÊM)
     let dateFilter = "";
     switch (period) {
       case "today":
@@ -198,16 +197,15 @@ export const vaccinationStats = async (req, res) => {
         dateFilter = "AND a.administered_at >= CURRENT_DATE - INTERVAL '6 months'";
         break;
       default:
-        dateFilter = ""; // Tất cả
+        dateFilter = ""; 
     }
 
-    // 2. Xử lý Search
     let searchFilter = "";
     if (search) {
       searchFilter = `AND (v.name ILIKE '%${search}%' OR v.code ILIKE '%${search}%')`;
     }
 
-    // 3. Tính tổng số lượng bản ghi (để phân trang)
+    // 3. Tính tổng số lượng bản ghi
     const countQuery = `
       SELECT COUNT(*) as total 
       FROM vaccines v
@@ -217,56 +215,52 @@ export const vaccinationStats = async (req, res) => {
     const totalItems = parseInt(countResult[0]?.total || 0);
 
     // 4. Query lấy dữ liệu chính
-  const query = `
-  SELECT
-    v.id,
-    v.code,
-    v.name,
-    
-    -- 1. TỔNG SỐ MŨI ĐÃ TIÊM (Lịch sử tiêm chủng)
-    -- Vẫn đếm tất cả, kể cả các mũi thuộc lô đã hết hạn 
-    COALESCE(stats.total_doses, 0)::int AS doses_given,
+    const query = `
+      SELECT
+        v.id,
+        v.code,
+        v.name,
+        
+        -- 1. TỔNG SỐ MŨI ĐÃ TIÊM
+        COALESCE(stats.total_doses, 0)::int AS doses_given,
 
-    -- 2. SỐ LƯỢNG CÒN LẠI (Tồn kho khả dụng)
-    -- Chỉ tính tổng tồn kho của các LÔ CÒN HẠN
-    COALESCE(stock.available_qty, 0)::int AS remaining
+        -- 2. SỐ LƯỢNG CÒN LẠI
+        COALESCE(stock.available_qty, 0)::int AS remaining
 
-  FROM vaccines v
-  
-  -- Subquery 1: Tính tổng số mũi đã tiêm
-  LEFT JOIN (
-    SELECT 
-        vaccine_id, 
-        COUNT(*) AS total_doses
-    FROM administrations
-    WHERE 1=1
-    ${dateFilter} -- Bộ lọc ngày chỉ áp dụng cho báo cáo "đã tiêm"
-    GROUP BY vaccine_id
-  ) stats ON stats.vaccine_id = v.id
+      FROM vaccines v
+      
+      -- Subquery 1: Tính tổng số mũi đã tiêm
+      LEFT JOIN (
+        SELECT 
+            vaccine_id, 
+            COUNT(*) AS total_doses
+        FROM administrations a  -- <--- ĐÃ SỬA: Thêm alias 'a' ở đây
+        WHERE 1=1
+        ${dateFilter} -- dateFilter dùng 'a.administered_at' nên cần alias 'a' ở trên
+        GROUP BY vaccine_id
+      ) stats ON stats.vaccine_id = v.id
 
-  -- Subquery 2: Tính tồn kho thực tế dựa trên các Lô còn hạn
-  LEFT JOIN (
-    SELECT
-        l.vaccine_id,
-        -- Công thức: Tổng (Số lượng nhập của lô - Số lượng đã dùng của lô đó)
-        SUM(l.quantity - COALESCE(usage.used_count, 0)) AS available_qty
-    FROM vaccine_lots l
-    -- Join để đếm số lượng đã dùng CỦA RIÊNG LÔ ĐÓ
-    LEFT JOIN (
-        SELECT vaccine_lot_id, COUNT(*) as used_count
-        FROM administrations
-        GROUP BY vaccine_lot_id
-    ) usage ON usage.vaccine_lot_id = l.id
-    
-    WHERE l.expiry_date >= (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE
-    GROUP BY l.vaccine_id
-  ) stock ON stock.vaccine_id = v.id
-  
-  WHERE 1=1
-  ${searchFilter}
-  ORDER BY v.name ASC
-  LIMIT ${limitNumber} OFFSET ${offset}
-`;
+      -- Subquery 2: Tính tồn kho
+      LEFT JOIN (
+        SELECT
+            l.vaccine_id,
+            SUM(l.quantity - COALESCE(usage.used_count, 0)) AS available_qty
+        FROM vaccine_lots l
+        LEFT JOIN (
+            SELECT vaccine_lot_id, COUNT(*) as used_count
+            FROM administrations
+            GROUP BY vaccine_lot_id
+        ) usage ON usage.vaccine_lot_id = l.id
+        
+        WHERE l.expiry_date >= (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE
+        GROUP BY l.vaccine_id
+      ) stock ON stock.vaccine_id = v.id
+      
+      WHERE 1=1
+      ${searchFilter}
+      ORDER BY v.name ASC
+      LIMIT ${limitNumber} OFFSET ${offset}
+    `;
 
     const result = await sql.unsafe(query);
 
@@ -281,7 +275,8 @@ export const vaccinationStats = async (req, res) => {
 
   } catch (error) {
     console.error("Error fetching vaccination stats:", error);
-    res.status(500).json({ error: "Error when retrieving vaccination statistics" });
+    // Log chi tiết lỗi để debug dễ hơn
+    res.status(500).json({ error: error.message || "Error when retrieving vaccination statistics" });
   }
 };
 
@@ -314,43 +309,35 @@ const query = `
     v.id,
     v.code,
     v.name,
-    -- 1. Số mũi đã tiêm 
-    COALESCE(stats.total_doses, 0)::int AS doses_given,
-
-    -- 2. Số lượng còn lại 
+    -- Không cần COALESCE nữa vì INNER JOIN đảm bảo luôn có dữ liệu, nhưng giữ cũng không sao
+    stats.total_doses::int AS doses_given, 
     COALESCE(stock.available_qty, 0)::int AS remaining
 
   FROM vaccines v
 
-  -- Subquery 1: Tính tổng số mũi đã tiêm 
-  LEFT JOIN (
+  -- ĐỔI LEFT JOIN THÀNH INNER JOIN ĐỂ LỌC LUÔN CÁC VACCINE CHƯA TIÊM
+  INNER JOIN (
     SELECT 
         vaccine_id, 
-        COUNT(*) AS total_doses -- Sửa từ SUM(dose_number) thành COUNT(*)
+        COUNT(*) AS total_doses 
     FROM administrations
     GROUP BY vaccine_id
   ) stats ON stats.vaccine_id = v.id
 
-  -- Subquery 2: Tính tồn kho thực tế (Logic chuẩn)
   LEFT JOIN (
     SELECT
         l.vaccine_id,
-        -- Tổng (Số lượng nhập - Số lượng đã dùng của lô đó)
         SUM(l.quantity - COALESCE(usage.used_count, 0)) AS available_qty
     FROM vaccine_lots l
-    -- Đếm số lượng đã dùng của riêng từng lô
     LEFT JOIN (
         SELECT vaccine_lot_id, COUNT(*) as used_count
         FROM administrations
         GROUP BY vaccine_lot_id
     ) usage ON usage.vaccine_lot_id = l.id
-    
-    -- Chỉ lấy lô còn hạn 
     WHERE l.expiry_date >= (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE
     GROUP BY l.vaccine_id
   ) stock ON stock.vaccine_id = v.id
 
-  -- Sắp xếp theo số lượng đã tiêm giảm dần (Top 10)
   ORDER BY doses_given DESC
   LIMIT 10;
 `;
