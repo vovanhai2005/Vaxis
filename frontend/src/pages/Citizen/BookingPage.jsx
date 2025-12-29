@@ -115,7 +115,7 @@ const BookingPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-6">
-                    <p className="font-semibold text-gray-800">${parseFloat(vaccine.price).toFixed(2)}</p>
+                    <p className="font-semibold text-gray-800">{Number(vaccine.price).toLocaleString('vi-VN')} VNĐ</p>
                     <button onClick={() => removeVaccineFromCart(vaccine.id)} className="text-red-500 hover:text-red-700">
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -168,7 +168,7 @@ const BookingPage = () => {
             </div>
             <div className="text-right">
               <p className="text-sm opacity-90">Total Cost</p>
-              <p className="text-3xl font-bold">${totalCost.toFixed(2)}</p>
+              <p className="text-3xl font-bold">{totalCost.toLocaleString('vi-VN')} VNĐ</p>
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-white/20">

@@ -323,7 +323,7 @@ const VaccinationCertificateTemplate = forwardRef(({ userProfile, appointment },
                         <span style={{ fontSize: '11px', color: '#6b7280' }}>{formatTime(appointment.scheduled_at)}</span>
                       </td>
                       <td style={styles.td}>{vaccine.manufacturer}</td>
-                      <td style={{ ...styles.tdCenter, fontWeight: '600', color: '#059669' }}>${parseFloat(vaccine.price || 0).toFixed(2)}</td>
+                      <td style={{ ...styles.tdCenter, fontWeight: '600', color: '#059669' }}>${Number(vaccine.price || 0).toLocaleString('vi-VN')}</td>
                       <td style={styles.td}>{appointment.administered_by || 'Nhân viên y tế'}</td>
                     </tr>
                   ))
