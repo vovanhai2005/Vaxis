@@ -58,6 +58,7 @@ const EmployeeManagementPage = () => {
   }, [searchTerm, filters]);
   
   // Xử lý tìm kiếm & Filter kết hợp
+ // Xử lý tìm kiếm & Filter kết hợp
   const filteredStaff = staffList.filter((employee) => {
     // 1. Logic Search 
     const term = searchTerm.toLowerCase();
@@ -69,11 +70,11 @@ const EmployeeManagementPage = () => {
       (employee.national_id || '').toLowerCase().includes(term)
     );
 
-    // 2. Logic Filter (MỚI)
+    // 2. Logic Filter
     // - Filter Role
     const matchesRole = filters.role === '' || employee.role === filters.role;
 
-    // - Filter Status (active là boolean)
+    // - Filter Status
     const matchesStatus = filters.status === '' 
         ? true 
         : filters.status === 'active' ? employee.active : !employee.active;
@@ -83,13 +84,15 @@ const EmployeeManagementPage = () => {
         ? true
         : filters.hasNationalId === 'yes' ? !!employee.national_id : !employee.national_id;
 
-    // - Filter Staff ID 
-    const matchesStaffId = filters.hasStaffId === ''
+    // --- SỬA LẠI ĐOẠN NÀY ---
+    // - Filter Job Title (Dựa vào staffPrefix)
+    // Nếu chọn prefix (VD: "DOC"), kiểm tra xem employee_number có bắt đầu bằng "DOC" không
+    const matchesJobTitle = filters.staffPrefix === ''
         ? true
-        : filters.hasStaffId === 'yes' ? !!employee.employee_number : !employee.employee_number;
+        : (employee.employee_number || '').startsWith(filters.staffPrefix);
 
     
-    return matchesSearch && matchesRole && matchesStatus && matchesNationalId && matchesStaffId;
+    return matchesSearch && matchesRole && matchesStatus && matchesNationalId && matchesJobTitle;
   });
 
   // Xử lý phân trang
