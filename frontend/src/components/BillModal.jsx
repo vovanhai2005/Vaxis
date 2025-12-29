@@ -5,7 +5,7 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
   if (!isOpen || !billData) return null;
 
   const formatCurrency = (cents) => {
-    return `$${(cents / 100).toFixed(2)}`;
+    return `${(cents / 100).toLocaleString('vi-VN')} VND`;
   };
 
   const formatDate = (dateString) => {
