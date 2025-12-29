@@ -270,7 +270,7 @@ const CategoriesVaccinePage = () => {
                                 Price
                             </th>
                             <th scope="col" className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase tracking-wider border-l border-gray-100 w-24">
-                                Operation
+                                Action
                             </th>
                         </tr>
                     </thead>
