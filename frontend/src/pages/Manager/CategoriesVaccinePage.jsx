@@ -81,7 +81,7 @@ const CategoriesVaccinePage = () => {
 
   // Helper format giá tiền
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('us-US', { style: 'currency', currency: 'USD' }).format(amount);
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
   };
 
   // --- HANDLERS ---
@@ -110,13 +110,10 @@ const CategoriesVaccinePage = () => {
     setIsFilterOpen(false);
   };
 
- const handleFilterChange = (e, field) => {
-    const value = e.target.value;
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setFilters(prev => ({ ...prev, [field]: value }));
-    }
+const handleFilterChange = (e, field) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    setFilters(prev => ({ ...prev, [field]: rawValue }));
   };
-  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30 pb-10">
       <Header 
@@ -197,27 +194,32 @@ const CategoriesVaccinePage = () => {
 
                                     {/* Min Price Input */}
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Min Price ($)</label>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Min Price (VNĐ)</label>
                                         <input 
                                             type="text"
-                                            placeholder="e.g. 10"
+                                            placeholder="e.g. 100.000"
                                             className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
-                                            value={filters.minPrice}
+                                            
+                                            // --- THAY ĐỔI Ở ĐÂY ---
+                                            // Nếu có dữ liệu thì format số đẹp, nếu không thì để rỗng
+                                            value={filters.minPrice ? Number(filters.minPrice).toLocaleString('vi-VN') : ''}
                                             onChange={(e) => handleFilterChange(e, 'minPrice')}
-                                            min="0"
+                                            // ---------------------
                                         />
                                     </div>
 
                                     {/* Max Price Input */}
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Max Price ($)</label>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Max Price (VNĐ)</label>
                                         <input 
                                             type="text"
-                                            placeholder="e.g. 1000"
+                                            placeholder="e.g. 5.000.000"
                                             className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
-                                            value={filters.maxPrice}
+                                            
+                                            // --- THAY ĐỔI Ở ĐÂY ---
+                                            value={filters.maxPrice ? Number(filters.maxPrice).toLocaleString('vi-VN') : ''}
                                             onChange={(e) => handleFilterChange(e, 'maxPrice')}
-                                            min="0"
+                                            // ---------------------
                                         />
                                     </div>
                                     

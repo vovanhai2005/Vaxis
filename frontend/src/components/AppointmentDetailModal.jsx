@@ -315,7 +315,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                         </div>
                       </div>
                       {vaccine.price && (
-                        <span className="text-emerald-600 font-semibold">${parseFloat(vaccine.price).toFixed(2)}</span>
+                        <span className="text-emerald-600 font-semibold">{Number(vaccine.price).toLocaleString('vi-VN')} VNĐ</span>
                       )}
                     </div>
                   ))}
@@ -359,7 +359,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                     <CreditCard className="h-4 w-4" />
                     <span className="text-xs font-medium uppercase tracking-wide">Total</span>
                   </div>
-                  <p className="text-gray-900 font-semibold text-sm">${totalCost.toFixed(2)}</p>
+                  <p className="text-gray-900 font-semibold text-sm">{totalCost.toLocaleString('vi-VN')}</p>
                 </div>
               </div>
 
@@ -445,7 +445,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                               <h4 className="font-bold text-lg text-gray-900">{vaccine.name}</h4>
                               {vaccine.price && (
                                 <span className="text-emerald-600 font-bold text-lg whitespace-nowrap">
-                                  ${parseFloat(vaccine.price).toFixed(2)}
+                                  {parseFloat(vaccine.price).toLocaleString('vi-VN')} VNĐ
                                 </span>
                               )}
                             </div>
@@ -512,7 +512,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500">Total Cost</p>
-                          <p className="font-bold text-2xl text-emerald-600">${totalCost.toFixed(2)}</p>
+                          <p className="font-bold text-2xl text-emerald-600">{totalCost.toLocaleString('vi-VN')} VNĐ</p>
                         </div>
                       </div>
                     </div>

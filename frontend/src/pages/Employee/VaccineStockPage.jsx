@@ -147,7 +147,7 @@ const VaccineStockPage = () => {
                                                 {vaccine.description}
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-l border-gray-100">
-                                                {formatCurrency(vaccine.price)}
+                                                {Number(vaccine.price).toLocaleString('vi-VN')} đ
                                             </td>
                                         </tr>
                                     ))
@@ -301,10 +301,10 @@ const VaccineStockPage = () => {
                                         
                                         <div className="flex items-center justify-between bg-teal-50 rounded-xl p-4 border border-teal-100">
                                             <label className="text-xs font-bold text-teal-600 uppercase tracking-wider flex items-center gap-1">
-                                                <DollarSign className="w-3 h-3" /> Price per Dose
+                                                <div className="w-3 h-3" /> Price per Dose
                                             </label>
                                             <p className="text-2xl font-bold text-teal-700">
-                                                {formatCurrency(selectedVaccine.price)}
+                                                {Number(selectedVaccine.price).toLocaleString('vi-VN')} VNĐ
                                             </p>
                                         </div>
                                     </div>

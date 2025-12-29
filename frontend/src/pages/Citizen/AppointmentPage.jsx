@@ -391,7 +391,7 @@ const AppointmentPage = () => {
                         {totalCost > 0 && (
                           <div className="text-right">
                             <p className="text-xs text-gray-500 font-medium mb-1">Total Cost</p>
-                            <p className="text-3xl font-bold text-emerald-600">${totalCost.toFixed(2)}</p>
+                            <p className="text-3xl font-bold text-emerald-600">{totalCost.toLocaleString('vi-VN')} VNĐ</p>
                           </div>
                         )}
                       </div>

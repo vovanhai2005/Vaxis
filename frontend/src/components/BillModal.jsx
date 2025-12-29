@@ -1,8 +1,6 @@
 import React from 'react';
 import { X, FileText, User, Calendar, DollarSign, CheckCircle, AlertCircle, Printer } from 'lucide-react';
 
-const EXCHANGE_RATE = 25400; 
-
 const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
   if (!isOpen || !billData) return null;
 
@@ -19,7 +17,7 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
       minute: '2-digit'
     });
   };
-  const amountInVND = Math.floor((billData.amount_cents / 100) * EXCHANGE_RATE);
+
   const handlePrint = () => {
     window.print();
   };
@@ -104,11 +102,11 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
           <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border-2 border-blue-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <DollarSign className="text-blue-600" size={24} />
+                <div className="text-blue-600" size={24} />
                 <span className="text-lg font-semibold text-gray-700">Total Amount:</span>
               </div>
               <span className="text-3xl font-bold text-blue-600">
-                {formatCurrency(billData.amount_cents)}
+                {Number(billData.amount_cents).toLocaleString('vi-VN')}
               </span>
             </div>
           </div>
@@ -120,7 +118,7 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
     
     {/* Cấu trúc link VietQR: https://img.vietqr.io/image/<BANK_ID>-<ACCOUNT_NO>-<TEMPLATE>.png?amount=<AMOUNT>&addInfo=<CONTENT> */}
     <img 
-      src={`https://img.vietqr.io/image/BIDV-8804279805-compact2.png?amount=${amountInVND}&addInfo=${billData.vaccine_names} payment`}
+      src={`https://img.vietqr.io/image/BIDV-8804279805-compact2.png?amount=${billData.amount_cents}&addInfo=${billData.vaccine_names} payment`}
       alt="Mã QR Thanh Toán"
       className="w-64 h-auto object-contain border rounded-lg"
     />

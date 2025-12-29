@@ -26,10 +26,10 @@ const AddVaccine = ({ isOpen, onClose }) => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'price') {
-      if (value === '' || /^\d*\.?\d*$/.test(value)) {
-        setFormData((prev) => ({ ...prev, [name]: value }));
-      }
-      return; 
+        const rawValue = value.replace(/\D/g, '');
+        setFormData(prev => ({ ...prev, [name]: rawValue }));
+        return;
+
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -91,7 +91,7 @@ const AddVaccine = ({ isOpen, onClose }) => {
                     Vaccine Image
                   </label>
                   
-                  {/* Wrapper cố định chiều cao h-64 để khung ảnh đẹp nhất */}
+                  {/* Wrapper cố định chiều cao h-64 */}
                   <div className="relative w-full h-64"> 
                     <label 
                       className="group relative flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-gray-300 rounded-xl hover:bg-gray-50 hover:border-teal-400 transition-all cursor-pointer bg-gray-50 overflow-hidden"
@@ -100,12 +100,12 @@ const AddVaccine = ({ isOpen, onClose }) => {
                       
                       {previewImage ? (
                         // --- TRƯỜNG HỢP 1: ĐÃ CÓ ẢNH ---
-                        // absolute inset-0: Ép khung ảnh dính chặt 4 góc, đè lên trên flexbox của label
+                        // absolute inset-0
                         <div className="absolute inset-0 w-full h-full z-20 bg-white">
                             <img 
                                 src={previewImage} 
                                 alt="Preview" 
-                                // object-cover: Ảnh dãn đầy khung, cắt bớt phần thừa để không méo
+                                // object-cover
                                 className="w-full h-full block object-fill" 
                             />
                             
@@ -161,13 +161,13 @@ const AddVaccine = ({ isOpen, onClose }) => {
                     {/* Price */}
                     <div>
                       <label className="block text-sm font-medium leading-6 text-gray-900">
-                        Price (USD)
+                        Price (VNĐ)
                       </label>
                       <div className="mt-1">
                         <input
                           type="text"
                           name="price"
-                          value={formData.price}
+                          value={formData.price ? Number(formData.price).toLocaleString('vi-VN') : ''}
                           onChange={handleChange}
                           className="block w-full pl-3 pr-3 py-2.5 border border-gray-200 rounded-xl leading-5 placeholder-gray-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition duration-150 ease-in-out sm:text-sm bg-white text-gray-900"          
                           placeholder="0"
