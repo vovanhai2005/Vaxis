@@ -31,6 +31,7 @@ export const totalStock = async (req, res) => {
      SELECT COALESCE(SUM(quantity), 0)::int AS total
       FROM vaccine_lots
       WHERE expiry_date > NOW()
+	  AND active = true
     `;
     const totalStock = result[0]?.total ?? 0;
     res.status(200).json({ totalStock });

@@ -273,13 +273,13 @@ const EmployeeManagementPage = () => {
 
                                     {/* 4. Filter Staff ID */}
                                     <div>
-                                        <label className="block text-xs font-medium text-gray-500 mb-1">Staff ID</label>
+                                        <label className="block text-xs font-medium text-gray-500 mb-1">Job Title</label>
                                         <select 
                                             className="w-full border-gray-200 rounded-lg text-sm focus:ring-teal-500 focus:border-teal-500 p-2 border bg-white text-gray-900 focus:outline-none"
                                             value={filters.staffPrefix}
                                             onChange={(e) => setFilters({...filters, staffPrefix: e.target.value})}
                                         >
-                                            <option value="">All ID</option>
+                                            <option value="">All Job Title</option>
                                             {/* Map qua danh sách Prefix */}
                                             {Object.entries(JOB_TITLE_PREFIXES).map(([title, prefix]) => (
                                                 <option key={prefix} value={prefix}>
