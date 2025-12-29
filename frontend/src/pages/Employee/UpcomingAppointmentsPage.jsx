@@ -90,14 +90,20 @@ const UpcomingAppointmentsPage = () => {
 
     setIsSubmitting(true);
     try {
-      await axiosInstance.put(`/appointments/${selectedAppointment.id}/status`, {
+      const response = await axiosInstance.put(`/appointments/${selectedAppointment.id}/status`, {
         temperature: temp,
         blood_pressure: bp,
         notes: checkInData.notes || null,
         allergies: checkInData.allergies || null,
         current_medications: checkInData.current_medications || null
       });
-      toast.success('Checked in successfully!');
+      
+      const assignedDoctor = response.data.assigned_doctor;
+      if (assignedDoctor) {
+        toast.success(`Checked in successfully! Assigned to Dr. ${assignedDoctor.name} (${assignedDoctor.employee_number})`);
+      } else {
+        toast.success('Checked in successfully!');
+      }
       setIsCheckInModalOpen(false);
       fetchAppointments();
     } catch (error) {
@@ -384,7 +390,7 @@ const UpcomingAppointmentsPage = () => {
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Citizen Name</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Vaccines</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Scheduled At</th>
-                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Notes</th>
+                  <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Assigned Doctor</th>
                   <th className="px-4 py-4 text-left text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Status</th>
                   <th className="px-4 py-4 text-center text-xs font-bold text-gray-600 uppercase border-l border-gray-100">Actions</th>
                 </tr>
@@ -392,7 +398,7 @@ const UpcomingAppointmentsPage = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {isLoading ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-20 text-center text-gray-500 h-[400px]">
+                    <td colSpan="8" className="px-6 py-20 text-center text-gray-500 h-[400px]">
                       <div className="flex flex-col items-center justify-center h-full">
                         <Loader2 className="w-8 h-8 text-teal-500 animate-spin mb-2" />
                         <span className="text-sm font-medium">Loading appointments...</span>
@@ -423,8 +429,15 @@ const UpcomingAppointmentsPage = () => {
                           {formatDate(appointment.time)}
                         </div>
                       </td>
-                      <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 border-l border-gray-100 font-mono">
-                        {appointment.notes || 'N/A'}
+                      <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
+                        {appointment.doctor_name ? (
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-blue-500" />
+                            <span className="text-blue-700 font-medium">Dr. {appointment.doctor_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 italic">Not assigned</span>
+                        )}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
                         {getStatusBadge(appointment.status)}
@@ -453,7 +466,7 @@ const UpcomingAppointmentsPage = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="7" className="px-6 py-10 text-center text-gray-500 italic">
+                    <td colSpan="8" className="px-6 py-10 text-center text-gray-500 italic">
                       No appointments found matching criteria.
                     </td>
                   </tr>
@@ -592,6 +605,14 @@ const UpcomingAppointmentsPage = () => {
                         <span className="text-gray-600 font-medium">Notes:</span>
                         <p className="text-gray-900 mt-1">{selectedAppointment.notes}</p>
                       </div>
+                    </div>
+                  )}
+                  {selectedAppointment.doctor_name && (
+                    <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-lg">
+                      <User className="h-4 w-4 text-blue-600" />
+                      <span className="text-blue-700 font-medium">Assigned Doctor:</span>
+                      <span className="text-blue-900 font-semibold">Dr. {selectedAppointment.doctor_name}</span>
+                      <span className="text-blue-600 text-sm">({selectedAppointment.doctor_employee_number})</span>
                     </div>
                   )}
                 </div>

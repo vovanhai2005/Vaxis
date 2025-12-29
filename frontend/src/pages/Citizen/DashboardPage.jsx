@@ -18,10 +18,12 @@ const DashboardPage = () => {
     completedVaccines: 0,
     upcomingAppointments: 0
   })
+  const [healthNews, setHealthNews] = useState([])
 
   useEffect(() => {
     getAppointmentHistory()
     getCitizenAppointments()
+    fetchHealthNews()
   }, [getAppointmentHistory, getCitizenAppointments])
 
   useEffect(() => {
@@ -47,6 +49,55 @@ const DashboardPage = () => {
       }))
     }
   }, [appointmentHistory, appointments])
+
+  const fetchHealthNews = async () => {
+    const rssUrls = [
+      'https://tuoitre.vn/rss/suc-khoe.rss',
+      'https://vnexpress.net/rss/suc-khoe.rss'
+    ]
+
+    try {
+      const feedPromises = rssUrls.map(url => 
+        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`)
+          .then(res => res.json())
+      )
+
+      const feeds = await Promise.all(feedPromises)
+      let allItems = []
+
+      feeds.forEach(feed => {
+        if (feed.status === 'ok') {
+          const source = feed.feed.url.includes('vnexpress') ? 'VnExpress' : 'Tuoi Tre'
+          const items = feed.items.map(item => ({ ...item, source }))
+          allItems = [...allItems, ...items]
+        }
+      })
+
+      // Sort by pubDate descending
+      allItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
+
+      // Take top 5 and format
+      const formattedNews = allItems.slice(0, 5).map((item, index) => {
+        // Strip HTML from description
+        const div = document.createElement('div')
+        div.innerHTML = item.description
+        const summary = div.textContent || div.innerText || ''
+
+        return {
+          id: index,
+          title: item.title,
+          summary: summary.length > 100 ? summary.substring(0, 100) + '...' : summary,
+          source: item.source,
+          date: new Date(item.pubDate).toLocaleDateString('vi-VN'),
+          link: item.link
+        }
+      })
+
+      setHealthNews(formattedNews)
+    } catch (error) {
+      console.error('Error fetching health news:', error)
+    }
+  }
 
   const getTimeAgo = (dateString) => {
     const date = new Date(dateString)
@@ -87,48 +138,7 @@ const DashboardPage = () => {
     }
   }
 
-  const newsItems = [
-    {
-      id: 1,
-      category: 'COVID-19',
-      categoryColor: 'bg-blue-100 text-blue-600',
-      time: '2 hours ago',
-      title: 'New COVID-19 Booster Shots Now Available',
-      description: 'Updated vaccines targeting latest variants are now available for booking. Priority given to high-risk groups.'
-    },
-    {
-      id: 2,
-      category: 'Influenza',
-      categoryColor: 'bg-purple-100 text-purple-600',
-      time: '5 hours ago',
-      title: 'Flu Season Vaccination Drive Starts Next Week',
-      description: 'Annual influenza vaccination campaign begins Monday. Walk-ins welcome at all participating clinics.'
-    },
-    {
-      id: 3,
-      category: 'HPV',
-      categoryColor: 'bg-pink-100 text-pink-600',
-      time: '1 day ago',
-      title: 'HPV Vaccination Recommended for Teens',
-      description: 'Health ministry updates guidelines recommending HPV vaccination for adolescents aged 11-12 years.'
-    },
-    {
-      id: 4,
-      category: 'General',
-      categoryColor: 'bg-gray-100 text-gray-600',
-      time: '2 days ago',
-      title: 'Record Vaccination Numbers This Month',
-      description: 'Over 50,000 vaccines administered this month, marking a 20% increase from last month.'
-    },
-    {
-      id: 5,
-      category: 'Hepatitis B',
-      categoryColor: 'bg-yellow-100 text-yellow-600',
-      time: '3 days ago',
-      title: 'Free Hepatitis B Screening Available',
-      description: 'Get tested for Hepatitis B at no cost during National Liver Health Month. Vaccination available for those at risk.'
-    }
-  ]
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30">
@@ -178,29 +188,40 @@ const DashboardPage = () => {
 
         {/* Main Grid - News, Quick Actions, Vaccination History */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - News */}
+          {/* Left Column - Health News */}
           <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
             <div className="flex items-center gap-2 mb-6">
-              <Newspaper className="h-6 w-6 text-gray-700" />
-              <h2 className="text-xl font-semibold text-gray-800">Daily Vaccination News</h2>
+              <Newspaper className="h-6 w-6 text-blue-600" />
+              <h2 className="text-xl font-semibold text-gray-800">Health News</h2>
             </div>
 
-            <div className="space-y-2 flex-1 overflow-hidden">
-              {newsItems.slice(0, 5).map((news) => (
-                <div key={news.id} className="border-b border-gray-100 last:border-0 pb-2 last:pb-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`text-xs px-2.5 py-0.5 rounded-full font-medium ${news.categoryColor}`}>
-                      {news.category}
-                    </span>
-                    <span className="text-xs text-gray-400 flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      {news.time}
-                    </span>
+            <div className="space-y-4 flex-1 overflow-hidden">
+              {healthNews.length > 0 ? (
+                healthNews.map((item) => (
+                  <div 
+                    key={item.id} 
+                    className="group cursor-pointer border-b border-gray-100 last:border-0 pb-4 last:pb-0"
+                    onClick={() => window.open(item.link, '_blank')}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
+                        {item.source}
+                      </span>
+                      <span className="text-xs text-gray-400">{item.date}</span>
+                    </div>
+                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">
+                      {item.summary}
+                    </p>
                   </div>
-                  <h3 className="font-semibold text-gray-800 mb-1">{news.title}</h3>
-                  <p className="text-sm text-gray-500 line-clamp-2">{news.description}</p>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Loading health news...</p>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
