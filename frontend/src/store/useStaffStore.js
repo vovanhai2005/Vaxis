@@ -11,6 +11,7 @@ export const useStaffStore = create((set, get) => ({
         set({ isLoadingStaff: true });
         try {
           const res = await axiosInstance.get('/staff/list');
+		  console.log("Dữ liệu API trả về:", res.data);
         set({ staffList: res.data });
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to fetch staff list');
