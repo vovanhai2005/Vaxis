@@ -35,7 +35,7 @@ const Navbar = () => {
      manager:[
       { to: "/", label: "Home", icon: Home },
       { to: "/staff-management", label: "Staff", icon: Users },
-      { to: "/categories-management", label: "Categories", icon: Layers },
+      { to: "/categories-management", label: "Category", icon: Layers },
       { to: "/vaccineLots-management", label: "Inventory", icon: Package },
       { to: "/vaccination-stats", label: "Statistics", icon: Syringe },
       { to: "/announcements", label: "Announcements", icon: Megaphone },

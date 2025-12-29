@@ -1,6 +1,8 @@
 import React from 'react';
 import { X, FileText, User, Calendar, DollarSign, CheckCircle, AlertCircle, Printer } from 'lucide-react';
 
+const EXCHANGE_RATE = 25400; 
+
 const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
   if (!isOpen || !billData) return null;
 
@@ -17,7 +19,7 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
       minute: '2-digit'
     });
   };
-
+  const amountInVND = Math.floor((billData.amount_cents / 100) * EXCHANGE_RATE);
   const handlePrint = () => {
     window.print();
   };
@@ -112,19 +114,18 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
           </div>
 
           {/* Payment Notice */}
-          {!billData.paid && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-              <div className="flex gap-3">
-                <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
-                <div className="text-sm">
-                  <p className="font-semibold text-yellow-800 mb-1">Payment Required</p>
-                  <p className="text-yellow-700">
-                    Please process the payment before completing the appointment.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
+         {!billData.paid && (
+  <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center shadow-sm">
+    <h3 className="font-semibold text-gray-800 mb-3">Quét mã để thanh toán</h3>
+    
+    {/* Cấu trúc link VietQR: https://img.vietqr.io/image/<BANK_ID>-<ACCOUNT_NO>-<TEMPLATE>.png?amount=<AMOUNT>&addInfo=<CONTENT> */}
+    <img 
+      src={`https://img.vietqr.io/image/BIDV-8804279805-compact2.png?amount=${amountInVND}&addInfo=${billData.vaccine_names} payment`}
+      alt="Mã QR Thanh Toán"
+      className="w-64 h-auto object-contain border rounded-lg"
+    />
+  </div>
+)}
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
