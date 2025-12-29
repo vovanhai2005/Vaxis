@@ -53,7 +53,7 @@ const VaccineStockPage = () => {
 
     // --- 4. FORMAT CURRENCY ---
     const formatCurrency = (value) => {
-        return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(value);
     };
 
     return (
