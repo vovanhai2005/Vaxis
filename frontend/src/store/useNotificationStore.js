@@ -21,49 +21,56 @@ export const useNotificationStore = create((set, get) => ({
   // Initialize socket connection
   initSocket: (userId) => {
     if (!get().isSocketConnected && userId) {
-      connectSocket(userId);
+      const socket = connectSocket(userId);
       
-      // Listen for new notifications
-      onNewNotification((notification) => {
-        set((state) => ({
-          notifications: [notification, ...state.notifications],
-          unreadCount: state.unreadCount + 1
-        }));
-        
-        // Show toast notification
-        toast.success(`New notification: ${notification.title}`);
-      });
-
-      // Listen for notification read
-      onNotificationRead((data) => {
-        set((state) => ({
-          notifications: state.notifications.map((notif) =>
-            notif.id === data.notificationId ? { ...notif, is_read: true } : notif
-          ),
-          unreadCount: Math.max(0, state.unreadCount - 1)
-        }));
-      });
-
-      // Listen for all notifications read
-      onNotificationReadAll(() => {
-        set((state) => ({
-          notifications: state.notifications.map((notif) => ({ ...notif, is_read: true })),
-          unreadCount: 0
-        }));
-      });
-
-      // Listen for notification deleted
-      onNotificationDeleted((data) => {
-        set((state) => {
-          const deletedNotif = state.notifications.find((n) => n.id === data.notificationId);
-          return {
-            notifications: state.notifications.filter((notif) => notif.id !== data.notificationId),
-            unreadCount: deletedNotif && !deletedNotif.is_read 
-              ? Math.max(0, state.unreadCount - 1) 
-              : state.unreadCount
-          };
+      // Set up listeners - these will work once socket connects
+      const setupListeners = () => {
+        // Listen for new notifications
+        onNewNotification((notification) => {
+          console.log('Received new notification:', notification);
+          set((state) => ({
+            notifications: [notification, ...state.notifications],
+            unreadCount: state.unreadCount + 1
+          }));
+          
+          // Show toast notification
+          toast.success(`New notification: ${notification.title}`);
         });
-      });
+
+        // Listen for notification read
+        onNotificationRead((data) => {
+          set((state) => ({
+            notifications: state.notifications.map((notif) =>
+              notif.id === data.notificationId ? { ...notif, is_read: true } : notif
+            ),
+            unreadCount: Math.max(0, state.unreadCount - 1)
+          }));
+        });
+
+        // Listen for all notifications read
+        onNotificationReadAll(() => {
+          set((state) => ({
+            notifications: state.notifications.map((notif) => ({ ...notif, is_read: true })),
+            unreadCount: 0
+          }));
+        });
+
+        // Listen for notification deleted
+        onNotificationDeleted((data) => {
+          set((state) => {
+            const deletedNotif = state.notifications.find((n) => n.id === data.notificationId);
+            return {
+              notifications: state.notifications.filter((notif) => notif.id !== data.notificationId),
+              unreadCount: deletedNotif && !deletedNotif.is_read 
+                ? Math.max(0, state.unreadCount - 1) 
+                : state.unreadCount
+            };
+          });
+        });
+      };
+
+      // Set up listeners immediately (they'll queue until connected)
+      setupListeners();
 
       set({ isSocketConnected: true });
     }
@@ -117,13 +124,7 @@ export const useNotificationStore = create((set, get) => ({
   markAsRead: async (id) => {
     try {
       await axiosInstance.put(`/notifications/${id}/read`)
-      // Update local state
-      set(state => ({
-        notifications: state.notifications.map(notif =>
-          notif.id === id ? { ...notif, is_read: true } : notif
-        ),
-        unreadCount: Math.max(0, state.unreadCount - 1)
-      }))
+      // Socket event will handle state update to avoid double decrement
     } catch (error) {
       console.error('Error marking notification as read:', error)
       toast.error(error.response?.data?.message || 'Failed to mark as read')
@@ -134,10 +135,7 @@ export const useNotificationStore = create((set, get) => ({
   markAllAsRead: async () => {
     try {
       await axiosInstance.put('/notifications/read-all')
-      set(state => ({
-        notifications: state.notifications.map(notif => ({ ...notif, is_read: true })),
-        unreadCount: 0
-      }))
+      // Socket event will handle state update to avoid double decrement
       toast.success('All notifications marked as read')
     } catch (error) {
       console.error('Error marking all as read:', error)
@@ -149,15 +147,7 @@ export const useNotificationStore = create((set, get) => ({
   deleteNotification: async (id) => {
     try {
       await axiosInstance.delete(`/notifications/${id}`)
-      set(state => {
-        const deletedNotif = state.notifications.find(n => n.id === id)
-        return {
-          notifications: state.notifications.filter(notif => notif.id !== id),
-          unreadCount: deletedNotif && !deletedNotif.is_read 
-            ? Math.max(0, state.unreadCount - 1) 
-            : state.unreadCount
-        }
-      })
+      // Socket event will handle state update to avoid double decrement
       toast.success('Notification deleted')
     } catch (error) {
       console.error('Error deleting notification:', error)
