@@ -84,9 +84,6 @@ const EmployeeManagementPage = () => {
         ? true
         : filters.hasNationalId === 'yes' ? !!employee.national_id : !employee.national_id;
 
-    // --- SỬA LẠI ĐOẠN NÀY ---
-    // - Filter Job Title (Dựa vào staffPrefix)
-    // Nếu chọn prefix (VD: "DOC"), kiểm tra xem employee_number có bắt đầu bằng "DOC" không
     const matchesJobTitle = filters.staffPrefix === ''
         ? true
         : (employee.employee_number || '').startsWith(filters.staffPrefix);

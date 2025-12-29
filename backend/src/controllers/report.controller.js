@@ -215,15 +215,14 @@ export const vaccinationStats = async (req, res) => {
     const totalItems = parseInt(countResult[0]?.total || 0);
 
     // 4. Query lấy dữ liệu chính
-  const query = `
-  SELECT
-    v.id,
-    v.code,
-    v.name,
-    
-    -- 1. TỔNG SỐ MŨI ĐÃ TIÊM (Lịch sử tiêm chủng)
-    -- Vẫn đếm tất cả, kể cả các mũi thuộc lô đã hết hạn 
-    COALESCE(stats.total_doses, 0)::int AS doses_given,
+    const query = `
+      SELECT
+        v.id,
+        v.code,
+        v.name,
+        
+        -- 1. TỔNG SỐ MŨI ĐÃ TIÊM
+        COALESCE(stats.total_doses, 0)::int AS doses_given,
 
         -- 2. SỐ LƯỢNG CÒN LẠI
         COALESCE(stock.available_qty, 0)::int AS remaining
@@ -310,16 +309,14 @@ const query = `
     v.id,
     v.code,
     v.name,
-    -- 1. Số mũi đã tiêm 
-    COALESCE(stats.total_doses, 0)::int AS doses_given,
-
-    -- 2. Số lượng còn lại 
+    -- Không cần COALESCE nữa vì INNER JOIN đảm bảo luôn có dữ liệu, nhưng giữ cũng không sao
+    stats.total_doses::int AS doses_given, 
     COALESCE(stock.available_qty, 0)::int AS remaining
 
   FROM vaccines v
 
-  -- Subquery 1: Tính tổng số mũi đã tiêm 
-  LEFT JOIN (
+  -- ĐỔI LEFT JOIN THÀNH INNER JOIN ĐỂ LỌC LUÔN CÁC VACCINE CHƯA TIÊM
+  INNER JOIN (
     SELECT 
         vaccine_id, 
         COUNT(*) AS total_doses 
@@ -337,8 +334,6 @@ const query = `
         FROM administrations
         GROUP BY vaccine_lot_id
     ) usage ON usage.vaccine_lot_id = l.id
-    
-    -- Chỉ lấy lô còn hạn 
     WHERE l.expiry_date >= (NOW() AT TIME ZONE 'Asia/Ho_Chi_Minh')::DATE
     GROUP BY l.vaccine_id
   ) stock ON stock.vaccine_id = v.id
