@@ -315,7 +315,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                         </div>
                       </div>
                       {vaccine.price && (
-                        <span className="text-emerald-600 font-semibold">{Number(vaccine.price).toLocaleString('vi-VN')} VNĐ</span>
+                        <span className="text-emerald-600 font-semibold">{parseFloat(vaccine.price).toLocaleString('vi-VN')} VND</span>
                       )}
                     </div>
                   ))}
@@ -359,7 +359,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                     <CreditCard className="h-4 w-4" />
                     <span className="text-xs font-medium uppercase tracking-wide">Total</span>
                   </div>
-                  <p className="text-gray-900 font-semibold text-sm">{totalCost.toLocaleString('vi-VN')}</p>
+                  <p className="text-gray-900 font-semibold text-sm">{totalCost.toLocaleString('vi-VN')} VND</p>
                 </div>
               </div>
 
@@ -391,6 +391,24 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                         <p className="text-gray-900 font-medium">{formatShortDate(authUser.date_of_birth)}</p>
                       </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Doctor Information */}
+              {appointment.administered_by && (
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-4 border border-purple-200">
+                  <h3 className="text-sm font-semibold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <User className="h-4 w-4 text-purple-600" />
+                    Administering Doctor
+                  </h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                      <User className="h-6 w-6 text-purple-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-900 font-semibold text-lg">{appointment.administered_by}</p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -445,7 +463,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                               <h4 className="font-bold text-lg text-gray-900">{vaccine.name}</h4>
                               {vaccine.price && (
                                 <span className="text-emerald-600 font-bold text-lg whitespace-nowrap">
-                                  {parseFloat(vaccine.price).toLocaleString('vi-VN')} VNĐ
+                                  {parseFloat(vaccine.price).toLocaleString('vi-VN')} VND
                                 </span>
                               )}
                             </div>
@@ -512,7 +530,7 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
                         </div>
                         <div className="text-right">
                           <p className="text-sm text-gray-500">Total Cost</p>
-                          <p className="font-bold text-2xl text-emerald-600">{totalCost.toLocaleString('vi-VN')} VNĐ</p>
+                          <p className="font-bold text-2xl text-emerald-600">{totalCost.toLocaleString('vi-VN')} VND</p>
                         </div>
                       </div>
                     </div>
@@ -540,30 +558,61 @@ const AppointmentDetailModal = ({ appointment, onClose }) => {
               )}
 
               {/* Important Information */}
-              <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-                <h4 className="font-semibold text-blue-900 flex items-center gap-2 mb-2">
-                  <Info className="h-4 w-4" />
-                  Important Information
-                </h4>
-                <ul className="text-sm text-blue-800 space-y-1.5">
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    Please arrive 15 minutes before your scheduled time
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    Bring a valid ID and your health insurance card
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    Wear loose-fitting clothing for easy access to your upper arm
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="text-blue-400 mt-1">•</span>
-                    Stay hydrated and eat a light meal before your appointment
-                  </li>
-                </ul>
-              </div>
+              {appointment.status === 'completed' ? (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-emerald-900 flex items-center gap-2 mb-2">
+                    <CheckCircle className="h-4 w-4" />
+                    Post-Vaccination Care
+                  </h4>
+                  <ul className="text-sm text-emerald-800 space-y-1.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Monitor for any side effects for the next 24-48 hours
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Stay hydrated and get plenty of rest
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Apply a cool compress if you experience injection site soreness
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Contact your healthcare provider if you experience severe reactions
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-emerald-400 mt-1">•</span>
+                      Keep your vaccination record safe for future reference
+                    </li>
+                  </ul>
+                </div>
+              ) : (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                  <h4 className="font-semibold text-blue-900 flex items-center gap-2 mb-2">
+                    <Info className="h-4 w-4" />
+                    Important Information
+                  </h4>
+                  <ul className="text-sm text-blue-800 space-y-1.5">
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-400 mt-1">•</span>
+                      Please arrive 15 minutes before your scheduled time
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-400 mt-1">•</span>
+                      Bring a valid ID and your health insurance card
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-400 mt-1">•</span>
+                      Wear loose-fitting clothing for easy access to your upper arm
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <span className="text-blue-400 mt-1">•</span>
+                      Stay hydrated and eat a light meal before your appointment
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           )}
         </div>

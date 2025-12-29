@@ -1,115 +1,84 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { useAuthStore } from '../../store/useAuthStore'
 import { useUserStore } from '../../store/useUserStore'
 import { useAppointmentStore } from '../../store/useAppointmentStore'
-import { useVaccineStore } from '../../store/useVaccineStore'
-import { CheckCircle, Clock, Newspaper, Calendar, MapPin, Loader2, LayoutDashboard, Syringe, CalendarPlus, FileText, User, ChevronRight, Lightbulb } from 'lucide-react'
+import { CheckCircle, Clock, Newspaper, Calendar, Loader2, LayoutDashboard, Syringe, CalendarPlus, ChevronRight, ExternalLink, AlertCircle } from 'lucide-react'
 import Header from '../../components/Header'
 import { useNavigate } from 'react-router-dom'
+import { axiosInstance } from '../../lib/axios'
 
 const DashboardPage = () => {
   const navigate = useNavigate()
   const { authUser } = useAuthStore()
   const { appointmentHistory, getAppointmentHistory, isLoadingHistory } = useUserStore()
   const { appointments, isLoadingAppointments, getCitizenAppointments } = useAppointmentStore()
-  const { selectedVaccines } = useVaccineStore()
   
-  const [stats, setStats] = useState({
-    completedVaccines: 0,
-    upcomingAppointments: 0
-  })
-  const [healthNews, setHealthNews] = useState([])
+  // FIX 1: Chuyển stats từ useState/useEffect sang useMemo để tránh re-render loop
+  const stats = useMemo(() => {
+    const completed = appointmentHistory?.reduce((sum, apt) => {
+      return sum + (apt.vaccines?.length || 0)
+    }, 0) || 0;
 
+    const upcoming = appointments?.filter(apt => 
+      (apt.status === 'booked' || apt.status === 'checked_in' || apt.status === 'administered') && 
+      new Date(apt.scheduled_at) >= new Date()
+    ).length || 0;
+
+    return {
+      completedVaccines: completed,
+      upcomingAppointments: upcoming
+    };
+  }, [appointmentHistory, appointments]);
+
+  const [healthNews, setHealthNews] = useState([])
+  const [newsLoading, setNewsLoading] = useState(true)
+  const [newsError, setNewsError] = useState(null)
+  const [failedImages, setFailedImages] = useState(new Set())
+
+  // Load data initial only
   useEffect(() => {
     getAppointmentHistory()
     getCitizenAppointments()
     fetchHealthNews()
-  }, [getAppointmentHistory, getCitizenAppointments])
-
-  useEffect(() => {
-    if (appointmentHistory) {
-      // Count total vaccines from completed appointments
-      const totalVaccines = appointmentHistory.reduce((sum, apt) => {
-        return sum + (apt.vaccines?.length || 0)
-      }, 0)
-      setStats(prev => ({
-        ...prev,
-        completedVaccines: totalVaccines
-      }))
-    }
-    if (appointments) {
-      // Only count appointments that are upcoming (booked or checked_in) and in the future
-      const upcomingCount = appointments.filter(apt => 
-        (apt.status === 'booked' || apt.status === 'checked_in' || apt.status === 'administered') && 
-        new Date(apt.scheduled_at) >= new Date()
-      ).length
-      setStats(prev => ({
-        ...prev,
-        upcomingAppointments: upcomingCount
-      }))
-    }
-  }, [appointmentHistory, appointments])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) 
 
   const fetchHealthNews = async () => {
-    const rssUrls = [
-      'https://tuoitre.vn/rss/suc-khoe.rss',
-      'https://vnexpress.net/rss/suc-khoe.rss'
-    ]
-
+    setNewsLoading(true)
+    setNewsError(null)
     try {
-      const feedPromises = rssUrls.map(url => 
-        fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`)
-          .then(res => res.json())
-      )
-
-      const feeds = await Promise.all(feedPromises)
-      let allItems = []
-
-      feeds.forEach(feed => {
-        if (feed.status === 'ok') {
-          const source = feed.feed.url.includes('vnexpress') ? 'VnExpress' : 'Tuoi Tre'
-          const items = feed.items.map(item => ({ ...item, source }))
-          allItems = [...allItems, ...items]
-        }
-      })
-
-      // Sort by pubDate descending
-      allItems.sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-
-      // Take top 5 and format
-      const formattedNews = allItems.slice(0, 5).map((item, index) => {
-        // Strip HTML from description
-        const div = document.createElement('div')
-        div.innerHTML = item.description
-        const summary = div.textContent || div.innerText || ''
-
-        return {
-          id: index,
-          title: item.title,
-          summary: summary.length > 100 ? summary.substring(0, 100) + '...' : summary,
-          source: item.source,
-          date: new Date(item.pubDate).toLocaleDateString('vi-VN'),
-          link: item.link
-        }
-      })
-
-      setHealthNews(formattedNews)
+      const response = await axiosInstance.get('/news')
+      setHealthNews(response.data.articles || [])
     } catch (error) {
-      console.error('Error fetching health news:', error)
+      console.error('Error fetching vaccine news:', error)
+      setNewsError(error.response?.data?.message || 'Failed to load vaccine news')
+    } finally {
+      setNewsLoading(false)
     }
   }
 
-  const getTimeAgo = (dateString) => {
+  const formatNewsDate = (dateString) => {
+    if (!dateString) return 'N/A'
     const date = new Date(dateString)
     const now = new Date()
-    const diffInMs = now - date
-    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60))
-    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24))
+    const diffInHours = Math.floor((now - date) / (1000 * 60 * 60))
+    
+    if (diffInHours < 24) {
+      return `${diffInHours}h ago`
+    } else if (diffInHours < 48) {
+      return 'Yesterday'
+    } else {
+      return date.toLocaleDateString('en-US', {
+        month: 'short',
+        day: 'numeric'
+      })
+    }
+  }
 
-    if (diffInHours < 1) return 'Just now'
-    if (diffInHours < 24) return `${diffInHours} hours ago`
-    if (diffInDays === 1) return '1 day ago'
-    return `${diffInDays} days ago`
+  const truncateText = (text, maxLength) => {
+    if (!text) return ''
+    if (text.length <= maxLength) return text
+    return text.substring(0, maxLength) + '...'
   }
 
   const formatDate = (dateString) => {
@@ -123,22 +92,14 @@ const DashboardPage = () => {
 
   const getStatusInfo = (status) => {
     switch (status) {
-      case 'booked':
-        return { text: 'Booked', color: 'bg-blue-500' }
-      case 'checked_in':
-        return { text: 'Checked In', color: 'bg-yellow-500' }
-      case 'completed':
-        return { text: 'Completed', color: 'bg-green-500' }
-      case 'cancelled':
-        return { text: 'Cancelled', color: 'bg-red-500' }
-      case 'no_show':
-        return { text: 'No Show', color: 'bg-gray-500' }
-      default:
-        return { text: 'Unknown', color: 'bg-gray-400' }
+      case 'booked': return { text: 'Booked', color: 'bg-blue-500' }
+      case 'checked_in': return { text: 'Checked In', color: 'bg-yellow-500' }
+      case 'completed': return { text: 'Completed', color: 'bg-green-500' }
+      case 'cancelled': return { text: 'Cancelled', color: 'bg-red-500' }
+      case 'no_show': return { text: 'No Show', color: 'bg-gray-500' }
+      default: return { text: 'Unknown', color: 'bg-gray-400' }
     }
   }
-
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-gray-50 to-teal-50/30">
@@ -186,157 +147,112 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        {/* Main Grid - News, Quick Actions, Vaccination History */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left Column - Health News */}
-          <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
-            <div className="flex items-center gap-2 mb-6">
-              <Newspaper className="h-6 w-6 text-blue-600" />
-              <h2 className="text-xl font-semibold text-gray-800">Health News</h2>
+        {/* Main Grid - News and Upcoming Appointments */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Vaccine News - Expanded */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col h-[600px]">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <Newspaper className="h-6 w-6 text-teal-600" />
+                <h2 className="text-xl font-semibold text-gray-800">Vaccine News</h2>
+              </div>
+              <button
+                onClick={fetchHealthNews}
+                className="text-sm text-teal-600 hover:text-teal-700 font-medium"
+              >
+                Refresh
+              </button>
             </div>
 
-            <div className="space-y-4 flex-1 overflow-hidden">
-              {healthNews.length > 0 ? (
-                healthNews.map((item) => (
-                  <div 
-                    key={item.id} 
-                    className="group cursor-pointer border-b border-gray-100 last:border-0 pb-4 last:pb-0"
-                    onClick={() => window.open(item.link, '_blank')}
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full">
-                        {item.source}
-                      </span>
-                      <span className="text-xs text-gray-400">{item.date}</span>
+            <div className="space-y-4 flex-1 overflow-y-auto">
+              {newsLoading ? (
+                // Skeleton Loader
+                <>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="animate-pulse">
+                      <div className="flex gap-3">
+                        <div className="w-20 h-20 bg-gray-200 rounded-lg flex-shrink-0"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors mb-1">
-                      {item.title}
-                    </h3>
-                    <p className="text-sm text-gray-500 leading-relaxed line-clamp-2">
-                      {item.summary}
-                    </p>
+                  ))}
+                </>
+              ) : newsError ? (
+                // Error State
+                <div className="text-center py-10">
+                  <AlertCircle className="h-12 w-12 text-red-400 mx-auto mb-3" />
+                  <p className="text-red-500 text-sm font-medium mb-2">Failed to load news</p>
+                  <p className="text-gray-500 text-xs">{newsError}</p>
+                  <button
+                    onClick={fetchHealthNews}
+                    className="mt-4 text-sm text-teal-600 hover:text-teal-700 font-medium"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              ) : healthNews.length > 0 ? (
+                // News Cards
+                healthNews.map((article, index) => (
+                  <div
+                    key={index}
+                    className="group border border-gray-200 rounded-lg p-3 hover:border-teal-300 hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex gap-3">
+                      {/* Thumbnail */}
+                      <div className="w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                        {article.urlToImage && !failedImages.has(index) ? (
+                          <img
+                            src={article.urlToImage}
+                            alt={article.title}
+                            className="w-full h-full object-cover"
+                            onError={() => {
+                              setFailedImages(prev => new Set([...prev, index]))
+                            }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Newspaper className="w-8 h-8 text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm text-gray-900 mb-1 line-clamp-2 group-hover:text-teal-600 transition-colors">
+                          {truncateText(article.title, 80)}
+                        </h4>
+                        <p className="text-xs text-gray-500 mb-2">
+                          {formatNewsDate(article.publishedAt)} • {article.source}
+                        </p>
+                        <a
+                          href={article.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-xs text-teal-600 hover:text-teal-700 font-medium"
+                        >
+                          Read more
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    </div>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Loading health news...</p>
+                // No News State
+                <div className="text-center py-10">
+                  <Newspaper className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-gray-500 text-sm">No vaccine news available</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Middle Column - Quick Actions & Vaccination History */}
-          <div className="lg:col-span-2 space-y-6 flex flex-col">
-          {/* Quick Actions & Vaccination History */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1">
-            {/* Quick Actions */}
-            <div className="bg-white rounded-2xl shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <CalendarPlus className="h-6 w-6 text-teal-600" />
-                <h2 className="text-xl font-semibold text-gray-800">Quick Actions</h2>
-              </div>
-
-              <div className="space-y-3">
-                <button 
-                  onClick={() => navigate('/vaccination-info')}
-                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
-                      <Syringe className="h-5 w-5 text-emerald-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-800">Vaccination Info</p>
-                      <p className="text-sm text-gray-500">Learn about vaccines</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-emerald-600 transition" />
-                </button>
-
-                <button 
-                  onClick={() => navigate('/booking')}
-                  className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-cyan-50 hover:from-teal-100 hover:to-cyan-100 rounded-xl border border-teal-200/50 transition group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center">
-                      <CalendarPlus className="h-5 w-5 text-teal-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-800">Book Appointment</p>
-                      <p className="text-sm text-gray-500">Schedule your vaccination</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-teal-600 transition" />
-                </button>
-
-                <button 
-                  onClick={() => navigate('/appointment')}
-                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-800">My Appointments</p>
-                      <p className="text-sm text-gray-500">View & manage bookings</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-blue-600 transition" />
-                </button>
-
-                <button 
-                  onClick={() => navigate('/profile')}
-                  className="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 rounded-xl border border-gray-200 transition group"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                      <User className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div className="text-left">
-                      <p className="font-semibold text-gray-800">My Profile</p>
-                      <p className="text-sm text-gray-500">Update personal info</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-gray-400 group-hover:text-purple-600 transition" />
-                </button>
-              </div>
-
-              <div className="mt-6 bg-gradient-to-br from-teal-50 to-emerald-50 rounded-xl p-3 border border-teal-100">
-                <div className="flex items-center gap-2 mb-2">
-                  <div className="p-1 bg-white rounded-lg shadow-sm text-teal-600">
-                    <Lightbulb className="h-3 w-3" />
-                  </div>
-                  <h3 className="font-semibold text-gray-800 text-xs">Health Tips</h3>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="flex gap-2">
-                    <div className="w-0.5 bg-teal-200 rounded-full flex-shrink-0 mt-1"></div>
-                    <p className="text-xs text-gray-600 leading-tight">
-                      <span className="font-medium text-teal-700">Stay Hydrated:</span> Drink water before & after vaccination.
-                    </p>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <div className="w-0.5 bg-teal-200 rounded-full flex-shrink-0 mt-1"></div>
-                    <p className="text-xs text-gray-600 leading-tight">
-                      <span className="font-medium text-teal-700">Keep Moving:</span> Move your arm to reduce soreness.
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="w-0.5 bg-teal-200 rounded-full flex-shrink-0 mt-1"></div>
-                    <p className="text-xs text-gray-600 leading-tight">
-                      <span className="font-medium text-teal-700">Rest Well:</span> Sleep helps your immune response.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Upcoming Appointments */}
-            <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col">
+          {/* Upcoming Appointments */}
+          <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col h-[600px]">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <Calendar className="h-6 w-6 text-blue-600" />
@@ -361,7 +277,7 @@ const DashboardPage = () => {
                     .sort((a, b) => new Date(a.scheduled_at) - new Date(b.scheduled_at))
                     .slice(0, 4)
                     .map((appointment) => {
-                      const { date, time } = formatDate(appointment.scheduled_at)
+                      const { time } = formatDate(appointment.scheduled_at)
                       const statusInfo = getStatusInfo(appointment.status)
                       const vaccineCount = appointment.vaccines?.length || 0
                       
@@ -425,17 +341,16 @@ const DashboardPage = () => {
             </div>
           </div>
         </div>
-      </div>
-      </div>
 
-      {/* Help Button */}
+      {/* Help Button - Đã sửa lỗi syntax comment */}
       <button className="fixed bottom-6 right-6 bg-gray-900 hover:bg-gray-800 text-white w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-all hover:scale-105 group">
         <span className="text-xl font-medium">?</span>
         <span className="absolute right-full mr-3 bg-gray-900 text-white text-sm font-medium px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
           Need help?
         </span>
       </button>
-    </div>
+
+    </div> 
   )
 }
 
