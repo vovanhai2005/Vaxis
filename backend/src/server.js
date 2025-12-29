@@ -140,7 +140,7 @@ async function initDB() {
                 image_url TEXT,
                 manufacturer TEXT NOT NULL,
                 description TEXT,
-                price NUMERIC(10,2) DEFAULT 0,
+                price NUMERIC(15,0) DEFAULT 0,
 				active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )

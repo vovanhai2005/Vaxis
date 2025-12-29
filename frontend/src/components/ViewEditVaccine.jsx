@@ -6,7 +6,6 @@ const ViewEditVaccine = ({ isOpen, onClose, vaccineData }) => {
   const { editVaccine, isLoadingVaccines } = useVaccineStore();
   const [isEditing, setIsEditing] = useState(false);
   
-  // State mới: Dùng để disable nút Save NGAY LẬP TỨC khi vừa bấm
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // State form data
@@ -53,20 +52,19 @@ const ViewEditVaccine = ({ isOpen, onClose, vaccineData }) => {
     if (e) e.preventDefault();
 
     if (isEditing) {
-      // Nếu đang Edit mà nhấn Cancel -> Revert về savedData
+   
       setFormData({ ...savedData });
       setPreviewImage(savedData.imageUrl || null);
     }
-    // Nếu đang View mà nhấn Edit -> Giữ nguyên
+   
     setIsEditing(!isEditing);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === 'price') {
-        if (value === '' || /^\d*\.?\d*$/.test(value)) {
-            setFormData(prev => ({ ...prev, [name]: value }));
-        }
+	if (name === 'price') {
+        const rawValue = value.replace(/\D/g, '');
+        setFormData(prev => ({ ...prev, [name]: rawValue }));
         return;
     }
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -243,9 +241,9 @@ const ViewEditVaccine = ({ isOpen, onClose, vaccineData }) => {
                             </div>
                         </div>
                         <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">Price ($)</label>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">Price (VNĐ)</label>
                             <div className="mt-1">
-                                <input type="text" name="price" disabled={!isEditing} value={formData.price} onChange={handleChange}
+                                <input type="text" name="price" disabled={!isEditing} value={formData.price ? Number(formData.price).toLocaleString('vi-VN') : ''}onChange={handleChange}
                                     className={`block w-full px-3 py-2.5 border outline-none rounded-xl sm:text-sm ${isEditing ? 'border-gray-300 focus:ring-teal-500 bg-white' : 'border-transparent bg-gray-100 text-teal-700 font-bold cursor-default'}`} />
                             </div>
                         </div>
