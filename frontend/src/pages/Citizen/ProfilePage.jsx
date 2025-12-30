@@ -387,17 +387,7 @@ const ProfilePage = () => {
                   <Mail className="h-4 w-4" />
                   Email Address
                 </label>
-                {isEditing ? (
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    className={`w-full p-3 rounded-lg focus:outline-none ${isEditing ? 'border-teal-500 ring-2 ring-teal-100 bg-white' : 'border-gray-300'}`}
-                  />
-                ) : (
-                  <p className="text-gray-800 font-medium">{formData.email}</p>
-                )}
+                <p className="text-gray-800 font-medium">{formData.email}</p>
               </div>
 
               <div>

@@ -60,7 +60,7 @@ export const updateCitizenProfile = async (req, res) => {
         await sql.begin(async (sql) => {
             const userFieldsToUpdate = {};
             if (fullname !== undefined) userFieldsToUpdate.full_name = fullname;
-            if (email !== undefined) userFieldsToUpdate.email = email;
+            // Email cannot be changed by citizens
             if (phone !== undefined) userFieldsToUpdate.phone = phone;
             if (dob !== undefined) userFieldsToUpdate.dob = dob;
             if (profilePictureUrl) userFieldsToUpdate.profile_picture = profilePictureUrl;
