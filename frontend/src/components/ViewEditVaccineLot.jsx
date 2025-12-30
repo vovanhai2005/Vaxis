@@ -62,14 +62,13 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
             imageUrl: data.image_url || ''
         });
 
-        // [ADD] Load xong -> Tắt màn hình chờ
         setIsInitializing(false);
       }
     };
 
     fetchLatestData();
     setIsEditing(false);
-  }, [isOpen, lotData?.id]); // Chạy lại khi ID thay đổi
+  }, [isOpen, lotData?.id]); 
 
   const handleClose = () => {
     setIsEditing(false);
@@ -229,7 +228,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                     <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                         {/* Lot Number */}
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium leading-6 text-gray-900">Lot Number / Batch ID</label>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">Lot Number / Lot ID <span className="text-red-500">*</span></label>
                             <div className="mt-1 relative rounded-md shadow-sm">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                     <ClipboardList className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -237,6 +236,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                                 <input
                                     type="text"
                                     name="lot_number"
+									required
                                     disabled={!isEditing}
                                     value={formData.lot_number}
                                     onChange={handleChange}
@@ -248,7 +248,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
 
                         {/* Quantity */}
                         <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">Quantity</label>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">Quantity <span className="text-red-500">*</span></label>
                             <div className="mt-1 relative rounded-md shadow-sm">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                     <Package className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -256,6 +256,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                                 <input
                                     type="text"
                                     name="quantity"
+									required
                                     disabled={!isEditing}
                                     value={formData.quantity}
                                     onChange={handleChange}
@@ -267,7 +268,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
 
                         {/* Expiry Date */}
                         <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">Expiry Date</label>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">Expiry Date <span className="text-red-500">*</span></label>
                             <div className="mt-1 relative rounded-md shadow-sm">
                                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                     <Calendar className="h-5 w-5 text-gray-400" aria-hidden="true" />
@@ -275,6 +276,7 @@ const ViewEditVaccineLot = ({ isOpen, onClose, lotData, onSuccess }) => {
                                 <input
                                     type="date"
                                     name="expiry_date"
+									required
                                     disabled={!isEditing}
                                     style={{ colorScheme: 'light' }}
                                     value={formData.expiry_date}

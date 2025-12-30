@@ -232,11 +232,12 @@ const ViewEditStaff = ({ isOpen, onClose, staffData }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium leading-6 text-gray-900">Email Address</label>
+                  <label className="block text-sm font-medium leading-6 text-gray-900">Email Address <span className="text-red-500">*</span></label>
                   <div className="mt-1">
                     <input
                       type="email"
                       name="email"
+					  required
                       disabled={!isEditing}
                       value={formData.email}
                       onChange={handleChange}
@@ -279,7 +280,7 @@ const ViewEditStaff = ({ isOpen, onClose, staffData }) => {
 		 
 				{/* Employee Number*/}
 					 <div>
-						<label className="block text-sm font-medium leading-6 text-gray-500">Staff ID</label>
+						<label className="block text-sm font-medium leading-6 text-gray-500">Staff ID <span className="text-red-500">*</span></label>
 						<div className="mt-1">
 						 <input
                         type="text"
@@ -291,10 +292,11 @@ const ViewEditStaff = ({ isOpen, onClose, staffData }) => {
 					  </div>				
 		 
                 <div>
-                  <label className="block text-sm font-medium leading-6 text-gray-900">Job Title</label>
+                  <label className="block text-sm font-medium leading-6 text-gray-900">Job Title <span className="text-red-500">*</span></label>
                   <div className="mt-1">
 					<select
                         name="role_title"
+						required
                         disabled={!isEditing} 
                         value={formData.role_title}
                         onChange={handleChange} 
