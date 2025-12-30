@@ -45,7 +45,10 @@ export const getIO = () => {
 // Emit notification to specific user
 export const emitNotificationToUser = (userId, event, data) => {
   if (io) {
+    console.log(`Emitting ${event} to user:${userId}`, data);
     io.to(`user:${userId}`).emit(event, data);
+  } else {
+    console.warn('Socket.io not initialized, cannot emit notification');
   }
 };
 

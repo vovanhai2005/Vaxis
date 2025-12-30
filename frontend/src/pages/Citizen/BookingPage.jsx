@@ -44,10 +44,58 @@ const BookingPage = () => {
 
   const [appointmentDate, setAppointmentDate] = useState('')
   const [notes, setNotes] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [dateError, setDateError] = useState('')
 
   useEffect(() => {
     getCitizenProfile()
   }, [getCitizenProfile])
+
+  // Validate appointment date is not in the past
+  const validateAppointmentDate = (dateString) => {
+    if (!dateString) return false
+    const selectedDate = new Date(dateString)
+    const now = new Date()
+    
+    if (selectedDate <= now) {
+      setDateError('Please select a future date and time')
+      return false
+    }
+    
+    setDateError('')
+    return true
+  }
+
+  // Handle date change with validation
+  const handleDateChange = (date) => {
+    setAppointmentDate(date)
+    if (date) {
+      validateAppointmentDate(date)
+    } else {
+      setDateError('')
+    }
+  }
+
+  // Handle booking submission
+  const handleSubmitBooking = async () => {
+    if (!validateAppointmentDate(appointmentDate)) {
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      await makeAppointment(appointmentDate, notes, () => {
+        // Clear all data after successful booking
+        setAppointmentDate('')
+        setNotes('')
+        setDateError('')
+      })
+    } catch (error) {
+      console.error('Booking error:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
@@ -115,7 +163,7 @@ const BookingPage = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-6">
-                    <p className="font-semibold text-gray-800">{Number(vaccine.price).toLocaleString('vi-VN')} VNĐ</p>
+                    <p className="font-semibold text-gray-800">{parseFloat(vaccine.price).toLocaleString('vi-VN')} VND</p>
                     <button onClick={() => removeVaccineFromCart(vaccine.id)} className="text-red-500 hover:text-red-700">
                       <Trash2 className="h-5 w-5" />
                     </button>
@@ -140,8 +188,14 @@ const BookingPage = () => {
               </label>
               <DateTimePicker
                 value={appointmentDate}
-                onChange={(date) => setAppointmentDate(date)}
+                onChange={handleDateChange}
               />
+              {dateError && (
+                <p className="text-red-500 text-sm mt-2 flex items-center gap-1">
+                  <Info className="h-4 w-4" />
+                  {dateError}
+                </p>
+              )}
             </div>
           </div>
           <div className="mt-6">
@@ -168,20 +222,26 @@ const BookingPage = () => {
             </div>
             <div className="text-right">
               <p className="text-sm opacity-90">Total Cost</p>
-              <p className="text-3xl font-bold">{totalCost.toLocaleString('vi-VN')} VNĐ</p>
+              <p className="text-3xl font-bold">{totalCost.toLocaleString('vi-VN')} VND</p>
             </div>
           </div>
           <div className="mt-6 pt-6 border-t border-white/20">
             <button
-              onClick={() => makeAppointment(appointmentDate, notes, () => {
-                setAppointmentDate('')
-                setNotes('')
-              })}
-              disabled={!appointmentDate || selectedVaccines.length === 0}
+              onClick={handleSubmitBooking}
+              disabled={!appointmentDate || selectedVaccines.length === 0 || isSubmitting || !!dateError}
               className="w-full bg-white text-teal-600 font-bold py-4 rounded-lg text-lg hover:bg-gray-100 transition-all transform hover:scale-105 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              <Check className="h-6 w-6" />
-              Confirm & Submit Booking
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Check className="h-6 w-6" />
+                  Confirm & Submit Booking
+                </>
+              )}
             </button>
           </div>
         </div>

@@ -235,10 +235,6 @@ const VaccinationCertificateTemplate = forwardRef(({ userProfile, appointment },
                 <span style={{ fontWeight: '600' }}>Địa chỉ:</span> 268 Lý Thường Kiệt, Phường 14, Quận 10, TP.HCM
               </p>
             </div>
-
-            <div style={styles.qrSection}>
-                <div style={styles.qrPlaceholder}>QR CODE</div>
-            </div>
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>

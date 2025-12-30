@@ -451,7 +451,7 @@ const UpcomingAppointmentsPage = () => {
                           >
                             <Eye size={18} />
                           </button>
-                          {appointment.status === 'booked' && (
+                          {/* {appointment.status === 'booked' && (
                             <button
                               onClick={() => handleCheckIn(appointment)}
                               className="text-green-600 hover:text-green-900 p-1 hover:bg-green-50 rounded"
@@ -459,7 +459,7 @@ const UpcomingAppointmentsPage = () => {
                             >
                               <CheckCircle size={18} />
                             </button>
-                          )}
+                          )} */}
                         </div>
                       </td>
                     </tr>

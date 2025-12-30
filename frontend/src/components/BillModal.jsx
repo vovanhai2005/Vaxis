@@ -5,7 +5,7 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
   if (!isOpen || !billData) return null;
 
   const formatCurrency = (cents) => {
-    return `$${(cents / 100).toFixed(2)}`;
+    return `${(cents / 100).toLocaleString('vi-VN')} VND`;
   };
 
   const formatDate = (dateString) => {
@@ -106,7 +106,7 @@ const BillModal = ({ isOpen, onClose, billData, onPayment }) => {
                 <span className="text-lg font-semibold text-gray-700">Total Amount:</span>
               </div>
               <span className="text-3xl font-bold text-blue-600">
-                {Number(billData.amount_cents).toLocaleString('vi-VN')}
+                {Number(billData.amount_cents).toLocaleString('vi-VN')} VND
               </span>
             </div>
           </div>

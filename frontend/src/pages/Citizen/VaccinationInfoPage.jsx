@@ -35,7 +35,7 @@ const VaccineDetailModal = ({ vaccine, onClose }) => {
             </div>
 
             <div className="mt-8">
-              <p className="text-teal-600 font-bold text-4xl">{Number(vaccine.price).toLocaleString('vi-VN')} VNĐ</p>
+              <p className="text-teal-600 font-bold text-4xl">{parseFloat(vaccine.price).toLocaleString('vi-VN')} VND</p>
             </div>
           </div>
           <div className="hidden md:block">
@@ -61,7 +61,7 @@ const VaccineCard = ({ vaccine, onViewDetail }) => {
         <p className="text-teal-500 bg-teal-50 text-xs font-bold px-3 py-1 rounded-full self-start">{vaccine.disease_type}</p>
         <h3 className="font-bold text-xl text-gray-800 mt-3">{vaccine.name}</h3>
         <p className="text-gray-500 text-sm mt-1 flex-grow">{vaccine.description}</p>
-        <p className="text-teal-600 font-bold text-2xl mt-4">{vaccine.price ? Number(vaccine.price).toLocaleString('vi-VN') : ''} VNĐ</p>
+        <p className="text-teal-600 font-bold text-2xl mt-4">{parseFloat(vaccine.price).toLocaleString('vi-VN')} VND</p>
         <div className="grid grid-cols-2 gap-3 mt-6">
           <button
             onClick={() => onViewDetail(vaccine)}

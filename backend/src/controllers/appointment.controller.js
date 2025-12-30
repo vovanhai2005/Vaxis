@@ -1,5 +1,6 @@
 import { sql } from "../config/db.js";
 import { getCache, setCache, deleteCache, cacheKeys } from "../lib/cache.js";
+import { emitNotificationToUser } from "../lib/socket.js";
 
 export const makeAppointment = async (req, res) => {
   try {
@@ -164,7 +165,7 @@ export const upcomingAppointments = async (req, res) => {
       LEFT JOIN administrations ad ON a.id = ad.appointment_id
       LEFT JOIN employees e ON ad.doctor_id = e.id
       LEFT JOIN users doc_user ON e.user_id = doc_user.id
-      WHERE a.scheduled_at > ${now} AND a.status IN ('booked', 'checked_in', 'administered')
+      WHERE a.scheduled_at > ${now} AND a.status IN ('booked', 'checked_in', 'administered', 'completed')
       GROUP BY a.id, u.full_name, a.scheduled_at, a.status, a.notes, u.phone, c.address, c.national_id, doc_user.full_name, e.employee_number
       ORDER BY a.scheduled_at ASC
       LIMIT 10;
@@ -318,6 +319,50 @@ export const updateAppointmentStatus = async (req, res) => {
     `
     );
     await Promise.all(queries);
+
+    // Get citizen details for notification
+    const citizenDetails = await sql`
+      SELECT u.full_name, u.id as user_id
+      FROM citizens c
+      JOIN users u ON c.user_id = u.id
+      WHERE c.id = ${citizenId}
+    `;
+
+    const citizenName = citizenDetails[0]?.full_name || 'A citizen';
+    const vaccineNames = await sql`
+      SELECT v.name
+      FROM appointment_vaccines av
+      JOIN vaccines v ON av.vaccine_id = v.id
+      WHERE av.appointment_id = ${appointmentId}
+    `;
+    const vaccineList = vaccineNames.map(v => v.name).join(', ');
+
+    // Create notification for the assigned doctor
+    const notificationTitle = 'New Patient Checked In';
+    const notificationMessage = `${citizenName} has checked in for appointment and has been assigned to you. Vaccines: ${vaccineList}`;
+    
+    const createdNotification = await sql`
+      INSERT INTO notifications (user_id, type, title, message, related_id)
+      VALUES (${assignedDoctor.user_id}, 'appointment', ${notificationTitle}, ${notificationMessage}, ${appointmentId})
+      RETURNING *
+    `;
+
+    // Emit real-time notification to the doctor
+    try {
+      emitNotificationToUser(assignedDoctor.user_id, 'notification:new', {
+        id: createdNotification[0].id,
+        type: 'appointment',
+        title: notificationTitle,
+        message: notificationMessage,
+        related_id: appointmentId,
+        created_at: createdNotification[0].created_at,
+        is_read: false,
+        id: createdNotification[0].id
+      });
+    } catch (socketError) {
+      console.error('Error emitting socket notification:', socketError);
+      // Continue even if socket fails - notification is still in database
+    }
 
     res.status(200).json({
       message: "Check-in successful",

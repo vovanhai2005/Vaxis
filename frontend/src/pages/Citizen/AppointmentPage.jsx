@@ -132,14 +132,14 @@ const AppointmentPage = () => {
       return matchesSearch && matchesFilter
     })
 
-  // Sort appointments: upcoming first, then by date
+  // Sort appointments: earlier dates first
   const sortedAppointments = [...filteredAppointments].sort((a, b) => {
     const dateA = new Date(a.scheduled_at)
     const dateB = new Date(b.scheduled_at)
     // Prioritize booked/checked_in appointments
     if (a.status === 'booked' && b.status !== 'booked') return -1
     if (b.status === 'booked' && a.status !== 'booked') return 1
-    return dateB - dateA
+    return dateA - dateB
   })
 
   const now = new Date()
@@ -391,7 +391,7 @@ const AppointmentPage = () => {
                         {totalCost > 0 && (
                           <div className="text-right">
                             <p className="text-xs text-gray-500 font-medium mb-1">Total Cost</p>
-                            <p className="text-3xl font-bold text-emerald-600">{totalCost.toLocaleString('vi-VN')} VNĐ</p>
+                            <p className="text-3xl font-bold text-emerald-600">{totalCost.toLocaleString('vi-VN')} VND</p>
                           </div>
                         )}
                       </div>

@@ -30,7 +30,7 @@ import { Toaster } from 'react-hot-toast'
 const App = () => {
   const { authUser, checkAuth, isCheckingAuth } = useAuthStore()
   const { getCitizenProfile } = useUserStore()
-  const { initSocket, disconnectSocket, getUnreadCount } = useNotificationStore()
+  const { initSocket, disconnectSocket, getUnreadCount, getNotifications } = useNotificationStore()
 
   useEffect(() => {
     checkAuth()
@@ -47,13 +47,15 @@ const App = () => {
     if (authUser) {
       initSocket(authUser.id);
       getUnreadCount();
+      // Load initial notifications
+      getNotifications({ limit: 20 });
       
       // Cleanup on unmount or logout
       return () => {
         disconnectSocket(authUser.id);
       };
     }
-  }, [authUser, initSocket, disconnectSocket, getUnreadCount]);
+  }, [authUser, initSocket, disconnectSocket, getUnreadCount, getNotifications]);
 
   console.log( authUser ? "True" : "False");
 

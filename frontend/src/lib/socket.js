@@ -1,10 +1,12 @@
 import { io } from "socket.io-client";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 let socket = null;
 
 export const initSocket = () => {
   if (!socket) {
-    socket = io("http://localhost:8000", {
+    socket = io(API_URL, {
       autoConnect: false,
       withCredentials: true,
     });
@@ -39,9 +41,17 @@ export const connectSocket = (userId) => {
     socketInstance.connect();
   }
 
-  // Join user-specific room
+  // Join user-specific room after connection is established
   if (userId) {
-    socketInstance.emit("join", userId);
+    if (socketInstance.connected) {
+      socketInstance.emit("join", userId);
+    } else {
+      // Wait for connection before joining room
+      socketInstance.once("connect", () => {
+        socketInstance.emit("join", userId);
+        console.log(`Socket connected and joined room for user ${userId}`);
+      });
+    }
   }
 
   return socketInstance;
@@ -60,21 +70,29 @@ export const disconnectSocket = (userId) => {
 // Listen to notification events
 export const onNewNotification = (callback) => {
   const socketInstance = getSocket();
-  socketInstance.on("notification:new", callback);
+  // Remove any existing listener to prevent duplicates
+  socketInstance.off("notification:new");
+  socketInstance.on("notification:new", (data) => {
+    console.log("Socket received notification:new event:", data);
+    callback(data);
+  });
 };
 
 export const onNotificationRead = (callback) => {
   const socketInstance = getSocket();
+  socketInstance.off("notification:read");
   socketInstance.on("notification:read", callback);
 };
 
 export const onNotificationReadAll = (callback) => {
   const socketInstance = getSocket();
+  socketInstance.off("notification:readAll");
   socketInstance.on("notification:readAll", callback);
 };
 
 export const onNotificationDeleted = (callback) => {
   const socketInstance = getSocket();
+  socketInstance.off("notification:deleted");
   socketInstance.on("notification:deleted", callback);
 };
 

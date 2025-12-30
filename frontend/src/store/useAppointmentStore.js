@@ -11,7 +11,7 @@ export const useAppointmentStore = create((set, get) => ({
 	isLoadingStats: false,
     isLoadingUpcoming: false,
     // Make an appointment
-    makeAppointment: async (scheduledAt, notes) => {
+    makeAppointment: async (scheduledAt, notes, onSuccess) => {
         const { selectedVaccines } = useVaccineStore.getState()
         if (selectedVaccines.length === 0) {
             toast.error('No vaccines selected for appointment')
@@ -33,6 +33,10 @@ export const useAppointmentStore = create((set, get) => ({
             toast.success('Appointment made successfully')
             // Clear cart after successful appointment
             useVaccineStore.getState().clearCart();
+            // Call the success callback if provided
+            if (onSuccess && typeof onSuccess === 'function') {
+                onSuccess();
+            }
         } catch (error) {
             console.error('Error making appointment:', error)
             toast.error(error.response?.data?.message || 'Failed to make appointment')

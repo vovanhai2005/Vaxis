@@ -110,11 +110,12 @@ export const createAdministration = async (req, res) => {
 
     let totalAmount = 0;
     details.forEach((item) => {
-      const priceStr = String(item.price).replace(/[^0-9.]/g, "");
-      const priceNum = parseFloat(priceStr);
+      // Ensure price is treated as integer VND (no decimals)
+      const priceStr = String(item.price).replace(/[^0-9]/g, "");
+      const priceNum = parseInt(priceStr, 10);
 
       if (!isNaN(priceNum)) {
-        totalAmount += Math.round(priceNum * 100);
+        totalAmount += priceNum;
       }
     });
 
@@ -146,41 +147,59 @@ export const createAdministration = async (req, res) => {
 export const searchCitizensByNationalId = async (req, res) => {
   try {
     const { nationalId } = req.query;
+    // fetch citizen information
+    const citizenResult = await sql`
+      SELECT 
+        c.id,
+        u.full_name,
+        u.dob,
+        u.phone,
+        u.email,
+        c.national_id,
+        c.address,
+        c.gender,
+        c.blood_type
+      FROM citizens c
+      JOIN users u ON c.user_id = u.id
+      WHERE c.national_id = ${nationalId} LIMIT 1
+    `;
 
-    const results = await sql`
-            SELECT
-                u.full_name as full_name,
-                u.dob as dob,
-                u.phone,
-                c.address,
-                c.gender,
-                c.blood_type,
-                string_agg(v.name, ', ') AS vaccine_names,
-                scheduled_at,
-                status,
-                notes,
-                ad.dose_number,
-                ad.temperature,
-                ad.blood_pressure,
-                ad.adverse_events,
-                ad.bill_id
-            FROM appointments a
-            JOIN citizens c ON a.citizen_id = c.id
-            LEFT JOIN administrations ad ON a.id = ad.appointment_id
-            JOIN users u ON c.user_id = u.id
-            LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
-            LEFT JOIN vaccines v ON av.vaccine_id = v.id
-            WHERE c.national_id = ${nationalId}
-            GROUP BY full_name, scheduled_at, status, notes, ad.dose_number, ad.temperature,
-            ad.adverse_events, ad.bill_id, c.address, c.gender, dob, u.phone, c.blood_type, ad.blood_pressure
-            ORDER BY scheduled_at DESC
-        `;
+    if (citizenResult.length === 0) {
+      return res.status(404).json({ message: "Citizen not found" });
+    }
+    const citizenId = citizenResult[0].id;
 
-    res.status(200).json(results);
+    // Fetch appointments for the citizen
+    const appointments = await sql`
+      SELECT 
+          a.id,
+          a.scheduled_at,
+          a.status,
+          a.notes,
+          ad.dose_number,
+          ad.temperature,
+          ad.blood_pressure,
+          ad.adverse_events,
+          ad.bill_id,
+          json_agg(DISTINCT jsonb_build_object('id', v.id, 'name', v.name, 'price', v.price, 'manufacturer', v.manufacturer)) AS vaccines,
+          doc_user.full_name AS administered_by
+      FROM appointments a
+      LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
+      LEFT JOIN vaccines v ON av.vaccine_id = v.id
+      LEFT JOIN administrations ad ON a.id = ad.appointment_id
+      LEFT JOIN employees e ON ad.doctor_id = e.id
+      LEFT JOIN users doc_user ON e.user_id = doc_user.id
+      WHERE a.citizen_id = ${citizenId}
+      GROUP BY a.id, doc_user.full_name, ad.dose_number, ad.temperature, ad.blood_pressure, ad.adverse_events, ad.bill_id
+      ORDER BY a.scheduled_at DESC
+    `;
+
+    res.status(200).json({ citizen: citizenResult[0], appointments });
   } catch (error) {
     console.error("Error searching citizens:", error);
     res.status(500).json({ message: "Internal server error" });
   }
+
 };
 
 export const getBillDetails = async (req, res) => {
