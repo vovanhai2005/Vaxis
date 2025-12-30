@@ -220,6 +220,10 @@ export const vaccinationStats = async (req, res) => {
         v.id,
         v.code,
         v.name,
+        v.description,
+        v.manufacturer,
+        v.price,
+        v.image_url,
         
         -- 1. TỔNG SỐ MŨI ĐÃ TIÊM
         COALESCE(stats.total_doses, 0)::int AS doses_given,

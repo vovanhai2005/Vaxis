@@ -63,6 +63,20 @@ export const useVaccineStore = create((set, get) => ({
         }
     },
 
+    // Get vaccine for employee
+    getVaccineForEmployee: async (params) => {
+        try {
+            const res = await axiosInstance.get(`reports/vaccinations`, { params });
+            set({ vaccines: res.data })
+            return res.data
+        } catch (error) {
+            console.error('Error fetching vaccine for employee:', error)
+            toast.error(error.response?.data?.message || 'Failed to load vaccine details')
+            return null
+        }
+    },
+
+
     // Get vaccine by ID
     getVaccineByID: async (id) => {
         try {

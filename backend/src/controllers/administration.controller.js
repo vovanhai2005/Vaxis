@@ -76,19 +76,19 @@ export const createAdministration = async (req, res) => {
       ORDER BY av.vaccine_id, vl.quantity;
     `;
 
-    if (vaccineDetails.length > 0) {
-      // Step 4: Decrement vaccine quantity for each vaccine in the appointment
-      const updateQueries = vaccineDetails.map(
-        (v) => sql`
-          UPDATE vaccine_lots
-          SET quantity = quantity - 1
-          WHERE vaccine_lots.id = ${v.vaccine_lot_id} AND quantity > 0
-          RETURNING id, quantity;
-        `
-      );
+    // if (vaccineDetails.length > 0) {
+    //   // Step 4: Decrement vaccine quantity for each vaccine in the appointment
+    //   const updateQueries = vaccineDetails.map(
+    //     (v) => sql`
+    //       UPDATE vaccine_lots
+    //       SET quantity = quantity - 1
+    //       WHERE vaccine_lots.id = ${v.vaccine_lot_id} AND quantity > 0
+    //       RETURNING id, quantity;
+    //     `
+    //   );
 
-      await Promise.all(updateQueries);
-    }
+    //   await Promise.all(updateQueries);
+    // }
 
     // Step 5: Create bill
     const billingCitizenData = await sql`
