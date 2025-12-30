@@ -234,9 +234,9 @@ const ViewEditVaccine = ({ isOpen, onClose, vaccineData }) => {
                     <div className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
                         {/* Các ô input giữ nguyên logic disable={!isEditing} */}
                         <div>
-                            <label className="block text-sm font-medium leading-6 text-gray-900">Code</label>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">Code <span className="text-red-500">*</span></label>
                             <div className="mt-1">
-                                <input type="text" name="code" disabled={!isEditing} value={formData.code} onChange={handleChange}
+                                <input type="text" name="code" required disabled={!isEditing} value={formData.code} onChange={handleChange}
                                     className={`block w-full px-3 py-2.5 border outline-none rounded-xl sm:text-sm ${isEditing ? 'border-gray-300 focus:ring-teal-500 bg-white' : 'border-transparent bg-gray-100 text-gray-600 cursor-default'}`} />
                             </div>
                         </div>
@@ -248,16 +248,16 @@ const ViewEditVaccine = ({ isOpen, onClose, vaccineData }) => {
                             </div>
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium leading-6 text-gray-900">Vaccine Name</label>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">Vaccine Name <span className="text-red-500">*</span></label>
                             <div className="mt-1">
-                                <input type="text" name="name" disabled={!isEditing} value={formData.name} onChange={handleChange}
+                                <input type="text" name="name" required disabled={!isEditing} value={formData.name} onChange={handleChange}
                                     className={`block w-full px-3 py-2.5 border outline-none rounded-xl sm:text-sm ${isEditing ? 'border-gray-300 focus:ring-teal-500 bg-white' : 'border-transparent bg-gray-100 text-gray-800 cursor-default'}`} />
                             </div>
                         </div>
                         <div className="sm:col-span-2">
-                            <label className="block text-sm font-medium leading-6 text-gray-900">Manufacturer</label>
+                            <label className="block text-sm font-medium leading-6 text-gray-900">Manufacturer <span className="text-red-500">*</span></label>
                             <div className="mt-1">
-                                <input type="text" name="manufacturer" disabled={!isEditing} value={formData.manufacturer} onChange={handleChange}
+                                <input type="text" name="manufacturer" required disabled={!isEditing} value={formData.manufacturer} onChange={handleChange}
                                     className={`block w-full px-3 py-2.5 border outline-none rounded-xl sm:text-sm ${isEditing ? 'border-gray-300 focus:ring-teal-500 bg-white' : 'border-transparent bg-gray-100 text-gray-800 cursor-default'}`} />
                             </div>
                         </div>

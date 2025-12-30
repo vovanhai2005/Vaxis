@@ -22,6 +22,7 @@ export const getVaccines = async (req, res) => {
             FROM vaccines v
             LEFT JOIN vaccine_lots vl ON v.id = vl.vaccine_id
             GROUP BY v.id
+			ORDER BY v.id ASC;
         `;
         
         // Cache for 10 minutes
