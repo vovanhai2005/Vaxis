@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import SignUpPage from './pages/SignUpPage'
 import LoginPage from './pages/LoginPage'
+import CompleteProfilePage from './pages/CompleteProfilePage'
 import DashboardPage from './pages/Citizen/DashboardPage'
 import ProfilePage from './pages/Citizen/ProfilePage'
 import BookingPage from './pages/Citizen/BookingPage'
@@ -59,6 +60,9 @@ const App = () => {
 
   console.log( authUser ? "True" : "False");
 
+  // Check if citizen needs to complete profile
+  const needsProfileCompletion = authUser && authUser.role === 'citizen' && !authUser.isProfileComplete;
+
   if (isCheckingAuth && !authUser) {
     return (
       <div className="h-screen flex items-center justify-center bg-gray-900 text-gray-200">
@@ -69,21 +73,56 @@ const App = () => {
 
   return (
     <div className="h-screen w-full overflow-hidden bg-gradient-to-br from-gray-900 via-slate-800 to-gray-900">
-      {authUser && <Navbar />}
+      {authUser && !needsProfileCompletion && <Navbar />}
       
       {/* Main content area - takes exactly remaining space */}
-      <div className={`h-full overflow-y-auto ${authUser ? 'ml-64' : 'w-full'}`}>
+      <div className={`h-full overflow-y-auto ${authUser && !needsProfileCompletion ? 'ml-64' : 'w-full'}`}>
         <Routes>
           {/* Public Routes */}
           <Route path="/signup" element={!authUser ? <SignUpPage /> : <Navigate to="/" />} />
           <Route path="/login" element={!authUser ? <LoginPage /> : <Navigate to="/" />} />
           
-          {/* Citizen Routes */}
-          <Route path="/" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <DashboardPage /> : authUser.role === 'employee' ? <EmployeeDashboardPage /> : authUser.role === 'manager' ? <Navigate to="/manager" /> :<Navigate to="/login" />} />
-          <Route path="/profile/:id?" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <ProfilePage /> : authUser.role === 'employee' ? <EmployeeProfilePage /> : <Navigate to="/login" />} />
-          <Route path="/booking" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <BookingPage /> : <Navigate to="/login" />} />
-          <Route path="/appointment" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <AppointmentPage /> : <Navigate to="/login" />} />
-          <Route path="/vaccination-info" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'citizen' ? <VaccinationInfoPage /> : <Navigate to="/login" />} />
+          {/* Complete Profile Route - for citizens with incomplete profiles */}
+          <Route path="/complete-profile" element={
+            !authUser ? <Navigate to="/login" /> : 
+            needsProfileCompletion ? <CompleteProfilePage /> : 
+            <Navigate to="/" />
+          } />
+          
+          {/* Citizen Routes - redirect to complete-profile if profile is incomplete */}
+          <Route path="/" element={
+            !authUser ? <Navigate to="/login" /> : 
+            needsProfileCompletion ? <Navigate to="/complete-profile" /> :
+            authUser.role === 'citizen' ? <DashboardPage /> : 
+            authUser.role === 'employee' ? <EmployeeDashboardPage /> : 
+            authUser.role === 'manager' ? <Navigate to="/manager" /> : 
+            <Navigate to="/login" />
+          } />
+          <Route path="/profile/:id?" element={
+            !authUser ? <Navigate to="/login" /> : 
+            needsProfileCompletion ? <Navigate to="/complete-profile" /> :
+            authUser.role === 'citizen' ? <ProfilePage /> : 
+            authUser.role === 'employee' ? <EmployeeProfilePage /> : 
+            <Navigate to="/login" />
+          } />
+          <Route path="/booking" element={
+            !authUser ? <Navigate to="/login" /> : 
+            needsProfileCompletion ? <Navigate to="/complete-profile" /> :
+            authUser.role === 'citizen' ? <BookingPage /> : 
+            <Navigate to="/login" />
+          } />
+          <Route path="/appointment" element={
+            !authUser ? <Navigate to="/login" /> : 
+            needsProfileCompletion ? <Navigate to="/complete-profile" /> :
+            authUser.role === 'citizen' ? <AppointmentPage /> : 
+            <Navigate to="/login" />
+          } />
+          <Route path="/vaccination-info" element={
+            !authUser ? <Navigate to="/login" /> : 
+            needsProfileCompletion ? <Navigate to="/complete-profile" /> :
+            authUser.role === 'citizen' ? <VaccinationInfoPage /> : 
+            <Navigate to="/login" />
+          } />
           
           {/* Employee Routes */}
           <Route path="/lookup-citizen" element={!authUser ? <Navigate to="/login" /> : authUser.role === 'employee' ? <LookupCitizenProfilePage /> : <Navigate to="/login" />} />
@@ -100,8 +139,8 @@ const App = () => {
         </Routes>
       </div>
       
-      {/* AI Chatbot - available for authenticated users */}
-      {authUser && <AIChatbot />}
+      {/* AI Chatbot - available for authenticated users with complete profiles */}
+      {authUser && !needsProfileCompletion && <AIChatbot />}
       
       <Toaster 
         toastOptions={{

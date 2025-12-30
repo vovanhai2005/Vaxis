@@ -90,11 +90,77 @@ export const logout = (req, res) => {
     }
 };
 
-export const checkAuth = (req, res) => {
+export const checkAuth = async (req, res) => {
     try {
-        res.status(200).json(req.user);
+        // For citizens, check if profile is complete
+        if (req.user.role === 'citizen') {
+            const citizenData = await sql`
+                SELECT c.national_id, u.full_name, u.phone, u.dob
+                FROM citizens c
+                JOIN users u ON c.user_id = u.id
+                WHERE u.id = ${req.user.id}
+            `;
+            
+            const isProfileComplete = citizenData.length > 0 && 
+                citizenData[0].national_id && 
+                citizenData[0].full_name && 
+                citizenData[0].phone && 
+                citizenData[0].dob;
+            
+            return res.status(200).json({
+                ...req.user,
+                isProfileComplete
+            });
+        }
+        
+        res.status(200).json({
+            ...req.user,
+            isProfileComplete: true
+        });
     } catch (error) {
         console.log("Error in checkAuth controller:", error.message);
         res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+export const completeProfile = async (req, res) => {
+    try {
+        const { fullName, nationalId, dob, phone } = req.body;
+        const userId = req.user.id;
+
+        // Validate required fields
+        if (!fullName || !nationalId || !dob || !phone) {
+            return res.status(400).json({ message: 'All fields are required.' });
+        }
+
+        // Check if national ID is already used by another citizen
+        const existingCitizen = await sql`
+            SELECT c.id FROM citizens c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.national_id = ${nationalId} AND u.id != ${userId}
+        `;
+        
+        if (existingCitizen.length > 0) {
+            return res.status(400).json({ message: 'National ID is already registered to another user.' });
+        }
+
+        // Update user table
+        await sql`
+            UPDATE users
+            SET full_name = ${fullName}, phone = ${phone}, dob = ${dob}, updated_at = NOW()
+            WHERE id = ${userId}
+        `;
+
+        // Update citizen table
+        await sql`
+            UPDATE citizens
+            SET national_id = ${nationalId}
+            WHERE user_id = ${userId}
+        `;
+
+        res.status(200).json({ message: 'Profile completed successfully.' });
+    } catch (error) {
+        console.error('Error completing profile:', error);
+        res.status(500).json({ message: 'Internal server error.' });
     }
 };
