@@ -165,7 +165,7 @@ export const upcomingAppointments = async (req, res) => {
       LEFT JOIN administrations ad ON a.id = ad.appointment_id
       LEFT JOIN employees e ON ad.doctor_id = e.id
       LEFT JOIN users doc_user ON e.user_id = doc_user.id
-      WHERE a.scheduled_at > ${now} AND a.status IN ('booked', 'checked_in', 'administered')
+      WHERE a.scheduled_at > ${now} AND a.status IN ('booked', 'checked_in', 'administered', 'completed')
       GROUP BY a.id, u.full_name, a.scheduled_at, a.status, a.notes, u.phone, c.address, c.national_id, doc_user.full_name, e.employee_number
       ORDER BY a.scheduled_at ASC
       LIMIT 10;
