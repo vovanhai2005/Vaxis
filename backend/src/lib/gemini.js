@@ -1,7 +1,9 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import OpenAI from 'openai';
 import { sql } from '../config/db.js';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 // Fetch all vaccines from database
 const getVaccinesData = async () => {
@@ -31,7 +33,7 @@ export const getVaccinationAdvice = async (userMessage, conversationHistory = []
   const vaccineContext = vaccines.map(v => `
     - ${v.name} (Code: ${v.code || 'N/A'}): ${v.description || 'No description available'}
       Manufacturer: ${v.manufacturer || 'N/A'}
-      Price: $${v.price || 'N/A'}
+      Price: ${v.price ? `${v.price.toLocaleString('vi-VN')} VND` : 'N/A'}
   `).join('\n');
 
   const systemPrompt = `You are a knowledgeable and helpful medical assistant specializing in vaccination and general health information for a healthcare vaccination management system.
@@ -75,25 +77,29 @@ GUIDELINES:
 Example responses:
 - "The COVID-19 mRNA vaccines work by delivering genetic instructions to your cells to produce the spike protein, which triggers a strong immune response without causing infection..."
 - "Common side effects of vaccines include soreness at injection site, mild fever, and fatigue. These typically resolve within 1-2 days and indicate your immune system is responding..."
-- "We offer [vaccine name] manufactured by [manufacturer] for $[price]. It requires [X] doses. Would you like to book an appointment?"
+- "We offer [vaccine name] manufactured by [manufacturer] for [price] VND. It requires [X] doses. Would you like to book an appointment?"
 - "For your symptoms of [symptoms], these could indicate [condition]. I recommend [advice]. If symptoms worsen or include [warning signs], seek immediate medical care..."
 `;
 
-  const model = genAI.getGenerativeModel({ 
-    model: "gemini-2.0-flash",
-    systemInstruction: systemPrompt
-  });
-
-  // Build conversation history for Gemini format
-  const history = conversationHistory.map(message => ({
-    role: message.role === 'assistant' ? 'model' : 'user',
-    parts: [{ text: message.content }]
-  }));
+  // Build conversation history for OpenAI format
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...conversationHistory.map(msg => ({
+      role: msg.role === 'assistant' ? 'assistant' : 'user',
+      content: msg.content
+    })),
+    { role: 'user', content: userMessage }
+  ];
 
   try {
-    const chat = model.startChat({ history });
-    const result = await chat.sendMessage(userMessage);
-    const response = result.response.text();
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 1000
+    });
+
+    const response = completion.choices[0].message.content;
 
     return {
       response,
@@ -104,11 +110,16 @@ Example responses:
       ]
     };
   } catch (error) {
-    console.error('Gemini AI Error:', error);
+    console.error('OpenAI Error:', error);
     
     // Handle rate limit errors specifically
     if (error.status === 429) {
       throw new Error('AI service is temporarily unavailable due to rate limits. Please try again in a moment.');
+    }
+    
+    // Handle authentication errors
+    if (error.status === 401) {
+      throw new Error('AI service authentication failed. Please contact administrator.');
     }
     
     throw new Error('Failed to get AI response. Please try again later.');
