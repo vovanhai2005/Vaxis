@@ -21,6 +21,7 @@ export const getVaccines = async (req, res) => {
                 END), 0)::int AS available_quantity
             FROM vaccines v
             LEFT JOIN vaccine_lots vl ON v.id = vl.vaccine_id
+            WHERE v.active = true
             GROUP BY v.id
 			ORDER BY v.id ASC;
         `;
