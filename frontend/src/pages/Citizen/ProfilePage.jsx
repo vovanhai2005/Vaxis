@@ -387,7 +387,17 @@ const ProfilePage = () => {
                   <Mail className="h-4 w-4" />
                   Email Address
                 </label>
-                <p className="text-gray-800 font-medium">{formData.email}</p>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    disabled
+                    className="w-full p-3 rounded-lg border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed focus:outline-none"
+                  />
+                ) : (
+                  <p className="text-gray-800 font-medium">{formData.email}</p>
+                )}
               </div>
 
               <div>
