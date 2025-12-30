@@ -25,6 +25,7 @@
     "ioredis": "^5.8.2",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
+    "openai": "^6.15.0",
     "pg": "^8.16.3",
     "postgres": "^3.4.7",
     "socket.io": "^4.8.3"
