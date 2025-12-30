@@ -20,6 +20,7 @@ import staffRoutes from "./routes/staff.route.js";
 import aiRoutes from "./routes/ai.route.js";
 import notificationRoutes from "./routes/notification.route.js";
 import announcementRoutes from "./routes/announcement.route.js";
+import newsRoutes from "./routes/news.route.js";
 import cookieParser from "cookie-parser";
 
 const PORT = process.env.PORT || 8000;
@@ -137,9 +138,9 @@ async function initDB() {
                 code TEXT UNIQUE,
                 name TEXT NOT NULL,
                 image_url TEXT,
-                manufacturer TEXT,
+                manufacturer TEXT NOT NULL,
                 description TEXT,
-                price NUMERIC(10,2) DEFAULT 0,
+                price NUMERIC(15,0) DEFAULT 0,
 				active BOOLEAN DEFAULT TRUE,
                 created_at TIMESTAMPTZ DEFAULT NOW()
             )
@@ -320,6 +321,7 @@ app.use("/api/staff", staffRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/news", newsRoutes);
 
 // Create HTTP server and initialize Socket.io
 const server = createServer(app);

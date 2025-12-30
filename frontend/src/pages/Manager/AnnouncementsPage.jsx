@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Megaphone, Plus, Edit2, Trash2, Users, Clock, AlertCircle, CheckCircle, X } from 'lucide-react'
 import { useAnnouncementStore } from '../../store/useAnnouncementStore'
 import Header from '../../components/Header'
+import DeleteConfirmationModal from '../../components/DeleteConfirmationModal'
 import toast from 'react-hot-toast'
 
 const AnnouncementsPage = () => {
@@ -9,6 +10,9 @@ const AnnouncementsPage = () => {
   
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [editingAnnouncement, setEditingAnnouncement] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [deletingAnnouncement, setDeletingAnnouncement] = useState(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -64,10 +68,29 @@ const AnnouncementsPage = () => {
     setShowCreateModal(true)
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this announcement?')) {
-      await deleteAnnouncement(id)
+  const handleDelete = (announcement) => {
+    setDeletingAnnouncement(announcement)
+    setShowDeleteModal(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deletingAnnouncement) return
+    
+    setIsDeleting(true)
+    try {
+      await deleteAnnouncement(deletingAnnouncement.id)
+      setShowDeleteModal(false)
+      setDeletingAnnouncement(null)
+    } catch (error) {
+      // Error already handled in store
+    } finally {
+      setIsDeleting(false)
     }
+  }
+
+  const cancelDelete = () => {
+    setShowDeleteModal(false)
+    setDeletingAnnouncement(null)
   }
 
   const getAudienceIcon = (audience) => {
@@ -211,7 +234,7 @@ const AnnouncementsPage = () => {
                         <Edit2 className="h-5 w-5" />
                       </button>
                       <button
-                        onClick={() => handleDelete(announcement.id)}
+                        onClick={() => handleDelete(announcement)}
                         className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition"
                         title="Delete"
                       >
@@ -343,6 +366,16 @@ const AnnouncementsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={cancelDelete}
+        onConfirm={confirmDelete}
+        itemName={deletingAnnouncement?.title}
+        isLoading={isDeleting}
+        isPermanent={true}
+      />
     </div>
   )
 }

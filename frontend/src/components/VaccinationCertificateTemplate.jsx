@@ -235,10 +235,6 @@ const VaccinationCertificateTemplate = forwardRef(({ userProfile, appointment },
                 <span style={{ fontWeight: '600' }}>Địa chỉ:</span> 268 Lý Thường Kiệt, Phường 14, Quận 10, TP.HCM
               </p>
             </div>
-
-            <div style={styles.qrSection}>
-                <div style={styles.qrPlaceholder}>QR CODE</div>
-            </div>
           </div>
 
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
@@ -323,7 +319,7 @@ const VaccinationCertificateTemplate = forwardRef(({ userProfile, appointment },
                         <span style={{ fontSize: '11px', color: '#6b7280' }}>{formatTime(appointment.scheduled_at)}</span>
                       </td>
                       <td style={styles.td}>{vaccine.manufacturer}</td>
-                      <td style={{ ...styles.tdCenter, fontWeight: '600', color: '#059669' }}>${parseFloat(vaccine.price || 0).toFixed(2)}</td>
+                      <td style={{ ...styles.tdCenter, fontWeight: '600', color: '#059669' }}>{parseFloat(vaccine.price || 0).toLocaleString('vi-VN')} VND</td>
                       <td style={styles.td}>{appointment.administered_by || 'Nhân viên y tế'}</td>
                     </tr>
                   ))
