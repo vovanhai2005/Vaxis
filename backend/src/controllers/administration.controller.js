@@ -110,11 +110,12 @@ export const createAdministration = async (req, res) => {
 
     let totalAmount = 0;
     details.forEach((item) => {
-      const priceStr = String(item.price).replace(/[^0-9.]/g, "");
-      const priceNum = parseFloat(priceStr);
+      // Ensure price is treated as integer VND (no decimals)
+      const priceStr = String(item.price).replace(/[^0-9]/g, "");
+      const priceNum = parseInt(priceStr, 10);
 
       if (!isNaN(priceNum)) {
-        totalAmount += Math.round(priceNum * 100);
+        totalAmount += priceNum;
       }
     });
 
