@@ -1,37 +1,37 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback } from "react";
 import { axiosInstance } from "../../lib/axios";
 import VaccinationDetails from "../../components/VaccinationDetails";
 import Header from "../../components/Header";
 import {
-  Search, Loader2, Syringe, Calendar, User, Thermometer, 
-  FileText, AlertTriangle, Hash, MapPin, Phone, Droplet, 
-  CalendarDays, UserCircle, Mail, Activity
+  Search, Loader2, Syringe, Calendar, User, Thermometer,
+  FileText, AlertTriangle, Hash, MapPin, Phone, Droplet,
+  CalendarDays, UserCircle, Mail, Activity,
+  DollarSign
 } from "lucide-react";
 import toast from "react-hot-toast";
 
 const LookUpCitizenProfile = () => {
   const [nationalId, setNationalId] = useState("");
-  const [selectedRecord, setSelectedRecord] = useState(null);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [lookupResults, setLookupResults] = useState([]);
+  const [citizen, setCitizen] = useState(null);
+  const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
-  const profile = useMemo(() => 
-    lookupResults.length > 0 ? lookupResults[0] : null,
-    [lookupResults]
-  );
-
+  // Use the new API
   const lookupCitizen = async (nationalId) => {
     setIsLoading(true);
     setHasSearched(true);
     try {
       const res = await axiosInstance.get(`/administration/search/?nationalId=${nationalId}`);
-      setLookupResults(res.data);
+      setCitizen(res.data.citizen || null);
+      setAppointments(res.data.appointments || []);
       toast.success("Search completed");
     } catch (error) {
       toast.error("Error searching for citizen profile");
-      setLookupResults([]);
+      setCitizen(null);
+      setAppointments([]);
     } finally {
       setIsLoading(false);
     }
@@ -40,12 +40,10 @@ const LookUpCitizenProfile = () => {
   const handleSearch = useCallback((e) => {
     e?.preventDefault();
     const trimmedId = nationalId.trim();
-    
     if (!trimmedId) {
       toast.error("Please enter a National ID");
       return;
     }
-    
     lookupCitizen(trimmedId);
   }, [nationalId]);
 
@@ -82,15 +80,15 @@ const LookUpCitizenProfile = () => {
         />
 
         {isLoading && <LoadingState />}
-        
-        {!isLoading && hasSearched && lookupResults.length === 0 && (
+
+        {!isLoading && hasSearched && !citizen && (
           <EmptyState nationalId={nationalId} />
         )}
 
-        {!isLoading && profile && (
+        {!isLoading && citizen && (
           <ResultsSection
-            profile={profile}
-            lookupResults={lookupResults}
+            citizen={citizen}
+            appointments={appointments}
             handleViewDetails={handleViewDetails}
           />
         )}
@@ -99,6 +97,7 @@ const LookUpCitizenProfile = () => {
           isOpen={isDetailsOpen}
           onClose={handleCloseDetails}
           data={selectedRecord}
+          citizen={citizen}
         />
       </div>
     </div>
@@ -199,24 +198,24 @@ const EmptyState = React.memo(({ nationalId }) => (
 EmptyState.displayName = 'EmptyState';
 
 // Results Section Component
-const ResultsSection = React.memo(({ profile, lookupResults, handleViewDetails }) => (
+const ResultsSection = React.memo(({ citizen, appointments, handleViewDetails }) => (
   <div className="max-w-5xl mx-auto space-y-6">
-    <ProfileCard profile={profile} />
-    <VaccinationHistoryCard lookupResults={lookupResults} handleViewDetails={handleViewDetails} />
+    <ProfileCard citizen={citizen} />
+    <VaccinationHistoryCard appointments={appointments} handleViewDetails={handleViewDetails} />
   </div>
 ));
 
 ResultsSection.displayName = 'ResultsSection';
 
 // Profile Card Component
-const ProfileCard = React.memo(({ profile }) => {
+const ProfileCard = React.memo(({ citizen }) => {
   const profileFields = [
-    { icon: User, label: 'Full Name', value: profile.full_name },
-    { icon: Phone, label: 'Phone Number', value: profile.phone },
-    { icon: CalendarDays, label: 'Date of Birth', value: formatDate(profile.dob) },
-    { icon: User, label: 'Gender', value: profile.gender, capitalize: true },
-    { icon: Droplet, label: 'Blood Type', value: profile.blood_type },
-    { icon: Mail, label: 'Email', value: profile.email },
+    { icon: User, label: 'Full Name', value: citizen.full_name },
+    { icon: Phone, label: 'Phone Number', value: citizen.phone },
+    { icon: CalendarDays, label: 'Date of Birth', value: formatDate(citizen.dob) },
+    { icon: User, label: 'Gender', value: citizen.gender, capitalize: true },
+    { icon: Droplet, label: 'Blood Type', value: citizen.blood_type },
+    { icon: Mail, label: 'Email', value: citizen.email },
   ];
 
   return (
@@ -236,13 +235,12 @@ const ProfileCard = React.memo(({ profile }) => {
         {profileFields.map((field, index) => (
           <ProfileField key={index} {...field} />
         ))}
-        
         <div className="p-3 bg-gray-50 rounded-lg md:col-span-2 lg:col-span-3">
           <div className="flex items-center gap-2 text-gray-600 text-xs mb-1">
             <MapPin className="w-3 h-3" />
             <span className="font-medium">Address</span>
           </div>
-          <p className="text-gray-900 font-semibold">{profile.address || "N/A"}</p>
+          <p className="text-gray-900 font-semibold">{citizen.address || "N/A"}</p>
         </div>
       </div>
     </div>
@@ -267,7 +265,7 @@ const ProfileField = React.memo(({ icon: Icon, label, value, capitalize }) => (
 ProfileField.displayName = 'ProfileField';
 
 // Vaccination History Card Component
-const VaccinationHistoryCard = React.memo(({ lookupResults, handleViewDetails }) => (
+const VaccinationHistoryCard = React.memo(({ appointments, handleViewDetails }) => (
   <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
     <div className="flex items-center justify-between mb-6">
       <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
@@ -275,12 +273,12 @@ const VaccinationHistoryCard = React.memo(({ lookupResults, handleViewDetails })
         Vaccination History
       </h3>
       <span className="text-sm text-gray-500 font-medium">
-        {lookupResults.length} {lookupResults.length === 1 ? 'Record' : 'Records'}
+        {appointments.length} {appointments.length === 1 ? 'Record' : 'Records'}
       </span>
     </div>
 
     <div className="space-y-4">
-      {lookupResults.map((item, index) => (
+      {appointments.map((item, index) => (
         <VaccinationRecord 
           key={item.id || item.appointment_id || index} 
           item={item} 
@@ -296,8 +294,20 @@ VaccinationHistoryCard.displayName = 'VaccinationHistoryCard';
 
 // Vaccination Record Component
 const VaccinationRecord = React.memo(({ item, index, handleViewDetails }) => {
-  const vaccines = item.vaccine_names ? item.vaccine_names.split(",").map((v) => v.trim()) : [];
-  
+  // If vaccines is an array of objects (from backend), join names
+  let vaccines = [];
+  if (Array.isArray(item.vaccines)) {
+    vaccines = item.vaccines;
+  } else if (item.vaccine_names) {
+    vaccines = item.vaccine_names.split(",").map((v) => ({ name: v.trim() }));
+  }
+
+  // Calculate total price (sum all vaccine.price if present and numeric)
+  const totalPrice = vaccines.reduce((sum, v) => {
+    const price = typeof v.price === "number" ? v.price : parseFloat(v.price);
+    return !isNaN(price) ? sum + price : sum;
+  }, 0);
+
   return (
     <div className="p-5 border border-gray-200 rounded-xl hover:shadow-md transition-shadow bg-gradient-to-br from-white to-gray-50">
       <div className="flex items-start justify-between mb-4 pb-3 border-b border-gray-100">
@@ -314,14 +324,36 @@ const VaccinationRecord = React.memo(({ item, index, handleViewDetails }) => {
       {vaccines.length > 0 && (
         <div className="mb-3">
           <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Vaccines</span>
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-col gap-2 mt-2">
             {vaccines.map((v, idx) => (
-              <span key={idx} className="inline-flex items-center gap-1 bg-teal-50 text-teal-700 px-3 py-1 rounded-full text-sm font-medium border border-teal-200">
-                <Syringe className="w-3 h-3" />
-                {v}
-              </span>
+              <div key={idx} className="bg-teal-50 border border-teal-200 rounded-lg p-2 mb-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Syringe className="w-3 h-3" />
+                  <span className="font-semibold text-teal-700">{v.name}</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {Object.entries(v).map(([key, value]) => (
+                    // Exclude 'name', 'id', and 'price'
+                    key !== "name" && key !== "id" && key !== "price" && (
+                      <DetailItem
+                        key={key}
+                        icon={FileText}
+                        label={key.charAt(0).toUpperCase() + key.slice(1)}
+                        value={value}
+                      />
+                    )
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
+          {/* Show total price if any vaccine has price */}
+          {totalPrice > 0 && (
+            <div className="flex items-center gap-2 mt-2 text-teal-700 font-semibold">
+              <DollarSign className="w-4 h-4" />
+              Total Price: {totalPrice.toLocaleString()} VND
+            </div>
+          )}
         </div>
       )}
 
@@ -330,6 +362,7 @@ const VaccinationRecord = React.memo(({ item, index, handleViewDetails }) => {
         <DetailItem icon={Thermometer} label="Temperature" value={item.temperature ? `${item.temperature}°C` : null} />
         <DetailItem icon={AlertTriangle} label="Adverse Events" value={item.adverse_events || 'None'} />
         <DetailItem icon={FileText} label="Bill ID" value={item.bill_id ? `#${item.bill_id}` : null} />
+        <DetailItem icon={User} label="Administered By" value={item.administered_by || 'N/A'} />
       </div>
 
       {item.status === "completed" && (
@@ -358,7 +391,5 @@ const DetailItem = React.memo(({ icon: Icon, label, value }) => (
 ));
 
 DetailItem.displayName = 'DetailItem';
-
-
 
 export default LookUpCitizenProfile;
