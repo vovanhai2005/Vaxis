@@ -8,8 +8,7 @@ import {
 } from 'lucide-react';
 
 const VaccineStockPage = () => {
-    const { vaccines, isLoadingVaccines, getVaccines } = useVaccineStore();
-    
+    const { vaccines, isLoadingVaccines, getVaccineForEmployee } = useVaccineStore();
     // Local state
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
@@ -20,8 +19,8 @@ const VaccineStockPage = () => {
 
     // --- 1. INITIAL LOAD ---
     useEffect(() => {
-        getVaccines();
-    }, [getVaccines]);
+        getVaccineForEmployee();
+    }, [getVaccineForEmployee]);
 
     // --- 2. FILTER & PAGINATION LOGIC ---
     useEffect(() => {
@@ -145,11 +144,11 @@ const VaccineStockPage = () => {
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm border-l border-gray-100">
                                                 <span className={`px-2 py-1 rounded-full text-xs font-bold ${
-                                                    vaccine.available_quantity > 0 
+                                                    vaccine.remaining > 0 
                                                         ? 'bg-green-100 text-green-700 border border-green-200' 
                                                         : 'bg-red-100 text-red-700 border border-red-200'
                                                 }`}>
-                                                    {vaccine.available_quantity > 0 ? `${vaccine.available_quantity} doses` : 'Out of Stock'}
+                                                    {vaccine.remaining > 0 ? `${vaccine.remaining} doses` : 'Out of Stock'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900 border-l border-gray-100">
