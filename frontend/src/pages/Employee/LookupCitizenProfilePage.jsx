@@ -12,6 +12,7 @@ import toast from "react-hot-toast";
 
 const LookUpCitizenProfile = () => {
   const [nationalId, setNationalId] = useState("");
+  const [email, setEmail] = useState("");
   const [citizen, setCitizen] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +21,14 @@ const LookUpCitizenProfile = () => {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // Use the new API
-  const lookupCitizen = async (nationalId) => {
+  const lookupCitizen = async (nationalId, email) => {
     setIsLoading(true);
     setHasSearched(true);
     try {
-      const res = await axiosInstance.get(`/administration/search/?nationalId=${nationalId}`);
+      const params = new URLSearchParams();
+      if (nationalId) params.append('nationalId', nationalId);
+      if (email) params.append('email', email);
+      const res = await axiosInstance.get(`/administration/search/?${params.toString()}`);
       setCitizen(res.data.citizen || null);
       setAppointments(res.data.appointments || []);
       toast.success("Search completed");
@@ -40,12 +44,13 @@ const LookUpCitizenProfile = () => {
   const handleSearch = useCallback((e) => {
     e?.preventDefault();
     const trimmedId = nationalId.trim();
-    if (!trimmedId) {
-      toast.error("Please enter a National ID");
+    const trimmedEmail = email.trim();
+    if (!trimmedId && !trimmedEmail) {
+      toast.error("Please enter a National ID or Email");
       return;
     }
-    lookupCitizen(trimmedId);
-  }, [nationalId]);
+    lookupCitizen(trimmedId, trimmedEmail);
+  }, [nationalId, email]);
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
@@ -74,6 +79,8 @@ const LookUpCitizenProfile = () => {
         <SearchSection
           nationalId={nationalId}
           setNationalId={setNationalId}
+          email={email}
+          setEmail={setEmail}
           handleSearch={handleSearch}
           handleKeyDown={handleKeyDown}
           isLoading={isLoading}
@@ -128,40 +135,56 @@ const getStatusBadge = (status) => {
 };
 
 // Search Section Component
-const SearchSection = React.memo(({ nationalId, setNationalId, handleSearch, handleKeyDown, isLoading }) => (
+const SearchSection = React.memo(({ nationalId, setNationalId, email, setEmail, handleSearch, handleKeyDown, isLoading }) => (
   <div className="max-w-2xl mx-auto mb-8">
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-      <form onSubmit={handleSearch} className="flex gap-3">
-        <div className="flex-1 relative">
-          <input
-            type="text"
-            placeholder="Enter National ID (e.g., 123456789)"
-            value={nationalId}
-            onChange={(e) => setNationalId(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="w-full p-3 pl-10 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
-            disabled={isLoading}
-            maxLength={20}
-          />
-          <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+      <form onSubmit={handleSearch} className="space-y-3">
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              placeholder="Enter National ID (e.g., 123456789)"
+              value={nationalId}
+              onChange={(e) => setNationalId(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full p-3 pl-10 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              disabled={isLoading}
+              maxLength={20}
+            />
+            <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          </div>
         </div>
-        <button
-          type="submit"
-          disabled={isLoading || !nationalId.trim()}
-          className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="animate-spin h-5 w-5" />
-              Searching...
-            </>
-          ) : (
-            <>
-              <Search className="h-5 w-5" />
-              Search
-            </>
-          )}
-        </button>
+        <div className="flex gap-3">
+          <div className="flex-1 relative">
+            <input
+              type="email"
+              placeholder="Or enter Email (e.g., user@example.com)"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="w-full p-3 pl-10 border border-gray-200 rounded-xl bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:bg-white transition-all"
+              disabled={isLoading}
+            />
+            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+          </div>
+          <button
+            type="submit"
+            disabled={isLoading || (!nationalId.trim() && !email.trim())}
+            className="bg-teal-600 hover:bg-teal-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-all shadow-sm hover:shadow-md"
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="animate-spin h-5 w-5" />
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search className="h-5 w-5" />
+                Search
+              </>
+            )}
+          </button>
+        </div>
       </form>
     </div>
   </div>
@@ -188,9 +211,9 @@ const EmptyState = React.memo(({ nationalId }) => (
       </div>
       <h3 className="text-lg font-semibold text-gray-900 mb-2">No Citizen Found</h3>
       <p className="text-gray-500">
-        No records found for National ID: <span className="font-mono font-semibold">{nationalId}</span>
+        No records found for the provided search criteria
       </p>
-      <p className="text-sm text-gray-400 mt-2">Please verify the ID and try again.</p>
+      <p className="text-sm text-gray-400 mt-2">Please verify the information and try again.</p>
     </div>
   </div>
 ));

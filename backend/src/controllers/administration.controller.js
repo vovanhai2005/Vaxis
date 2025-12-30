@@ -143,26 +143,50 @@ export const createAdministration = async (req, res) => {
   }
 };
 
-// Search citizens by national ID
+// Search citizens by national ID or email
 export const searchCitizensByNationalId = async (req, res) => {
   try {
-    const { nationalId } = req.query;
+    const { nationalId, email } = req.query;
+    
+    if (!nationalId && !email) {
+      return res.status(400).json({ message: "Please provide either National ID or Email" });
+    }
+    
     // fetch citizen information
-    const citizenResult = await sql`
-      SELECT 
-        c.id,
-        u.full_name,
-        u.dob,
-        u.phone,
-        u.email,
-        c.national_id,
-        c.address,
-        c.gender,
-        c.blood_type
-      FROM citizens c
-      JOIN users u ON c.user_id = u.id
-      WHERE c.national_id = ${nationalId} LIMIT 1
-    `;
+    let citizenResult;
+    if (nationalId) {
+      citizenResult = await sql`
+        SELECT 
+          c.id,
+          u.full_name,
+          u.dob,
+          u.phone,
+          u.email,
+          c.national_id,
+          c.address,
+          c.gender,
+          c.blood_type
+        FROM citizens c
+        JOIN users u ON c.user_id = u.id
+        WHERE c.national_id = ${nationalId} LIMIT 1
+      `;
+    } else if (email) {
+      citizenResult = await sql`
+        SELECT 
+          c.id,
+          u.full_name,
+          u.dob,
+          u.phone,
+          u.email,
+          c.national_id,
+          c.address,
+          c.gender,
+          c.blood_type
+        FROM citizens c
+        JOIN users u ON c.user_id = u.id
+        WHERE u.email = ${email} LIMIT 1
+      `;
+    }
 
     if (citizenResult.length === 0) {
       return res.status(404).json({ message: "Citizen not found" });
