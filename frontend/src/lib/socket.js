@@ -1,10 +1,12 @@
 import { io } from "socket.io-client";
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
 let socket = null;
 
 export const initSocket = () => {
   if (!socket) {
-    socket = io("http://localhost:8000", {
+    socket = io(API_URL, {
       autoConnect: false,
       withCredentials: true,
     });
