@@ -1,5 +1,6 @@
 import { sql } from '../config/db.js';
 import { generateToken } from '../lib/utils.js';
+import { deleteCache, cacheKeys } from '../lib/cache.js';
 import bcrypt from 'bcryptjs';
 
 export const signup = async (req, res) => {
@@ -157,6 +158,9 @@ export const completeProfile = async (req, res) => {
             SET national_id = ${nationalId}
             WHERE user_id = ${userId}
         `;
+
+        // Invalidate user profile cache so fresh data is fetched
+        await deleteCache(cacheKeys.userProfile(userId));
 
         res.status(200).json({ message: 'Profile completed successfully.' });
     } catch (error) {

@@ -36,6 +36,10 @@ const ProfilePage = () => {
   const [profilePictureFile, setProfilePictureFile] = useState(null)
 
   useEffect(() => {
+    getCitizenProfile()
+  }, [getCitizenProfile])
+
+  useEffect(() => {
     getAppointmentHistory()
   }, [getAppointmentHistory])
 

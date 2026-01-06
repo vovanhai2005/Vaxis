@@ -47,17 +47,20 @@ const CompleteProfilePage = () => {
 
     setIsSubmitting(true)
     try {
-      await axiosInstance.post('/auth/complete-profile', {
+      const response = await axiosInstance.post('/auth/complete-profile', {
         fullName: formData.fullName,
         nationalId: formData.nationalId,
         dob: formData.dob,
         phone: formData.phone
       })
       
-      toast.success('Profile completed successfully!')
-      // Refresh auth to get updated profile status
-      await checkAuth()
-      window.location.href = '/'
+      if (response.status === 200) {
+        toast.success('Profile completed successfully!')
+        // Refresh auth to get updated profile status
+        await checkAuth()
+        // Force redirect to home page
+        window.location.href = '/'
+      }
     } catch (error) {
       console.error('Error completing profile:', error)
       toast.error(error.response?.data?.message || 'Failed to complete profile')
