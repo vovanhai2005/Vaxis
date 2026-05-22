@@ -212,13 +212,13 @@ export const editAppointment = async (req, res) => {
     const result = await sql`
       UPDATE appointments
       SET ${sql(updates.reduce((acc, field, i) => {
-        acc[field] = values[i];
-        return acc;
-      }, {}))}
+      acc[field] = values[i];
+      return acc;
+    }, {}))}
       WHERE id = ${id}
       RETURNING *
     `;
-    
+
     if (result.length === 0) {
       return res.status(404).json({ error: "Appointment not found" });
     }
@@ -232,7 +232,7 @@ export const editAppointment = async (req, res) => {
 export const deleteAppointment = async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Delete the appointment
     await sql`
       DELETE FROM appointments
@@ -258,123 +258,145 @@ export const updateAppointmentStatus = async (req, res) => {
         .json({ message: "Temperature and blood pressure are required." });
     }
 
-    // Find an available doctor (employee with role_title = 'Doctor')
-    // Using least connection algorithm to assign doctor with least current assignments
-    const availableDoctors = await sql`
-      SELECT 
-        e.id as employee_id,
-        e.user_id,
-        u.full_name as doctor_name,
-        e.employee_number,
-        COUNT(ad.id) as current_assignments
-      FROM employees e
-      JOIN users u ON e.user_id = u.id
-      LEFT JOIN administrations ad ON ad.doctor_id = e.id 
-        AND ad.administered_at IS NULL
-      WHERE e.role_title = 'Doctor'
-      GROUP BY e.id, e.user_id, u.full_name, e.employee_number
-      ORDER BY current_assignments ASC, RANDOM()
-      LIMIT 1
-    `;
+    const { assignedDoctor, updatedStatus, createdAdmins, createdNotification } =
+      await sql.begin(async (sql) => {
 
-    if (availableDoctors.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "No doctors available. Please try again later." });
-    }
+        // Step 1: Select & lock the least-busy available doctor.
+        const [doctor] = await sql`
+          SELECT
+            e.id                AS employee_id,
+            e.user_id,
+            u.full_name         AS doctor_name,
+            e.employee_number,
+            (
+              SELECT COUNT(*)
+              FROM administrations ad
+              WHERE ad.doctor_id = e.id
+                AND ad.administered_at IS NULL
+            )                   AS current_assignments
+          FROM employees e
+          JOIN users u ON e.user_id = u.id
+          WHERE e.role_title = 'Doctor'
+          ORDER BY current_assignments ASC, RANDOM()
+          LIMIT 1
+          FOR UPDATE OF e SKIP LOCKED
+        `;
 
-    const assignedDoctor = availableDoctors[0];
+        if (!doctor) {
+          throw Object.assign(new Error("No doctors available."), { code: "NO_DOCTORS" });
+        }
 
-    const updatedStatus = await sql`
-      UPDATE appointments
-      SET status = 'checked_in'
-      WHERE id = ${appointmentId}
-      RETURNING *;
-    `;
+        // Step 2: Mark appointment as checked-in.
+        const [appointment] = await sql`
+          UPDATE appointments
+          SET status = 'checked_in'
+          WHERE id = ${appointmentId}
+          RETURNING *
+        `;
 
-    const checkInDetails = updatedStatus[0];
-    const citizenId = checkInDetails.citizen_id;
-    const vaccineId = await sql`
-      SELECT DISTINCT ON (av.vaccine_id)
-        av.vaccine_id,
-        vl.id AS vaccine_lot_id,
-        vl.quantity
-      FROM appointment_vaccines av
-      JOIN vaccine_lots vl ON av.vaccine_id = vl.vaccine_id
-      WHERE av.appointment_id = ${appointmentId} AND vl.quantity > 0
-      ORDER BY av.vaccine_id, vl.quantity;
+        const citizenId = appointment.citizen_id;
 
-    `;
-    if (vaccineId.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No vaccines found for this appointment." });
-    }
-    // Link the check-in details to administrations table with assigned doctor
-    const queries = vaccineId.map(
-      (vaccine) => sql`
-      INSERT INTO administrations (appointment_id, citizen_id, vaccine_id, vaccine_lot_id, temperature, blood_pressure, doctor_id)
-      VALUES (${appointmentId}, ${citizenId}, ${vaccine.vaccine_id}, ${vaccine.vaccine_lot_id}, ${temperature}, ${blood_pressure}, ${assignedDoctor.employee_id})
-      RETURNING *;
-    `
-    );
-    await Promise.all(queries);
+        // Step 3: Resolve vaccine lots for this appointment.
+        const vaccines = await sql`
+          SELECT DISTINCT ON (av.vaccine_id)
+            av.vaccine_id,
+            vl.id AS vaccine_lot_id,
+            vl.quantity
+          FROM appointment_vaccines av
+          JOIN vaccine_lots vl ON av.vaccine_id = vl.vaccine_id
+          WHERE av.appointment_id = ${appointmentId}
+            AND vl.quantity > 0
+          ORDER BY av.vaccine_id, vl.quantity
+        `;
 
-    // Get citizen details for notification
-    const citizenDetails = await sql`
-      SELECT u.full_name, u.id as user_id
-      FROM citizens c
-      JOIN users u ON c.user_id = u.id
-      WHERE c.id = ${citizenId}
-    `;
+        if (vaccines.length === 0) {
+          throw Object.assign(new Error("No vaccines found for this appointment."), { code: "NO_VACCINES" });
+        }
 
-    const citizenName = citizenDetails[0]?.full_name || 'A citizen';
-    const vaccineNames = await sql`
-      SELECT v.name
-      FROM appointment_vaccines av
-      JOIN vaccines v ON av.vaccine_id = v.id
-      WHERE av.appointment_id = ${appointmentId}
-    `;
-    const vaccineList = vaccineNames.map(v => v.name).join(', ');
+        // Step 4: Insert administration records with the locked doctor.
+        const admins = await Promise.all(
+          vaccines.map((vaccine) => sql`
+            INSERT INTO administrations
+              (appointment_id, citizen_id, vaccine_id, vaccine_lot_id,
+               temperature, blood_pressure, doctor_id)
+            VALUES
+              (${appointmentId}, ${citizenId}, ${vaccine.vaccine_id},
+               ${vaccine.vaccine_lot_id}, ${temperature}, ${blood_pressure},
+               ${doctor.employee_id})
+            RETURNING *
+          `)
+        );
 
-    // Create notification for the assigned doctor
-    const notificationTitle = 'New Patient Checked In';
-    const notificationMessage = `${citizenName} has checked in for appointment and has been assigned to you. Vaccines: ${vaccineList}`;
-    
-    const createdNotification = await sql`
-      INSERT INTO notifications (user_id, type, title, message, related_id)
-      VALUES (${assignedDoctor.user_id}, 'appointment', ${notificationTitle}, ${notificationMessage}, ${appointmentId})
-      RETURNING *
-    `;
+        // Step 5: Resolve citizen name and vaccine names for notification.
+        const [citizenDetail] = await sql`
+          SELECT u.full_name, u.id AS user_id
+          FROM citizens c
+          JOIN users u ON c.user_id = u.id
+          WHERE c.id = ${citizenId}
+        `;
 
-    // Emit real-time notification to the doctor
+        const vaccineNames = await sql`
+          SELECT v.name
+          FROM appointment_vaccines av
+          JOIN vaccines v ON av.vaccine_id = v.id
+          WHERE av.appointment_id = ${appointmentId}
+        `;
+
+        const citizenName = citizenDetail?.full_name || "A citizen";
+        const vaccineList = vaccineNames.map((v) => v.name).join(", ");
+        const notifTitle = "New Patient Checked In";
+        const notifMessage = `${citizenName} has checked in and has been assigned to you. Vaccines: ${vaccineList}`;
+
+        // Step 6: Persist the notification inside the same transaction.
+        const [notification] = await sql`
+          INSERT INTO notifications (user_id, type, title, message, related_id)
+          VALUES (${doctor.user_id}, 'appointment', ${notifTitle}, ${notifMessage}, ${appointmentId})
+          RETURNING *
+        `;
+
+        return {
+          assignedDoctor: doctor,
+          updatedStatus: appointment,
+          createdAdmins: admins,
+          createdNotification: notification,
+        };
+      });
+
+    // Emit real-time notification to the doctor (outside transaction — non-blocking).
     try {
-      emitNotificationToUser(assignedDoctor.user_id, 'notification:new', {
-        id: createdNotification[0].id,
-        type: 'appointment',
-        title: notificationTitle,
-        message: notificationMessage,
+      emitNotificationToUser(assignedDoctor.user_id, "notification:new", {
+        id: createdNotification.id,
+        type: "appointment",
+        title: createdNotification.title,
+        message: createdNotification.message,
         related_id: appointmentId,
-        created_at: createdNotification[0].created_at,
+        created_at: createdNotification.created_at,
         is_read: false,
-        id: createdNotification[0].id
       });
     } catch (socketError) {
-      console.error('Error emitting socket notification:', socketError);
-      // Continue even if socket fails - notification is still in database
+      console.error("Error emitting socket notification:", socketError);
+      // Non-fatal: notification is already persisted in the DB.
     }
 
     res.status(200).json({
       message: "Check-in successful",
-      appointment: updatedStatus[0],
+      appointment: updatedStatus,
       assigned_doctor: {
         id: assignedDoctor.employee_id,
         name: assignedDoctor.doctor_name,
-        employee_number: assignedDoctor.employee_number
-      }
+        employee_number: assignedDoctor.employee_number,
+      },
     });
   } catch (error) {
     console.error("Error during check-in:", error);
+
+    if (error.code === "NO_DOCTORS") {
+      return res.status(400).json({ message: "No doctors available. Please try again later." });
+    }
+    if (error.code === "NO_VACCINES") {
+      return res.status(404).json({ message: "No vaccines found for this appointment." });
+    }
+
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -427,7 +449,7 @@ export const completeAppointment = async (req, res) => {
       if (appointmentData.length > 0) {
         const citizenUserId = appointmentData[0].user_id;
         const vaccineName = appointmentData[0].vaccine_name || 'vaccination';
-        
+
         // Create notification for citizen
         await sql`
           INSERT INTO notifications (user_id, type, title, message, related_id)
