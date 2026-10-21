@@ -4,7 +4,7 @@
   "description": "Backend for Vaxis application",
   "main": "src/server.js",
   "scripts": {
-    "dev": "nodemon src/server.js"
+    "dev": "nodemon --exec \"node --network-family-autoselection-attempt-timeout=2000\" src/server.js"
   },
   "keywords": [],
   "author": "",
