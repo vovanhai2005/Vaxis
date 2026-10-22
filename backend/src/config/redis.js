@@ -13,13 +13,15 @@ export const connectRedis = () => {
     const redisUrl = process.env.REDIS_URL;
     
     redis = new Redis(redisUrl, {
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: 1,
+      // Fail cache commands immediately while disconnected instead of queueing them
+      enableOfflineQueue: false,
+      // Never give up: Redis may start after the backend or restart at any time
       retryStrategy: (times) => {
-        if (times > 5) {
-          console.log('⚠️  Redis connection failed after 5 attempts - caching disabled');
-          return null;
+        if (times === 5) {
+          console.log('⚠️  Redis unavailable - running without cache, still retrying in background');
         }
-        return Math.min(times * 100, 3000);
+        return Math.min(times * 200, 5000);
       }
     });
 

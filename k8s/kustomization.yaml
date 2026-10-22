@@ -1,0 +1,20 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: vaxis
+
+resources:
+  - namespace.yaml
+  - backend-config.yaml
+  - backend.yaml
+  - frontend.yaml
+  - redis.yaml
+  - ingress.yaml
+
+images:
+  - name: vaxis-backend
+    newName: vohai2005/vaxis-backend
+    newTag: local
+  - name: vaxis-frontend
+    newName: vohai2005/vaxis-frontend
+    newTag: local

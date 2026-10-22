@@ -5,141 +5,174 @@ export const createAdministration = async (req, res) => {
     const { appointmentId } = req.params;
     const { doseNumber, adverseEvents } = req.body;
 
-    // Validate required fields
     if (!appointmentId || doseNumber == null) {
       return res.status(400).json({
-        message: "appointmentId and doseNumber are required",
+        message: "appointmentId and doseNumber are required.",
       });
     }
 
-    // Step 1: Update administration record
-    const administration = await sql`
-      UPDATE administrations
-      SET dose_number = ${doseNumber}, adverse_events = ${adverseEvents}, administered_at = NOW()
-      WHERE appointment_id = ${appointmentId}
-      RETURNING *;
-    `;
+    const { administration, appointmentStatus, newBill, notification } =
+      await sql.begin(async (sql) => {
+        const [administration] = await sql`
+          UPDATE administrations
+          SET
+            dose_number     = ${doseNumber},
+            adverse_events  = ${adverseEvents ?? null},
+            administered_at = NOW()
+          WHERE appointment_id = ${appointmentId}
+            AND administered_at IS NULL
+          RETURNING *
+        `;
 
-    if (administration.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Administration record not found" });
+        if (!administration) {
+          throw Object.assign(
+            new Error("Administration already recorded or not found."),
+            { code: "ALREADY_DONE" }
+          );
+        }
+
+        const [appointment] = await sql`
+          UPDATE appointments
+          SET status     = 'administered',
+              updated_at = NOW()
+          WHERE id     = ${appointmentId}
+            AND status = 'checked_in'
+          RETURNING *
+        `;
+
+        if (!appointment) {
+          throw Object.assign(
+            new Error("Appointment is not in checked_in state."),
+            { code: "INVALID_STATUS" }
+          );
+        }
+
+        const vaccineDetails = await sql`
+          SELECT DISTINCT ON (av.vaccine_id)
+            av.vaccine_id,
+            vl.id       AS vaccine_lot_id,
+            vl.quantity,
+            v.name      AS vaccine_name,
+            v.price
+          FROM appointment_vaccines av
+          JOIN vaccine_lots vl ON av.vaccine_id = vl.vaccine_id
+          JOIN vaccines     v  ON av.vaccine_id = v.id
+          WHERE av.appointment_id = ${appointmentId}
+          ORDER BY av.vaccine_id, vl.quantity DESC
+          FOR UPDATE OF vl
+        `;
+
+        if (vaccineDetails.length === 0) {
+          throw Object.assign(
+            new Error("No vaccine lots found for this appointment."),
+            { code: "NO_LOTS" }
+          );
+        }
+
+        const outOfStock = vaccineDetails.filter((v) => v.quantity <= 0);
+        if (outOfStock.length > 0) {
+          throw Object.assign(
+            new Error("One or more vaccines are out of stock."),
+            { code: "OUT_OF_STOCK" }
+          );
+        }
+
+        const lotIds = vaccineDetails.map((v) => v.vaccine_lot_id);
+
+        await sql`
+          UPDATE vaccine_lots
+          SET quantity = quantity - 1
+          WHERE id = ANY(${lotIds})
+            AND quantity > 0
+        `;
+
+        const totalAmount = vaccineDetails.reduce((sum, v) => {
+          const price = parseInt(String(v.price).replace(/[^0-9]/g, ""), 10);
+          return sum + (isNaN(price) ? 0 : price);
+        }, 0);
+
+
+        const [newBill] = await sql`
+          INSERT INTO bills (citizen_id, amount_cents, paid, issued_at)
+          VALUES (${appointment.citizen_id}, ${totalAmount}, false, NOW())
+          RETURNING *
+        `;
+
+        await sql`
+          UPDATE administrations
+          SET bill_id = ${newBill.id}
+          WHERE appointment_id = ${appointmentId}
+        `;
+
+
+        const [citizenDetail] = await sql`
+          SELECT u.id AS user_id, u.full_name
+          FROM citizens c
+          JOIN users u ON c.user_id = u.id
+          WHERE c.id = ${appointment.citizen_id}
+        `;
+
+        const citizenName = citizenDetail?.full_name ?? "Patient";
+        const vaccineList = vaccineDetails.map((v) => v.vaccine_name).join(", ");
+
+        const [notification] = await sql`
+          INSERT INTO notifications (user_id, type, title, message, related_id)
+          VALUES (
+            ${citizenDetail.user_id},
+            'appointment',
+            'Vaccination Administered',
+            ${`Your ${vaccineList} vaccination has been administered successfully. Please proceed to payment.`},
+            ${appointmentId}
+          )
+          RETURNING *
+        `;
+
+        return {
+          administration,
+          appointmentStatus: appointment.status,
+          newBill,
+          notification,
+          citizenUserId: citizenDetail.user_id,
+        };
+      });
+
+    try {
+      emitNotificationToUser(
+        notification.user_id ?? newBill.citizen_id,
+        "notification:new",
+        {
+          id: notification.id,
+          type: "appointment",
+          title: notification.title,
+          message: notification.message,
+          related_id: appointmentId,
+          created_at: notification.created_at,
+          is_read: false,
+        }
+      );
+    } catch (socketError) {
+      console.error("Socket emit failed (non-fatal):", socketError);
     }
 
-    // Step 2: Update appointment status to administered
-    const status = await sql`
-      UPDATE appointments
-      SET status = 'administered', updated_at = NOW()
-      WHERE id = ${appointmentId}
-      RETURNING *;
-    `;
-
-    // Step 2.5: Get citizen user_id for notification
-    const appointmentData = await sql`
-      SELECT a.citizen_id, c.user_id, u.full_name, v.name as vaccine_name
-      FROM appointments a
-      JOIN citizens c ON a.citizen_id = c.id
-      JOIN users u ON c.user_id = u.id
-      LEFT JOIN appointment_vaccines av ON a.id = av.appointment_id
-      LEFT JOIN vaccines v ON av.vaccine_id = v.id
-      WHERE a.id = ${appointmentId}
-      LIMIT 1
-    `;
-
-    if (appointmentData.length > 0) {
-      const citizenUserId = appointmentData[0].user_id;
-      const citizenName = appointmentData[0].full_name;
-      const vaccineName = appointmentData[0].vaccine_name || 'vaccination';
-      
-      // Create notification for citizen
-      await sql`
-        INSERT INTO notifications (user_id, type, title, message, related_id)
-        VALUES (
-          ${citizenUserId}, 
-          'appointment', 
-          'Vaccination Administered',
-          ${`Your ${vaccineName} vaccination has been administered. Please proceed to payment to complete your appointment.`},
-          ${appointmentId}
-        )
-      `;
-    }
-
-    // Step 3: Get vaccine details from appointment
-    const vaccineDetails = await sql`
-      SELECT DISTINCT ON (av.vaccine_id)
-        av.vaccine_id,
-        vl.id AS vaccine_lot_id,
-        vl.quantity
-      FROM appointment_vaccines av
-      JOIN vaccine_lots vl ON av.vaccine_id = vl.vaccine_id
-      WHERE av.appointment_id = ${appointmentId} AND vl.quantity > 0
-      ORDER BY av.vaccine_id, vl.quantity;
-    `;
-
-    // if (vaccineDetails.length > 0) {
-    //   // Step 4: Decrement vaccine quantity for each vaccine in the appointment
-    //   const updateQueries = vaccineDetails.map(
-    //     (v) => sql`
-    //       UPDATE vaccine_lots
-    //       SET quantity = quantity - 1
-    //       WHERE vaccine_lots.id = ${v.vaccine_lot_id} AND quantity > 0
-    //       RETURNING id, quantity;
-    //     `
-    //   );
-
-    //   await Promise.all(updateQueries);
-    // }
-
-    // Step 5: Create bill
-    const billingCitizenData = await sql`
-      SELECT citizen_id FROM appointments WHERE id = ${appointmentId}
-    `;
-
-    // SỬA: Lấy citizen_id từ biến mới
-    if (billingCitizenData.length === 0) {
-        return res.status(404).json({ message: "Appointment not found for billing" });
-    }
-    const citizenId = billingCitizenData[0].citizen_id;
-
-    const details = await sql`
-      SELECT v.price
-      FROM appointment_vaccines av
-      JOIN vaccines v ON av.vaccine_id = v.id
-      WHERE av.appointment_id = ${appointmentId}
-    `;
-
-    let totalAmount = 0;
-    details.forEach((item) => {
-      // Ensure price is treated as integer VND (no decimals)
-      const priceStr = String(item.price).replace(/[^0-9]/g, "");
-      const priceNum = parseInt(priceStr, 10);
-
-      if (!isNaN(priceNum)) {
-        totalAmount += priceNum;
-      }
+    return res.status(201).json({
+      message: "Administration recorded successfully.",
+      administration,
+      appointmentStatus,
+      bill: newBill.amount_cents,
     });
 
-    const bill = await sql`
-      INSERT INTO bills (citizen_id, amount_cents, paid, issued_at)
-      VALUES (${citizenId}, ${totalAmount}, false, NOW())
-      RETURNING *;
-    `;
-
-    await sql`
-      UPDATE administrations
-      SET bill_id = ${bill[0].id}
-      WHERE appointment_id = ${appointmentId};
-    `;
-
-    res.status(201).json({
-      message: "Administration created successfully",
-      administration: administration[0],
-      appointmentStatus: status[0].status,
-      bill: bill[0].amount_cents,
-    });
   } catch (error) {
-    console.error("Error creating administration:", error);
-    res.status(500).json({ message: "Internal server error" });
+    console.error("Error in createAdministration:", error);
+
+    const errorMap = {
+      ALREADY_DONE: [409, "Administration already recorded for this appointment."],
+      INVALID_STATUS: [409, "Appointment is not in a valid state for administration."],
+      OUT_OF_STOCK: [409, "One or more vaccines are out of stock. Administration cancelled."],
+      NO_LOTS: [404, "No vaccine lots found for this appointment."],
+    };
+
+    const [status, message] = errorMap[error.code] ?? [500, "Internal server error."];
+    return res.status(status).json({ message });
   }
 };
 
@@ -147,11 +180,11 @@ export const createAdministration = async (req, res) => {
 export const searchCitizensByNationalId = async (req, res) => {
   try {
     const { nationalId, email } = req.query;
-    
+
     if (!nationalId && !email) {
       return res.status(400).json({ message: "Please provide either National ID or Email" });
     }
-    
+
     // fetch citizen information
     let citizenResult;
     if (nationalId) {

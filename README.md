@@ -227,22 +227,6 @@ cd frontend
 npm test
 ```
 
-## 📦 Building for Production
-
-### Backend
-```bash
-cd backend
-npm run build
-npm start
-```
-
-### Frontend
-```bash
-cd frontend
-npm run build
-# The build artifacts will be in the dist/ directory
-```
-
 ## 🤝 Contributing
 
 1. Fork the repository
