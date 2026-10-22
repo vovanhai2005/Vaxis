@@ -4,17 +4,17 @@ kind: Kustomization
 namespace: vaxis
 
 resources:
-  - namespace.yaml
-  - backend-config.yaml
-  - backend.yaml
-  - frontend.yaml
-  - redis.yaml
-  - ingress.yaml
+- namespace.yaml
+- backend-config.yaml
+- backend.yaml
+- frontend.yaml
+- redis.yaml
+- ingress.yaml
 
 images:
-  - name: vaxis-backend
-    newName: vohai2005/vaxis-backend
-    newTag: local
-  - name: vaxis-frontend
-    newName: vohai2005/vaxis-frontend
-    newTag: local
+- name: vaxis-backend
+  newName: vohai2005/vaxis-backend
+  newTag: eb0f2a1359280adbb14ac78d00cf7faaca8943d0
+- name: vaxis-frontend
+  newName: vohai2005/vaxis-frontend
+  newTag: eb0f2a1359280adbb14ac78d00cf7faaca8943d0
