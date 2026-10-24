@@ -51,6 +51,7 @@ pip-log.txt
 pip-delete-this-directory.txt
 
 # IDE and editor files
+.claude/
 .idea/
 .vscode/*
 !.vscode/settings.json

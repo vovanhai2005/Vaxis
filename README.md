@@ -136,6 +136,61 @@ The frontend will run on `http://localhost:5173`
 redis-server
 ```
 
+## 🚀 Deployment
+
+Deployment follows a GitOps flow: Git is the source of truth and ArgoCD keeps the cluster in sync with it.
+
+```
+push to main ──► GitHub Actions ──► build & push images to Docker Hub (tag = commit SHA)
+                       │
+                       └──► bot commits the new tag to k8s/kustomization.yaml
+                                         │
+ArgoCD (inside the cluster) ── polls the repo ──► applies k8s/ automatically
+```
+
+- `backend/Dockerfile`, `frontend/Dockerfile`: production images (frontend is served by nginx)
+- `k8s/`: Kubernetes manifests (Kustomize) for backend, frontend, Redis and the Ingress
+- `argocd/application.yaml`: ArgoCD Application watching `k8s/` on `main`
+- `.github/workflows/ci-cd.yaml`: CI/CD pipeline
+
+### One-time setup (Minikube)
+
+1. Start the cluster and the Ingress controller:
+   ```bash
+   minikube start --driver=docker --cpus=4 --memory=4g
+   minikube addons enable ingress
+   echo "$(minikube ip) vaxis.local" | sudo tee -a /etc/hosts
+   ```
+2. Create the backend secret from a local env file that is never committed:
+   ```bash
+   kubectl create namespace vaxis
+   kubectl -n vaxis create secret generic backend-secret --from-env-file=backend/secrets.env
+   rm backend/secrets.env
+   ```
+   Required keys: `PGHOST`, `PGDATABASE`, `PGUSER`, `PGPASSWORD`, `JWT_SECRET`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `OPENAI_API_KEY`, `NEWS_API_KEY`. Values must not be quoted.
+3. Install ArgoCD and register the application:
+   ```bash
+   kubectl create namespace argocd
+   kubectl apply -n argocd --server-side -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+   kubectl -n argocd rollout status deploy/argocd-server
+   kubectl apply -f argocd/application.yaml
+   ```
+4. GitHub repository settings: variable `DOCKERHUB_USERNAME`, secret `DOCKERHUB_TOKEN`, and *Workflow permissions* set to **Read and write**.
+
+The app is then available at `http://vaxis.local`.
+
+### Day-to-day
+
+- **Deploy:** merge into `main`. The new version is live within ~5 minutes.
+- **Rollback:** revert the latest `chore(deploy)` commit on `main`.
+- **Useful commands:**
+  ```bash
+  kubectl -n vaxis get pods
+  kubectl -n vaxis logs deploy/backend -f
+  kubectl -n argocd port-forward svc/argocd-server 8080:443   # ArgoCD UI at https://localhost:8080
+  kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+  ```
+
 ## 📁 Project Structure
 
 ```
